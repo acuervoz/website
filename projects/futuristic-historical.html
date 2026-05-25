@@ -463,7 +463,7 @@
     setTimeout(function() {
       rows[idx].classList.remove('flash');
       if (ALL[idx] === HOME) {
-        window.location.href = '../index.html';
+        window.location.href = '/';
       } else {
         openStory(ALL[idx]);
       }
@@ -516,7 +516,7 @@
     } else if (e.key === 'Enter') {
       activate(curIdx);
     } else if (e.key === 'Escape') {
-      window.location.href = '../index.html';
+      window.location.href = '/';
     }
   });
 
