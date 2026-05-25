@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Random — A Cuervoz</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <nav>
+    <a href="index.html">home</a>
+    <span class="nav-sep">/</span>
+    <a href="projects.html">projects</a>
+    <span class="nav-sep">/</span>
+    <a href="random.html" class="active">random</a>
+  </nav>
+
+  <div class="divider">- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</div>
+
+  <div class="random-wrap">
+    <div class="sec-hdr">// random</div>
+    <p id="status">picking something for you<span class="blink">_</span></p>
+    <p id="fallback" style="display:none;">
+      javascript is off — here are all the pieces:
+      <a href="index.html">go to the full list &rarr;</a>
+    </p>
+  </div>
+
+  <script>
+    /*
+     * ════════════════════════════════════════════════════
+     * ADD every new piece you publish to this list.
+     * Use the path relative to this file, e.g.:
+     *   "projects/your-story.html"
+     * ════════════════════════════════════════════════════
+     */
+    var pieces = [
+      "projects/the-night-of-the-milipede.html",
+      "projects/hells-janitor.html",
+      "projects/the-machine-gods-manifesto.html",
+      "projects/do-it-monday.html",
+      "projects/a-deeply-rooted-curse.html",
+      "projects/the-bodies-inside-the-laguna-negra.html"
+    ];
+
+    if (pieces.length > 0) {
+      var pick = pieces[Math.floor(Math.random() * pieces.length)];
+      document.getElementById("status").textContent = "taking you somewhere...";
+      setTimeout(function() { window.location.href = pick; }, 700);
+    } else {
+      document.getElementById("status").style.display = "none";
+      document.getElementById("fallback").style.display = "block";
+    }
+  </script>
+
+  <noscript>
+    <style>#fallback { display: block !important; } #status { display: none; }</style>
+  </noscript>
+
+  <footer>
+    made by hand &nbsp;&middot;&nbsp; no trackers &nbsp;&middot;&nbsp; no cookies &nbsp;&middot;&nbsp; acuervoz.com
+  </footer>
+
+</body>
+</html>

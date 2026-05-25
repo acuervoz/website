@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The night of the milipede — A Cuervoz</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+
+  <nav>
+    <a href="../index.html">home</a>
+    <span class="nav-sep">/</span>
+    <a href="../projects.html">projects</a>
+    <span class="nav-sep">/</span>
+    <a href="../random.html">random</a>
+  </nav>
+
+  <div class="divider">- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</div>
+
+  <a class="back-link" href="unclassified.html">&larr; unclassified</a>
+
+  <div class="page-header">
+    <h1 class="page-title">The night of the milipede</h1>
+    <div class="page-meta">
+      <span>fiction</span>
+      <span>Unclassified</span>
+    </div>
+  </div>
+
+  <div class="page-body" id="md-content">
+    <p class="loading-msg">loading<span class="blink">_</span></p>
+    <noscript>
+      <p>JavaScript is required to render this page. <a href="the-night-of-the-milipede.md">Read the raw markdown file instead.</a></p>
+    </noscript>
+  </div>
+
+  <div class="divider" style="margin-top:2.5rem;">- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</div>
+
+  <footer>
+    made by hand &nbsp;&middot;&nbsp; no trackers &nbsp;&middot;&nbsp; no cookies &nbsp;&middot;&nbsp; acuervoz.com
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    fetch('the-night-of-the-milipede.md')
+      .then(function(r) { return r.text(); })
+      .then(function(text) {
+        document.getElementById('md-content').innerHTML = marked.parse(text);
+      })
+      .catch(function() {
+        document.getElementById('md-content').innerHTML =
+          '<p>Could not load content. <a href="the-night-of-the-milipede.md">Read the raw file.</a></p>';
+      });
+  </script>
+
+</body>
+</html>

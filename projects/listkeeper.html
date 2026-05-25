@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Listkeeper — A Cuervoz</title>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .lk-wrap { margin-top: 1.5rem; }
+
+    .lk-add-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+
+    .lk-input {
+      flex: 1;
+      min-width: 160px;
+      background: var(--border);
+      border: 1px solid var(--text-dim);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 12px;
+      padding: 0.4rem 0.6rem;
+      outline: none;
+    }
+    .lk-input:focus { border-color: var(--accent); }
+    .lk-input::placeholder { color: var(--text-ghost); }
+
+    .lk-select {
+      background: var(--border);
+      border: 1px solid var(--text-dim);
+      color: var(--text-muted);
+      font-family: var(--font);
+      font-size: 12px;
+      padding: 0.4rem 0.6rem;
+      outline: none;
+      cursor: pointer;
+    }
+    .lk-select:focus { border-color: var(--accent); }
+
+    .lk-btn {
+      background: none;
+      border: 1px solid rgba(255,106,119,0.4);
+      color: var(--accent);
+      font-family: var(--font);
+      font-size: 11px;
+      padding: 0.4rem 0.8rem;
+      cursor: pointer;
+      letter-spacing: 0.06em;
+    }
+    .lk-btn:hover { background: var(--accent-faint); }
+
+    .lk-list { list-style: none; }
+
+    .lk-item {
+      display: flex;
+      align-items: baseline;
+      gap: 0.75rem;
+      padding: 0.55rem 0;
+      border-bottom: 1px solid var(--border-sub);
+      font-size: 12px;
+    }
+    .lk-item:hover { background: var(--hover-bg); padding-left: 0.3rem; transition: padding 0.1s; }
+
+    .lk-name { flex: 1; color: var(--text); }
+    .lk-interval { font-size: 9px; color: var(--text-ghost); letter-spacing: 0.08em; text-transform: uppercase; }
+    .lk-due { font-size: 10px; min-width: 110px; text-align: right; }
+    .lk-due.overdue  { color: var(--accent); }
+    .lk-due.due-soon { color: #c8a84b; }
+    .lk-due.ok       { color: var(--text-dim); }
+
+    .lk-done-btn {
+      background: none;
+      border: 1px solid var(--text-ghost);
+      color: var(--text-ghost);
+      font-family: var(--font);
+      font-size: 9px;
+      padding: 2px 6px;
+      cursor: pointer;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+    .lk-done-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .lk-del-btn {
+      background: none;
+      border: none;
+      color: var(--text-ghost);
+      font-family: var(--font);
+      font-size: 11px;
+      cursor: pointer;
+      padding: 0 2px;
+      opacity: 0.4;
+    }
+    .lk-del-btn:hover { opacity: 1; color: var(--accent); }
+
+    .lk-empty {
+      font-size: 11px;
+      color: var(--text-ghost);
+      padding: 1.5rem 0;
+      display: none;
+    }
+
+    .lk-list-hdr {
+      display: flex;
+      gap: 0.75rem;
+      font-size: 9px;
+      color: var(--text-ghost);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0 0 0.35rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0.1rem;
+    }
+    .lk-list-hdr .h-name { flex: 1; }
+    .lk-list-hdr .h-due  { min-width: 110px; text-align: right; }
+    .lk-list-hdr .h-act  { width: 72px; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="../index.html">home</a>
+    <span class="nav-sep">/</span>
+    <a href="../projects.html">projects</a>
+    <span class="nav-sep">/</span>
+    <a href="../random.html">random</a>
+  </nav>
+
+  <div class="divider">- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</div>
+
+  <a class="back-link" href="../projects.html">&larr; projects</a>
+
+  <div class="page-header">
+    <h1 class="page-title">Listkeeper</h1>
+    <div class="page-meta">
+      <span>web app</span>
+      <span>recurring task tracker</span>
+    </div>
+  </div>
+
+  <div class="page-body">
+    <p>
+      Track recurring tasks without a todo list that grows forever. Add a task,
+      set how often it repeats, mark it done when you do it. That's it.
+      Data lives in your browser only — nothing is sent anywhere.
+    </p>
+  </div>
+
+  <div class="lk-wrap">
+    <div class="sec-hdr">// add task</div>
+
+    <div class="lk-add-row">
+      <input class="lk-input" id="lk-name-in" type="text" placeholder="task name" maxlength="80" />
+      <select class="lk-select" id="lk-interval-in">
+        <option value="1">daily</option>
+        <option value="3">every 3 days</option>
+        <option value="7" selected>weekly</option>
+        <option value="14">fortnightly</option>
+        <option value="30">monthly</option>
+        <option value="90">quarterly</option>
+      </select>
+      <button class="lk-btn" id="lk-add-btn">+ add</button>
+    </div>
+
+    <div class="sec-hdr">// tasks</div>
+
+    <div class="lk-list-hdr">
+      <span class="h-name">task</span>
+      <span class="h-due">due / last done</span>
+      <span class="h-act"></span>
+    </div>
+
+    <p class="lk-empty" id="lk-empty">no tasks yet — add one above.</p>
+    <ul class="lk-list" id="lk-list"></ul>
+  </div>
+
+  <div class="divider" style="margin-top:2.5rem;">- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</div>
+
+  <footer>
+    made by hand &nbsp;&middot;&nbsp; no trackers &nbsp;&middot;&nbsp; no cookies &nbsp;&middot;&nbsp; acuervoz.com
+  </footer>
+
+  <script>
+    var STORE_KEY = 'listkeeper_tasks';
+
+    function loadTasks() {
+      try { return JSON.parse(localStorage.getItem(STORE_KEY)) || []; }
+      catch(e) { return []; }
+    }
+
+    function saveTasks(tasks) {
+      localStorage.setItem(STORE_KEY, JSON.stringify(tasks));
+    }
+
+    function daysAgo(isoDate) {
+      if (!isoDate) return null;
+      var diff = Date.now() - new Date(isoDate).getTime();
+      return Math.floor(diff / 86400000);
+    }
+
+    function dueLabel(task) {
+      if (!task.lastDone) return { text: 'never done', cls: 'overdue' };
+      var age = daysAgo(task.lastDone);
+      var remaining = task.interval - age;
+      if (remaining <= 0)  return { text: 'overdue by ' + Math.abs(remaining) + 'd', cls: 'overdue' };
+      if (remaining <= 2)  return { text: 'due in ' + remaining + 'd', cls: 'due-soon' };
+      return { text: 'due in ' + remaining + 'd', cls: 'ok' };
+    }
+
+    function intervalLabel(days) {
+      var map = { 1:'daily', 3:'every 3d', 7:'weekly', 14:'fortnightly', 30:'monthly', 90:'quarterly' };
+      return map[days] || ('every ' + days + 'd');
+    }
+
+    function render() {
+      var tasks = loadTasks();
+      var list  = document.getElementById('lk-list');
+      var empty = document.getElementById('lk-empty');
+      list.innerHTML = '';
+
+      if (tasks.length === 0) {
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+
+      tasks.forEach(function(task, i) {
+        var due = dueLabel(task);
+        var li  = document.createElement('li');
+        li.className = 'lk-item';
+        li.innerHTML =
+          '<span class="lk-name">' + escHtml(task.name) + '</span>' +
+          '<span class="lk-interval">' + intervalLabel(task.interval) + '</span>' +
+          '<span class="lk-due ' + due.cls + '">' + due.text + '</span>' +
+          '<button class="lk-done-btn" data-i="' + i + '">done</button>' +
+          '<button class="lk-del-btn" data-i="' + i + '" title="remove">&times;</button>';
+        list.appendChild(li);
+      });
+
+      list.querySelectorAll('.lk-done-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var tasks = loadTasks();
+          tasks[+this.dataset.i].lastDone = new Date().toISOString();
+          saveTasks(tasks);
+          render();
+        });
+      });
+
+      list.querySelectorAll('.lk-del-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var tasks = loadTasks();
+          tasks.splice(+this.dataset.i, 1);
+          saveTasks(tasks);
+          render();
+        });
+      });
+    }
+
+    function escHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    document.getElementById('lk-add-btn').addEventListener('click', function() {
+      var nameIn = document.getElementById('lk-name-in');
+      var name   = nameIn.value.trim();
+      if (!name) { nameIn.focus(); return; }
+      var interval = +document.getElementById('lk-interval-in').value;
+      var tasks = loadTasks();
+      tasks.push({ name: name, interval: interval, lastDone: null });
+      saveTasks(tasks);
+      nameIn.value = '';
+      nameIn.focus();
+      render();
+    });
+
+    document.getElementById('lk-name-in').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') document.getElementById('lk-add-btn').click();
+    });
+
+    render();
+  </script>
+
+</body>
+</html>
