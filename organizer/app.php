@@ -352,10 +352,14 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .modal-subtask-prefix { color: var(--text-dim); font-size: 11px; flex-shrink: 0; }
 
 /* ── Project view modal ─────────────────────────────────────────────────── */
-.pv-section-header { padding: 6px 16px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border); background: var(--bg-raised); }
-.pv-task-row { display: flex; align-items: flex-start; gap: 8px; padding: 6px 16px; border-left: 2px solid transparent; transition: background 120ms ease, border-color 120ms ease; }
+.pv-task-row { display: flex; align-items: flex-start; gap: 8px; padding: 6px 16px; border-left: 2px solid transparent; border-top: 2px solid transparent; transition: background 120ms ease, border-color 120ms ease; cursor: grab; }
+.pv-task-row:active { cursor: grabbing; }
 .pv-task-row:hover { background: var(--bg-raised); border-left-color: var(--accent); }
-.pv-task-row.subtask { padding-left: 36px; }
+.pv-task-row.subtask { padding-left: 36px; cursor: default; }
+.pv-task-row.is-dragging { opacity: 0.3; }
+.pv-task-row.drag-insert-before { border-top-color: var(--accent) !important; }
+.pv-drag-handle { color: var(--text-dim); font-size: 11px; opacity: 0; flex-shrink: 0; user-select: none; transition: opacity 120ms ease; padding-top: 2px; }
+.pv-task-row:not(.subtask):hover .pv-drag-handle { opacity: 1; }
 .pv-task-num { font-size: 10px; color: var(--text-dim); flex-shrink: 0; min-width: 22px; padding-top: 2px; }
 .pv-task-info { flex: 1; min-width: 0; }
 .pv-task-title { color: var(--text); font-size: 12px; word-break: break-word; cursor: pointer; }
@@ -363,13 +367,8 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .pv-task-meta { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
 .pv-task-actions { flex-shrink: 0; display: flex; gap: 4px; opacity: 0; transition: opacity 120ms ease; }
 .pv-task-row:hover .pv-task-actions { opacity: 1; }
-.pv-comp-row { display: flex; align-items: flex-start; gap: 8px; padding: 5px 16px; border-left: 2px solid transparent; transition: background 120ms ease; }
-.pv-comp-row:hover { background: var(--bg-raised); }
-.pv-comp-row .pv-task-actions { opacity: 0; }
-.pv-comp-row:hover .pv-task-actions { opacity: 1; }
-.pv-comp-date { font-size: 10px; color: var(--text-dim); flex-shrink: 0; min-width: 72px; padding-top: 2px; }
-.pv-comp-title { font-size: 12px; color: var(--text-dim); text-decoration: line-through; text-decoration-color: var(--text-dim); word-break: break-word; cursor: pointer; flex: 1; }
-.pv-comp-title:hover { color: var(--text-muted); }
+.pv-done .pv-task-title { text-decoration: line-through; text-decoration-color: var(--text-dim); color: var(--text-dim); }
+.pv-done .pv-task-meta { opacity: 0.6; }
 .project-card-title-btn { cursor: pointer; transition: color 120ms ease; }
 .project-card-title-btn:hover { color: var(--accent); }
 
@@ -1092,17 +1091,20 @@ button:focus { outline: none; }
     </div>
     <div class="modal-body" style="padding:0">
 
-      <!-- Active tasks -->
-      <div class="pv-section-header">
-        ── active
-        <span style="color:var(--text-dim)" x-text="'('+projectViewTasks.length+')'"></span>
-      </div>
       <template x-if="projectViewTasks.length===0 && !loading">
-        <div style="padding:10px 16px;font-size:11px;color:var(--text-dim)">· no active tasks</div>
+        <div style="padding:12px 16px;font-size:11px;color:var(--text-dim)">· no tasks yet</div>
       </template>
+
       <template x-for="(task, i) in projectViewTasks" :key="task.id">
         <div>
-          <div class="pv-task-row">
+          <div class="pv-task-row"
+               draggable="true"
+               :class="{'is-dragging': pvDrag.id===task.id, 'drag-insert-before': pvDragOver===task.id, 'pv-done': task.status==='completed'}"
+               @dragstart.stop="onPVDragStart($event, task)"
+               @dragend="onPVDragEnd()"
+               @dragover.prevent.stop="onPVDragOver($event, task)"
+               @drop.prevent.stop="onPVDrop($event, task)">
+            <span class="pv-drag-handle">⠿</span>
             <span class="pv-task-num" x-text="(i+1)+'.'"></span>
             <div class="pv-task-info">
               <div class="pv-task-title" x-text="task.title" @click.stop="openEditTaskModal(task)"></div>
@@ -1113,12 +1115,18 @@ button:focus { outline: none; }
                 x-text="task.priority==='ASAP'?'!! ASAP':task.priority==='Soon'?'◈ Soon':task.priority==='Backlog'?'· Backlog':'— No Priority'"></div>
             </div>
             <div class="pv-task-actions">
-              <button class="task-btn success btn-sm" @click.stop="openCompleteModal(task)">✓</button>
+              <template x-if="task.status==='active'">
+                <button class="task-btn success btn-sm" @click.stop="openCompleteModal(task)">✓</button>
+              </template>
+              <template x-if="task.status==='completed'">
+                <button class="task-btn btn-sm" @click.stop="reopenInProjectView(task.id)" title="Reopen">↺</button>
+              </template>
               <button class="task-btn btn-sm" @click.stop="openEditTaskModal(task)">✎</button>
             </div>
           </div>
           <template x-for="sub in task.subtasks||[]" :key="sub.id">
-            <div class="pv-task-row subtask">
+            <div class="pv-task-row subtask" :class="{'pv-done': sub.status==='completed'}">
+              <span class="pv-drag-handle" style="visibility:hidden">⠿</span>
               <span class="pv-task-num">└─</span>
               <div class="pv-task-info">
                 <div class="pv-task-title" x-text="sub.title" @click.stop="openEditTaskModal(sub)"></div>
@@ -1127,32 +1135,13 @@ button:focus { outline: none; }
                 </template>
               </div>
               <div class="pv-task-actions">
-                <button class="task-btn success btn-sm" @click.stop="openCompleteModal(sub)">✓</button>
-                <button class="task-btn btn-sm" @click.stop="openEditTaskModal(sub)">✎</button>
-              </div>
-            </div>
-          </template>
-        </div>
-      </template>
-
-      <!-- Completed tasks -->
-      <template x-if="projectViewCompleted.length > 0">
-        <div>
-          <div class="pv-section-header" style="margin-top:8px">
-            ── completed
-            <span style="color:var(--text-dim)" x-text="'('+projectViewCompleted.length+')'"></span>
-          </div>
-          <template x-for="task in projectViewCompleted" :key="task.id">
-            <div class="pv-comp-row">
-              <span class="pv-comp-date" x-text="formatShortDate(task.completed_at)"></span>
-              <div style="flex:1;min-width:0">
-                <div class="pv-comp-title" x-text="task.title" @click.stop="openEditTaskModal(task)"></div>
-                <template x-if="task.completion_note">
-                  <div class="pv-task-meta" x-text="task.completion_note"></div>
+                <template x-if="sub.status==='active'">
+                  <button class="task-btn success btn-sm" @click.stop="openCompleteModal(sub)">✓</button>
                 </template>
-              </div>
-              <div class="pv-task-actions">
-                <button class="task-btn btn-sm" @click.stop="reopenInProjectView(task.id)" title="Reopen">↺</button>
+                <template x-if="sub.status==='completed'">
+                  <button class="task-btn btn-sm" @click.stop="reopenInProjectView(sub.id)" title="Reopen">↺</button>
+                </template>
+                <button class="task-btn btn-sm" @click.stop="openEditTaskModal(sub)">✎</button>
               </div>
             </div>
           </template>
@@ -1182,7 +1171,9 @@ function app() {
     projectCompletedCache: {},
     projectViewProject: null,
     projectViewTasks: [],
-    projectViewCompleted: [],
+    projectViewActive: false,
+    pvDrag: { id: null },
+    pvDragOver: null,
     priorityTasks: { ASAP: [], Soon: [], Backlog: [] },
     completedTasks: [],
     loading: false,
@@ -1290,19 +1281,14 @@ function app() {
 
     // ── Project view ─────────────────────────────────────────────────────
     async openProjectView(project) {
-      this.projectViewProject  = project;
-      this.projectViewTasks    = [];
-      this.projectViewCompleted = [];
+      this.projectViewProject = project;
+      this.projectViewTasks   = [];
       this.modal = 'project-view';
       await this._fetchProjectViewData(project.id);
     },
     async _fetchProjectViewData(pid) {
-      const [active, completed] = await Promise.all([
-        this.api('get_tasks', { project_id: pid }),
-        this.api('get_project_completed', { project_id: pid, limit: 1000 }),
-      ]);
-      if (active    && !active.error)    this.projectViewTasks     = active;
-      if (completed && !completed.error) this.projectViewCompleted = completed;
+      const data = await this.api('get_project_tasks_all', { project_id: pid });
+      if (data && !data.error) this.projectViewTasks = data;
     },
     async reopenInProjectView(taskId) {
       const ok = await this.apiPost('reopen_task', { id: taskId });
@@ -1310,6 +1296,32 @@ function app() {
         this.showNotification('↺ task reopened', 'info');
         await this._fetchProjectViewData(this.projectViewProject.id);
       }
+    },
+    onPVDragStart(e, task) {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', String(task.id));
+      this.pvDrag = { id: task.id };
+    },
+    onPVDragOver(e, task) {
+      if (!this.pvDrag.id || this.pvDrag.id === task.id) return;
+      this.pvDragOver = task.id;
+    },
+    onPVDrop(e, task) {
+      if (!this.pvDrag.id || this.pvDrag.id === task.id) { this.onPVDragEnd(); return; }
+      const dragId = this.pvDrag.id, targetId = task.id;
+      this.onPVDragEnd();
+      const arr = [...this.projectViewTasks];
+      const fi  = arr.findIndex(t => t.id == dragId);
+      const ti  = arr.findIndex(t => t.id == targetId);
+      if (fi === -1 || ti === -1) return;
+      const [item] = arr.splice(fi, 1);
+      arr.splice(ti, 0, item);
+      this.projectViewTasks = arr;
+      this.apiPost('reorder_tasks', { order: arr.map(t => t.id) });
+    },
+    onPVDragEnd() {
+      this.pvDrag    = { id: null };
+      this.pvDragOver = null;
     },
 
     // ── Task helpers ──────────────────────────────────────────────────────
@@ -1339,6 +1351,7 @@ function app() {
 
     // ── Complete task ─────────────────────────────────────────────────────
     openCompleteModal(task) {
+      this.projectViewActive = (this.modal === 'project-view');
       this.modalTask    = task;
       this.completeNote = '';
       this.modal        = 'complete';
@@ -1347,9 +1360,15 @@ function app() {
       if (!this.modalTask) return;
       const ok = await this.apiPost('complete_task', { id: this.modalTask.id, note: this.completeNote });
       if (ok) {
-        this.modal = null;
         this.showNotification('✓ task marked complete', 'success');
-        await this.refresh();
+        if (this.projectViewActive) {
+          this.projectViewActive = false;
+          this.modal = 'project-view';
+          await this._fetchProjectViewData(this.projectViewProject.id);
+        } else {
+          this.modal = null;
+          await this.refresh();
+        }
       }
     },
     async reopenTask(id) {
@@ -1418,10 +1437,11 @@ function app() {
 
     // ── Edit task modal ───────────────────────────────────────────────────
     openEditTaskModal(task) {
+      this.projectViewActive = (this.modal === 'project-view');
       this.editTaskForm = {
         id: task.id, title: task.title, priority: task.priority,
         projectId: task.project_id, description: task.description || '',
-        subtasks: (task.subtasks || []).map(s => ({ id: s.id, _cid: s.id, title: s.title })),
+        subtasks: (task.subtasks || []).filter(s => s.status !== 'completed').map(s => ({ id: s.id, _cid: s.id, title: s.title })),
         subtasksToDelete: [],
       };
       this.pendingSubtask = '';
@@ -1458,9 +1478,15 @@ function app() {
             });
           }
         }
-        this.modal = null;
         this.showNotification('task updated', 'success');
-        await this.refresh();
+        if (this.projectViewActive) {
+          this.projectViewActive = false;
+          this.modal = 'project-view';
+          await this._fetchProjectViewData(this.projectViewProject.id);
+        } else {
+          this.modal = null;
+          await this.refresh();
+        }
       }
     },
 

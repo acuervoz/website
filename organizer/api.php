@@ -455,6 +455,39 @@ try {
             $stmt->execute([':tid' => $taskId]);
             jsonOut($stmt->fetchAll());
 
+        case 'get_project_tasks_all':
+            requireAuth();
+            $projectId = (int)($_GET['project_id'] ?? 0);
+            if (!$projectId) jsonError('project_id required');
+            $pdo  = getDb();
+            $stmt = $pdo->prepare(
+                "SELECT t.*,
+                    (SELECT MAX(tl.logged_at) FROM task_logs tl
+                     WHERE tl.task_id = t.id AND tl.action = 'completed') AS completed_at,
+                    (SELECT tl.note FROM task_logs tl
+                     WHERE tl.task_id = t.id AND tl.action = 'completed'
+                     ORDER BY tl.logged_at DESC LIMIT 1) AS completion_note
+                 FROM tasks t
+                 WHERE t.project_id = :pid AND t.parent_task_id IS NULL
+                 ORDER BY t.sort_order ASC, t.created_at ASC"
+            );
+            $stmt->execute([':pid' => $projectId]);
+            $parents = $stmt->fetchAll();
+            $stmt2 = $pdo->prepare(
+                "SELECT t.*,
+                    (SELECT MAX(tl.logged_at) FROM task_logs tl
+                     WHERE tl.task_id = t.id AND tl.action = 'completed') AS completed_at
+                 FROM tasks t
+                 WHERE t.project_id = :pid AND t.parent_task_id IS NOT NULL
+                 ORDER BY t.sort_order ASC, t.created_at ASC"
+            );
+            $stmt2->execute([':pid' => $projectId]);
+            $subs = $stmt2->fetchAll();
+            $subMap = [];
+            foreach ($subs as $s) { $subMap[$s['parent_task_id']][] = $s; }
+            foreach ($parents as &$p) { $p['subtasks'] = $subMap[$p['id']] ?? []; }
+            jsonOut($parents);
+
         case 'get_project_completed':
             requireAuth();
             $pid   = (int)($_GET['project_id'] ?? 0);
