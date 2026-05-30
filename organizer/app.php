@@ -343,6 +343,9 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .modal-select { width: 100%; background: var(--bg-raised); border: 1px solid var(--border); color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 7px 8px; outline: none; transition: border-color 120ms ease; }
 .modal-select:focus { border-color: var(--accent); }
 .modal-field { margin-bottom: 16px; }
+.modal-subtask-list { margin-bottom: 6px; }
+.modal-subtask-item { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.modal-subtask-prefix { color: var(--text-dim); font-size: 11px; flex-shrink: 0; }
 
 /* ── Devices panel ──────────────────────────────────────────────────────── */
 .devices-table { width: 100%; border-collapse: collapse; font-size: 12px; }
@@ -458,7 +461,7 @@ button:focus { outline: none; }
                   :style="'color:'+task.project_colour+';border-color:'+task.project_colour+'40'"
                   x-text="task.project_name"></span>
                 <div class="task-info">
-                  <span class="task-title" x-text="task.title"></span>
+                  <span class="task-title" x-text="task.title" :title="task.title"></span>
                   <template x-if="task.description">
                     <span class="task-desc" x-text="task.description"></span>
                   </template>
@@ -486,7 +489,7 @@ button:focus { outline: none; }
                      @dragend="onDragEnd()">
                   <span class="subtask-prefix">└─</span>
                   <div class="task-info">
-                    <span class="task-title" x-text="sub.title"></span>
+                    <span class="task-title" x-text="sub.title" :title="sub.title"></span>
                     <template x-if="sub.description">
                       <span class="task-desc" x-text="sub.description"></span>
                     </template>
@@ -554,7 +557,7 @@ button:focus { outline: none; }
                      @drop.prevent.stop="onDashTaskDrop($event, task, project.id)">
                   <span class="task-num" x-text="(i+1)+'.'"></span>
                   <div class="task-info">
-                    <span class="task-title" x-text="task.title"></span>
+                    <span class="task-title" x-text="task.title" :title="task.title"></span>
                     <template x-if="task.description">
                       <span class="task-desc" x-text="task.description"></span>
                     </template>
@@ -568,7 +571,7 @@ button:focus { outline: none; }
                   <div class="card-task-row subtask">
                     <span class="subtask-prefix">└─</span>
                     <div class="task-info">
-                      <span class="task-title" x-text="sub.title"></span>
+                      <span class="task-title" x-text="sub.title" :title="sub.title"></span>
                       <template x-if="sub.description">
                         <span class="task-desc" x-text="sub.description"></span>
                       </template>
@@ -592,7 +595,7 @@ button:focus { outline: none; }
                 <template x-for="ct in (projectCompletedCache[project.id]||[])" :key="ct.id">
                   <div class="card-completed-row">
                     <span class="card-completed-date" x-text="formatShortDate(ct.completed_at)"></span>
-                    <span class="card-completed-title" x-text="ct.title"></span>
+                    <span class="card-completed-title" x-text="ct.title" :title="ct.title"></span>
                     <div class="task-actions">
                       <button class="task-btn btn-sm" @click.stop="reopenTaskInDashboard(ct.id, project.id)" title="Reopen">↺</button>
                     </div>
@@ -691,7 +694,7 @@ button:focus { outline: none; }
                    @drop.prevent="onCompletedDrop($event, task)">
                 <div class="comp-date" x-text="formatShortDate(task.completed_at)"></div>
                 <div class="comp-body">
-                  <div class="comp-title" x-text="task.title"></div>
+                  <div class="comp-title" x-text="task.title" :title="task.title"></div>
                   <template x-if="task.completion_note">
                     <div class="comp-note" x-text="task.completion_note"></div>
                   </template>
@@ -785,6 +788,24 @@ button:focus { outline: none; }
         <textarea class="modal-textarea" x-model="newAnyTask.description"
           placeholder="additional details..." style="min-height:60px"></textarea>
       </div>
+      <div class="modal-field" style="margin-bottom:0">
+        <label class="modal-label">Subtasks:</label>
+        <div class="modal-subtask-list">
+          <template x-for="(sub, si) in newAnyTask.subtasks" :key="sub._cid">
+            <div class="modal-subtask-item">
+              <span class="modal-subtask-prefix">└─</span>
+              <input class="modal-input" type="text" x-model="sub.title" style="flex:1">
+              <button class="task-btn" @click="removeNewSubtask(si)">✕</button>
+            </div>
+          </template>
+        </div>
+        <div style="display:flex;gap:6px">
+          <input class="modal-input" type="text" x-model="pendingSubtask"
+            placeholder="add subtask..." style="flex:1"
+            @keydown.enter.prevent="addSubtaskToNew()">
+          <button class="btn btn-sm" @click="addSubtaskToNew()">+</button>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn" @click="modal=null">CANCEL</button>
@@ -830,6 +851,24 @@ button:focus { outline: none; }
         <label class="modal-label">Description (optional):</label>
         <textarea class="modal-textarea" x-model="editTaskForm.description"
           placeholder="additional details..." style="min-height:60px"></textarea>
+      </div>
+      <div class="modal-field" style="margin-bottom:0">
+        <label class="modal-label">Subtasks:</label>
+        <div class="modal-subtask-list">
+          <template x-for="(sub, si) in editTaskForm.subtasks" :key="sub.id || sub._cid">
+            <div class="modal-subtask-item">
+              <span class="modal-subtask-prefix">└─</span>
+              <input class="modal-input" type="text" x-model="sub.title" style="flex:1">
+              <button class="task-btn" @click="removeEditSubtask(si)">✕</button>
+            </div>
+          </template>
+        </div>
+        <div style="display:flex;gap:6px">
+          <input class="modal-input" type="text" x-model="pendingSubtask"
+            placeholder="add subtask..." style="flex:1"
+            @keydown.enter.prevent="addSubtaskToEdit()">
+          <button class="btn btn-sm" @click="addSubtaskToEdit()">+</button>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -1043,13 +1082,14 @@ function app() {
     completeNote: '',
     historyTask: null,
     historyLog: [],
-    editTaskForm: { id: null, title: '', priority: 'Soon', projectId: null, description: '' },
+    editTaskForm: { id: null, title: '', priority: 'Soon', projectId: null, description: '', subtasks: [], subtasksToDelete: [] },
     mobileMenuOpen: false,
     openDropdownId: null,
     addingTaskTo: null,
     newTaskTitle: '',
     newTaskPriority: 'Soon',
-    newAnyTask: { title: '', projectId: null, priority: 'Soon', description: '' },
+    newAnyTask: { title: '', projectId: null, priority: 'Soon', description: '', subtasks: [] },
+    pendingSubtask: '',
     showNewProjectInline: false,
     newProjectInlineName: '',
     newProjectInlineColour: '#FF6777',
@@ -1195,7 +1235,9 @@ function app() {
         projectId: this.projects[0] ? this.projects[0].id : null,
         priority: 'Soon',
         description: '',
+        subtasks: [],
       };
+      this.pendingSubtask         = '';
       this.showNewProjectInline   = false;
       this.newProjectInlineName   = '';
       this.newProjectInlineColour = '#FF6777';
@@ -1218,13 +1260,23 @@ function app() {
     },
     async submitAddAnyTask() {
       if (!this.newAnyTask.title.trim() || !this.newAnyTask.projectId) return;
-      const ok = await this.apiPost('create_task', {
+      const res = await this.apiPost('create_task', {
         project_id:  this.newAnyTask.projectId,
         title:       this.newAnyTask.title.trim(),
         priority:    this.newAnyTask.priority,
         description: this.newAnyTask.description.trim() || null,
       });
-      if (ok) {
+      if (res) {
+        for (const sub of this.newAnyTask.subtasks) {
+          if (sub.title.trim()) {
+            await this.apiPost('create_task', {
+              project_id:     parseInt(this.newAnyTask.projectId),
+              parent_task_id: res.id,
+              title:          sub.title.trim(),
+              priority:       this.newAnyTask.priority,
+            });
+          }
+        }
         this.modal = null;
         this.showNotification('task added', 'success');
         await this.refresh();
@@ -1233,7 +1285,13 @@ function app() {
 
     // ── Edit task modal ───────────────────────────────────────────────────
     openEditTaskModal(task) {
-      this.editTaskForm = { id: task.id, title: task.title, priority: task.priority, projectId: task.project_id, description: task.description || '' };
+      this.editTaskForm = {
+        id: task.id, title: task.title, priority: task.priority,
+        projectId: task.project_id, description: task.description || '',
+        subtasks: (task.subtasks || []).map(s => ({ id: s.id, _cid: s.id, title: s.title })),
+        subtasksToDelete: [],
+      };
+      this.pendingSubtask = '';
       this.modal = 'edit-task';
     },
     async submitEditTask() {
@@ -1246,10 +1304,50 @@ function app() {
         description: this.editTaskForm.description.trim() || null,
       });
       if (ok) {
+        for (const id of (this.editTaskForm.subtasksToDelete || [])) {
+          await this.apiPost('delete_task', { id });
+        }
+        for (const sub of this.editTaskForm.subtasks) {
+          if (!sub.title.trim()) continue;
+          if (sub.id === null) {
+            await this.apiPost('create_task', {
+              project_id:     parseInt(this.editTaskForm.projectId),
+              parent_task_id: this.editTaskForm.id,
+              title:          sub.title.trim(),
+              priority:       this.editTaskForm.priority,
+            });
+          } else {
+            await this.apiPost('update_task', {
+              id:         sub.id,
+              title:      sub.title.trim(),
+              priority:   this.editTaskForm.priority,
+              project_id: parseInt(this.editTaskForm.projectId),
+            });
+          }
+        }
         this.modal = null;
         this.showNotification('task updated', 'success');
         await this.refresh();
       }
+    },
+
+    addSubtaskToNew() {
+      if (!this.pendingSubtask.trim()) return;
+      this.newAnyTask.subtasks.push({ _cid: Date.now(), title: this.pendingSubtask.trim() });
+      this.pendingSubtask = '';
+    },
+    addSubtaskToEdit() {
+      if (!this.pendingSubtask.trim()) return;
+      this.editTaskForm.subtasks.push({ id: null, _cid: Date.now(), title: this.pendingSubtask.trim() });
+      this.pendingSubtask = '';
+    },
+    removeNewSubtask(si) {
+      this.newAnyTask.subtasks.splice(si, 1);
+    },
+    removeEditSubtask(si) {
+      const sub = this.editTaskForm.subtasks[si];
+      if (sub && sub.id) this.editTaskForm.subtasksToDelete.push(sub.id);
+      this.editTaskForm.subtasks.splice(si, 1);
     },
 
     // ── Delete / move task ────────────────────────────────────────────────
