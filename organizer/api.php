@@ -428,6 +428,23 @@ try {
             $stmt->execute([':tid' => $taskId]);
             jsonOut($stmt->fetchAll());
 
+        case 'get_completed_tasks':
+            requireAuth();
+            $pdo  = getDb();
+            $stmt = $pdo->query(
+                "SELECT t.*, p.name AS project_name, p.colour AS project_colour,
+                    (SELECT MAX(tl.logged_at) FROM task_logs tl
+                     WHERE tl.task_id = t.id AND tl.action = 'completed') AS completed_at,
+                    (SELECT tl.note FROM task_logs tl
+                     WHERE tl.task_id = t.id AND tl.action = 'completed'
+                     ORDER BY tl.logged_at DESC LIMIT 1) AS completion_note
+                 FROM tasks t
+                 JOIN projects p ON p.id = t.project_id
+                 WHERE t.status = 'completed'
+                 ORDER BY completed_at DESC, t.id DESC"
+            );
+            jsonOut($stmt->fetchAll());
+
         case 'get_recent_activity':
             requireAuth();
             $pdo  = getDb();
