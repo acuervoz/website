@@ -227,12 +227,17 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .project-card-title { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
 .project-card-body { padding: 8px 0; flex: 1; overflow-y: auto; max-height: 420px; }
 .card-section-header { padding: 4px 12px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
-.card-task-row { display: flex; align-items: center; gap: 6px; padding: 4px 12px; border-left: 2px solid transparent; transition: background 120ms ease, border-color 120ms ease; }
+.card-task-row { display: flex; align-items: center; gap: 6px; padding: 4px 12px; border-left: 2px solid transparent; border-top: 2px solid transparent; transition: background 120ms ease, border-color 120ms ease; }
 .card-task-row:hover { background: var(--bg-raised); border-left-color: var(--accent); }
+.card-task-row[draggable="true"] { cursor: grab; }
+.card-task-row.is-dragging { opacity: 0.3; }
+.card-task-row.drag-insert-before { border-top-color: var(--accent) !important; }
 .card-task-row .task-title { font-size: 12px; }
 .card-task-row .task-actions { opacity: 0; }
 .card-task-row:hover .task-actions { opacity: 1; }
 .card-task-row.subtask { padding-left: 24px; }
+.card-drag-handle { color: var(--text-dim); cursor: grab; font-size: 11px; opacity: 0; flex-shrink: 0; user-select: none; transition: opacity 120ms ease; }
+.project-card-header:hover .card-drag-handle { opacity: 1; }
 .project-card-footer { border-top: 1px solid var(--border); padding: 8px 12px; }
 
 /* ── Completed tasks in dashboard card ──────────────────────────────────── */
@@ -413,29 +418,10 @@ button:focus { outline: none; }
                 <span class="project-tag"
                   :style="'color:'+task.project_colour+';border-color:'+task.project_colour+'40'"
                   x-text="task.project_name"></span>
-                <template x-if="editingTask && editingTask.id===task.id">
-                  <div class="inline-edit-form" @click.stop>
-                    <input type="text" x-model="editingTask.title"
-                      @keydown.enter="saveEdit()" @keydown.escape="editingTask=null"
-                      @blur="saveEditBlur()" x-init="$nextTick(()=>$el.focus())">
-                    <select x-model="editingTask.priority">
-                      <option value="ASAP">!! ASAP</option>
-                      <option value="Soon">◈ Soon</option>
-                      <option value="Backlog">· Backlog</option>
-                    </select>
-                    <select x-model="editingTask.project_id">
-                      <template x-for="p in projects" :key="p.id">
-                        <option :value="p.id" x-text="p.name"></option>
-                      </template>
-                    </select>
-                  </div>
-                </template>
-                <template x-if="!editingTask || editingTask.id!==task.id">
-                  <span class="task-title" x-text="task.title"></span>
-                </template>
+                <span class="task-title" x-text="task.title"></span>
                 <div class="task-actions">
                   <button class="task-btn success" @click.stop="openCompleteModal(task)">✓</button>
-                  <button class="task-btn" @click.stop="startEdit(task)">✎</button>
+                  <button class="task-btn" @click.stop="openEditTaskModal(task)">✎</button>
                   <div class="dropdown-wrap" @click.outside="closeDropdown(task.id)">
                     <button class="task-btn" @click.stop="toggleDropdown(task.id)">⋮</button>
                     <div class="dropdown-menu" x-show="openDropdownId===task.id" x-cloak @click.stop>
@@ -455,24 +441,10 @@ button:focus { outline: none; }
                      @dragstart="onTaskDragStart($event, sub)"
                      @dragend="onDragEnd()">
                   <span class="subtask-prefix">└─</span>
-                  <template x-if="editingTask && editingTask.id===sub.id">
-                    <div class="inline-edit-form" @click.stop>
-                      <input type="text" x-model="editingTask.title"
-                        @keydown.enter="saveEdit()" @keydown.escape="editingTask=null"
-                        @blur="saveEditBlur()" x-init="$nextTick(()=>$el.focus())">
-                      <select x-model="editingTask.priority">
-                        <option value="ASAP">!! ASAP</option>
-                        <option value="Soon">◈ Soon</option>
-                        <option value="Backlog">· Backlog</option>
-                      </select>
-                    </div>
-                  </template>
-                  <template x-if="!editingTask || editingTask.id!==sub.id">
-                    <span class="task-title" x-text="sub.title"></span>
-                  </template>
+                  <span class="task-title" x-text="sub.title"></span>
                   <div class="task-actions">
                     <button class="task-btn success" @click.stop="openCompleteModal(sub)">✓</button>
-                    <button class="task-btn" @click.stop="startEdit(sub)">✎</button>
+                    <button class="task-btn" @click.stop="openEditTaskModal(sub)">✎</button>
                     <div class="dropdown-wrap" @click.outside="closeDropdown(sub.id)">
                       <button class="task-btn" @click.stop="toggleDropdown(sub.id)">⋮</button>
                       <div class="dropdown-menu" x-show="openDropdownId===sub.id" x-cloak @click.stop>
@@ -497,12 +469,13 @@ button:focus { outline: none; }
         <div class="project-card"
              draggable="true"
              :class="{'is-dragging': drag.id===project.id && drag.type==='project', 'drag-target': dragOverId==='proj_'+project.id}"
-             @dragstart.self="onProjDragStart($event, project)"
+             @dragstart="onProjDragStart($event, project)"
              @dragend="onDragEnd()"
              @dragover.prevent="onProjDragOver($event, project)"
              @drop.prevent="onProjDrop($event, project)">
 
           <div class="project-card-header" style="border-left:3px solid" :style="'border-left-color:'+project.colour">
+            <span class="card-drag-handle">⠿</span>
             <span class="project-card-title" x-text="project.name"></span>
             <div class="dropdown-wrap" @click.outside="closeDropdown('proj_'+project.id)" @click.stop>
               <button class="task-btn" @click.stop="toggleDropdown('proj_'+project.id)">⋮</button>
@@ -526,11 +499,17 @@ button:focus { outline: none; }
                   </div>
                   <template x-for="task in getProjectTasks(project.id, pri)" :key="task.id">
                     <div>
-                      <div class="card-task-row">
+                      <div class="card-task-row"
+                           draggable="true"
+                           :class="{'is-dragging': drag.id===task.id && drag.type==='dashboard-task', 'drag-insert-before': dragOverId===task.id}"
+                           @dragstart.stop="onDashTaskDragStart($event, task, project.id)"
+                           @dragend="onDragEnd()"
+                           @dragover.prevent.stop="onDashTaskDragOver($event, task, project.id)"
+                           @drop.prevent.stop="onDashTaskDrop($event, task, project.id)">
                         <span class="task-title" x-text="task.title"></span>
                         <div class="task-actions">
                           <button class="task-btn success btn-sm" @click="openCompleteModal(task)">✓</button>
-                          <button class="task-btn btn-sm" @click="startEdit(task)">✎</button>
+                          <button class="task-btn btn-sm" @click="openEditTaskModal(task)">✎</button>
                         </div>
                       </div>
                       <template x-for="sub in task.subtasks||[]" :key="sub.id">
@@ -665,6 +644,7 @@ button:focus { outline: none; }
                     x-text="task.priority==='ASAP'?'!! ASAP':task.priority==='Soon'?'◈ Soon':'· Backlog'"></div>
                 </div>
                 <div class="comp-card-actions">
+                  <button class="task-btn btn-sm" @click="openEditTaskModal(task)" title="Edit">✎</button>
                   <button class="task-btn btn-sm" @click="reopenTask(task.id)" title="Reopen">↺</button>
                   <button class="task-btn btn-sm" @click="deleteTask(task.id)" title="Delete">✕</button>
                 </div>
@@ -749,6 +729,46 @@ button:focus { outline: none; }
       <button class="btn" @click="modal=null">CANCEL</button>
       <button class="btn btn-accent" @click="submitAddAnyTask()"
         :disabled="!newAnyTask.title.trim() || !newAnyTask.projectId">ADD TASK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit task -->
+<div class="modal-backdrop" x-show="modal==='edit-task'" x-cloak @click.self="modal=null">
+  <div class="modal">
+    <div class="modal-header">
+      <span>─ EDIT TASK ─────────────────────</span>
+      <button class="task-btn" @click="modal=null">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-field">
+        <label class="modal-label">Task title:</label>
+        <input class="modal-input" type="text" x-model="editTaskForm.title"
+          @keydown.enter="submitEditTask()"
+          @keydown.escape="modal=null"
+          x-init="$nextTick(()=>{ if(modal==='edit-task') $el.focus(); })">
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Priority:</label>
+        <select class="modal-select" x-model="editTaskForm.priority">
+          <option value="ASAP">!! ASAP</option>
+          <option value="Soon">◈ Soon</option>
+          <option value="Backlog">· Backlog</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Project:</label>
+        <select class="modal-select" x-model="editTaskForm.projectId">
+          <template x-for="p in projects" :key="p.id">
+            <option :value="p.id" x-text="p.name"></option>
+          </template>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" @click="modal=null">CANCEL</button>
+      <button class="btn btn-accent" @click="submitEditTask()"
+        :disabled="!editTaskForm.title.trim()">SAVE CHANGES</button>
     </div>
   </div>
 </div>
@@ -956,8 +976,7 @@ function app() {
     completeNote: '',
     historyTask: null,
     historyLog: [],
-    editingTask: null,
-    editSaving: false,
+    editTaskForm: { id: null, title: '', priority: 'Soon', projectId: null },
     openDropdownId: null,
     addingTaskTo: null,
     newTaskTitle: '',
@@ -1006,7 +1025,6 @@ function app() {
     async switchView(v) {
       this.view = v;
       this.modal = null;
-      this.editingTask = null;
       if (v === 'priority')  await Promise.all([this.fetchProjects(), this.fetchPriorityTasks()]);
       if (v === 'dashboard') { await this.fetchProjects(); await this.fetchAllProjectTasks(); }
       if (v === 'archive')   await this.fetchArchivedProjects();
@@ -1143,22 +1161,24 @@ function app() {
       }
     },
 
-    // ── Inline edit ───────────────────────────────────────────────────────
-    startEdit(task) {
-      this.editingTask = { ...task };
-      this.editSaving  = false;
+    // ── Edit task modal ───────────────────────────────────────────────────
+    openEditTaskModal(task) {
+      this.editTaskForm = { id: task.id, title: task.title, priority: task.priority, projectId: task.project_id };
+      this.modal = 'edit-task';
     },
-    async saveEdit() {
-      if (!this.editingTask || this.editSaving) return;
-      this.editSaving = true;
-      const t = { ...this.editingTask };
-      this.editingTask = null;
-      await this.apiPost('update_task', { id: t.id, title: t.title, priority: t.priority, project_id: t.project_id });
-      this.editSaving = false;
-      await this.refresh();
-    },
-    saveEditBlur() {
-      setTimeout(() => { if (this.editingTask) this.saveEdit(); }, 150);
+    async submitEditTask() {
+      if (!this.editTaskForm.title.trim()) return;
+      const ok = await this.apiPost('update_task', {
+        id:         this.editTaskForm.id,
+        title:      this.editTaskForm.title.trim(),
+        priority:   this.editTaskForm.priority,
+        project_id: parseInt(this.editTaskForm.projectId),
+      });
+      if (ok) {
+        this.modal = null;
+        this.showNotification('task updated', 'success');
+        await this.refresh();
+      }
     },
 
     // ── Delete / move task ────────────────────────────────────────────────
@@ -1358,20 +1378,32 @@ function app() {
       this.drag = { id: project.id, type: 'project', priority: null, projectId: null };
     },
     onProjDragOver(e, project) {
-      if (this.drag.type !== 'project' || this.drag.id === project.id) return;
-      this.dragOverId = 'proj_' + project.id;
+      if (this.drag.type === 'project') {
+        if (this.drag.id === project.id) return;
+        this.dragOverId = 'proj_' + project.id;
+      } else if (this.drag.type === 'dashboard-task') {
+        if (this.drag.projectId === project.id) return;
+        this.dragOverId = 'proj_' + project.id;
+      }
     },
     onProjDrop(e, project) {
-      if (this.drag.type !== 'project' || this.drag.id === project.id) { this.dragOverId = null; return; }
-      const arr = [...this.projects];
-      const fi  = arr.findIndex(p => p.id == this.drag.id);
-      const ti  = arr.findIndex(p => p.id == project.id);
-      this.onDragEnd();
-      if (fi !== -1 && ti !== -1) {
-        const [item] = arr.splice(fi, 1);
-        arr.splice(ti, 0, item);
-        this.projects = arr;
-        this.apiPost('reorder_projects', { order: arr.map(p => p.id) });
+      if (this.drag.type === 'project') {
+        if (this.drag.id === project.id) { this.dragOverId = null; return; }
+        const arr = [...this.projects];
+        const fi  = arr.findIndex(p => p.id == this.drag.id);
+        const ti  = arr.findIndex(p => p.id == project.id);
+        this.onDragEnd();
+        if (fi !== -1 && ti !== -1) {
+          const [item] = arr.splice(fi, 1);
+          arr.splice(ti, 0, item);
+          this.projects = arr;
+          this.apiPost('reorder_projects', { order: arr.map(p => p.id) });
+        }
+      } else if (this.drag.type === 'dashboard-task') {
+        if (this.drag.projectId === project.id) { this.onDragEnd(); return; }
+        const dragId = this.drag.id;
+        this.onDragEnd();
+        this._moveTaskToProject(dragId, project.id);
       }
     },
 
@@ -1404,6 +1436,53 @@ function app() {
       this.drag       = { id: null, type: null, priority: null, projectId: null };
       this.dragOverId  = null;
       this.dragOverPri = null;
+    },
+
+    // ── Drag: dashboard task rows ─────────────────────────────────────────
+    onDashTaskDragStart(e, task, projectId) {
+      e.dataTransfer.effectAllowed = 'move';
+      this.drag = { id: task.id, type: 'dashboard-task', priority: task.priority, projectId: projectId };
+    },
+    onDashTaskDragOver(e, task, projectId) {
+      if (this.drag.type !== 'dashboard-task' || this.drag.id === task.id) return;
+      if (this.drag.projectId === projectId) {
+        this.dragOverId = task.id;
+      } else {
+        this.dragOverId = 'proj_' + projectId;
+      }
+    },
+    onDashTaskDrop(e, task, projectId) {
+      if (this.drag.type !== 'dashboard-task' || this.drag.id === task.id) { this.onDragEnd(); return; }
+      const dragId        = this.drag.id;
+      const dragProjectId = this.drag.projectId;
+      this.onDragEnd();
+      if (dragProjectId === projectId) {
+        this._reorderDashboardTasks(dragId, task.id, projectId);
+      } else {
+        this._moveTaskToProject(dragId, projectId);
+      }
+    },
+    _reorderDashboardTasks(dragId, targetId, projectId) {
+      const arr = [...(this.projectTasksCache[projectId] || [])];
+      const fi  = arr.findIndex(t => t.id == dragId);
+      const ti  = arr.findIndex(t => t.id == targetId);
+      if (fi === -1 || ti === -1) return;
+      const [item] = arr.splice(fi, 1);
+      arr.splice(ti, 0, item);
+      this.projectTasksCache = { ...this.projectTasksCache, [projectId]: arr };
+      this.apiPost('reorder_tasks', { order: arr.map(t => t.id) });
+    },
+    async _moveTaskToProject(taskId, newProjectId) {
+      let task = null;
+      for (const pid of Object.keys(this.projectTasksCache)) {
+        task = (this.projectTasksCache[pid] || []).find(t => t.id == taskId);
+        if (task) break;
+      }
+      if (!task) task = this.findTask(taskId);
+      if (!task) return;
+      await this.apiPost('update_task', { id: taskId, title: task.title, priority: task.priority, project_id: parseInt(newProjectId) });
+      this.showNotification('task moved', 'info');
+      await this.refresh();
     },
 
     // ── API ───────────────────────────────────────────────────────────────
