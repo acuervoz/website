@@ -458,7 +458,7 @@ try {
         case 'get_project_completed':
             requireAuth();
             $pid   = (int)($_GET['project_id'] ?? 0);
-            $limit = max(1, min((int)($_GET['limit'] ?? 3), 20));
+            $limit = max(1, min((int)($_GET['limit'] ?? 3), 1000));
             if (!$pid) jsonError('project_id required');
             $pdo  = getDb();
             $stmt = $pdo->prepare(

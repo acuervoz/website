@@ -351,6 +351,28 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .modal-subtask-item { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
 .modal-subtask-prefix { color: var(--text-dim); font-size: 11px; flex-shrink: 0; }
 
+/* ── Project view modal ─────────────────────────────────────────────────── */
+.pv-section-header { padding: 6px 16px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border); background: var(--bg-raised); }
+.pv-task-row { display: flex; align-items: flex-start; gap: 8px; padding: 6px 16px; border-left: 2px solid transparent; transition: background 120ms ease, border-color 120ms ease; }
+.pv-task-row:hover { background: var(--bg-raised); border-left-color: var(--accent); }
+.pv-task-row.subtask { padding-left: 36px; }
+.pv-task-num { font-size: 10px; color: var(--text-dim); flex-shrink: 0; min-width: 22px; padding-top: 2px; }
+.pv-task-info { flex: 1; min-width: 0; }
+.pv-task-title { color: var(--text); font-size: 12px; word-break: break-word; cursor: pointer; }
+.pv-task-title:hover { color: var(--accent); }
+.pv-task-meta { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+.pv-task-actions { flex-shrink: 0; display: flex; gap: 4px; opacity: 0; transition: opacity 120ms ease; }
+.pv-task-row:hover .pv-task-actions { opacity: 1; }
+.pv-comp-row { display: flex; align-items: flex-start; gap: 8px; padding: 5px 16px; border-left: 2px solid transparent; transition: background 120ms ease; }
+.pv-comp-row:hover { background: var(--bg-raised); }
+.pv-comp-row .pv-task-actions { opacity: 0; }
+.pv-comp-row:hover .pv-task-actions { opacity: 1; }
+.pv-comp-date { font-size: 10px; color: var(--text-dim); flex-shrink: 0; min-width: 72px; padding-top: 2px; }
+.pv-comp-title { font-size: 12px; color: var(--text-dim); text-decoration: line-through; text-decoration-color: var(--text-dim); word-break: break-word; cursor: pointer; flex: 1; }
+.pv-comp-title:hover { color: var(--text-muted); }
+.project-card-title-btn { cursor: pointer; transition: color 120ms ease; }
+.project-card-title-btn:hover { color: var(--accent); }
+
 /* ── Devices panel ──────────────────────────────────────────────────────── */
 .devices-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .devices-table th { text-align: left; color: var(--text-muted); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 8px; border-bottom: 1px solid var(--border); font-weight: 400; }
@@ -532,7 +554,7 @@ button:focus { outline: none; }
 
           <div class="project-card-header" style="border-left:3px solid" :style="'border-left-color:'+project.colour">
             <span class="card-drag-handle">⠿</span>
-            <span class="project-card-title" x-text="project.name"></span>
+            <span class="project-card-title project-card-title-btn" x-text="project.name" @click.stop="openProjectView(project)"></span>
             <div class="dropdown-wrap" @click.outside="closeDropdown('proj_'+project.id)" @click.stop>
               <button class="task-btn" @click.stop="toggleDropdown('proj_'+project.id)">⋮</button>
               <div class="dropdown-menu" x-show="openDropdownId==='proj_'+project.id" x-cloak @click.stop>
@@ -684,7 +706,7 @@ button:focus { outline: none; }
       <template x-for="group in completedByProject" :key="group.id">
         <div class="project-card">
           <div class="project-card-header" style="border-left:3px solid" :style="'border-left-color:'+group.colour">
-            <span class="project-card-title" x-text="group.name"></span>
+            <span class="project-card-title project-card-title-btn" x-text="group.name" @click.stop="openProjectView(group)"></span>
             <span style="color:var(--text-dim);font-size:10px" x-text="group.tasks.length"></span>
           </div>
           <div class="project-card-body">
@@ -1061,6 +1083,86 @@ button:focus { outline: none; }
   </div>
 </div>
 
+<!-- Project view -->
+<div class="modal-backdrop" x-show="modal==='project-view'" x-cloak @click.self="modal=null">
+  <div class="modal" style="max-width:660px;max-height:85vh">
+    <div class="modal-header" :style="'border-left:3px solid '+(projectViewProject ? projectViewProject.colour : 'var(--accent)')">
+      <span x-text="projectViewProject ? projectViewProject.name : ''"></span>
+      <button class="task-btn" @click="modal=null">✕</button>
+    </div>
+    <div class="modal-body" style="padding:0">
+
+      <!-- Active tasks -->
+      <div class="pv-section-header">
+        ── active
+        <span style="color:var(--text-dim)" x-text="'('+projectViewTasks.length+')'"></span>
+      </div>
+      <template x-if="projectViewTasks.length===0 && !loading">
+        <div style="padding:10px 16px;font-size:11px;color:var(--text-dim)">· no active tasks</div>
+      </template>
+      <template x-for="(task, i) in projectViewTasks" :key="task.id">
+        <div>
+          <div class="pv-task-row">
+            <span class="pv-task-num" x-text="(i+1)+'.'"></span>
+            <div class="pv-task-info">
+              <div class="pv-task-title" x-text="task.title" @click.stop="openEditTaskModal(task)"></div>
+              <template x-if="task.description">
+                <div class="pv-task-meta" x-text="task.description"></div>
+              </template>
+              <div class="pv-task-meta"
+                x-text="task.priority==='ASAP'?'!! ASAP':task.priority==='Soon'?'◈ Soon':task.priority==='Backlog'?'· Backlog':'— No Priority'"></div>
+            </div>
+            <div class="pv-task-actions">
+              <button class="task-btn success btn-sm" @click.stop="openCompleteModal(task)">✓</button>
+              <button class="task-btn btn-sm" @click.stop="openEditTaskModal(task)">✎</button>
+            </div>
+          </div>
+          <template x-for="sub in task.subtasks||[]" :key="sub.id">
+            <div class="pv-task-row subtask">
+              <span class="pv-task-num">└─</span>
+              <div class="pv-task-info">
+                <div class="pv-task-title" x-text="sub.title" @click.stop="openEditTaskModal(sub)"></div>
+                <template x-if="sub.description">
+                  <div class="pv-task-meta" x-text="sub.description"></div>
+                </template>
+              </div>
+              <div class="pv-task-actions">
+                <button class="task-btn success btn-sm" @click.stop="openCompleteModal(sub)">✓</button>
+                <button class="task-btn btn-sm" @click.stop="openEditTaskModal(sub)">✎</button>
+              </div>
+            </div>
+          </template>
+        </div>
+      </template>
+
+      <!-- Completed tasks -->
+      <template x-if="projectViewCompleted.length > 0">
+        <div>
+          <div class="pv-section-header" style="margin-top:8px">
+            ── completed
+            <span style="color:var(--text-dim)" x-text="'('+projectViewCompleted.length+')'"></span>
+          </div>
+          <template x-for="task in projectViewCompleted" :key="task.id">
+            <div class="pv-comp-row">
+              <span class="pv-comp-date" x-text="formatShortDate(task.completed_at)"></span>
+              <div style="flex:1;min-width:0">
+                <div class="pv-comp-title" x-text="task.title" @click.stop="openEditTaskModal(task)"></div>
+                <template x-if="task.completion_note">
+                  <div class="pv-task-meta" x-text="task.completion_note"></div>
+                </template>
+              </div>
+              <div class="pv-task-actions">
+                <button class="task-btn btn-sm" @click.stop="reopenInProjectView(task.id)" title="Reopen">↺</button>
+              </div>
+            </div>
+          </template>
+        </div>
+      </template>
+
+    </div>
+  </div>
+</div>
+
 <!-- Toast area -->
 <div id="toast-area">
   <template x-for="t in toasts" :key="t.id">
@@ -1078,6 +1180,9 @@ function app() {
     archivedProjects: [],
     projectTasksCache: {},
     projectCompletedCache: {},
+    projectViewProject: null,
+    projectViewTasks: [],
+    projectViewCompleted: [],
     priorityTasks: { ASAP: [], Soon: [], Backlog: [] },
     completedTasks: [],
     loading: false,
@@ -1181,6 +1286,30 @@ function app() {
       ]);
       if (active && !active.error)     this.projectTasksCache    = { ...this.projectTasksCache, [pid]: active };
       if (completed && !completed.error) this.projectCompletedCache = { ...this.projectCompletedCache, [pid]: completed };
+    },
+
+    // ── Project view ─────────────────────────────────────────────────────
+    async openProjectView(project) {
+      this.projectViewProject  = project;
+      this.projectViewTasks    = [];
+      this.projectViewCompleted = [];
+      this.modal = 'project-view';
+      await this._fetchProjectViewData(project.id);
+    },
+    async _fetchProjectViewData(pid) {
+      const [active, completed] = await Promise.all([
+        this.api('get_tasks', { project_id: pid }),
+        this.api('get_project_completed', { project_id: pid, limit: 1000 }),
+      ]);
+      if (active    && !active.error)    this.projectViewTasks     = active;
+      if (completed && !completed.error) this.projectViewCompleted = completed;
+    },
+    async reopenInProjectView(taskId) {
+      const ok = await this.apiPost('reopen_task', { id: taskId });
+      if (ok) {
+        this.showNotification('↺ task reopened', 'info');
+        await this._fetchProjectViewData(this.projectViewProject.id);
+      }
     },
 
     // ── Task helpers ──────────────────────────────────────────────────────
