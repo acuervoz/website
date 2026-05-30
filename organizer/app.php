@@ -210,8 +210,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .task-info .task-title { flex: none; }
 .task-desc  { font-size: 10px; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .task-num   { font-size: 10px; color: var(--text-dim); flex-shrink: 0; min-width: 20px; }
-.task-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; opacity: 0; transition: opacity 120ms ease; }
-.task-row:hover .task-actions { opacity: 1; }
+.task-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 .task-btn { background: none; border: 1px solid var(--border); color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 2px 6px; cursor: pointer; transition: border-color 120ms ease, color 120ms ease; }
 .task-btn:hover { border-color: var(--accent); color: var(--accent); }
 .task-btn.success:hover { border-color: var(--success); color: var(--success); }
@@ -261,8 +260,6 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .card-task-row.is-dragging { opacity: 0.3; }
 .card-task-row.drag-insert-before { border-top-color: var(--accent) !important; }
 .card-task-row .task-title { font-size: 12px; }
-.card-task-row .task-actions { opacity: 0; }
-.card-task-row:hover .task-actions { opacity: 1; }
 .card-task-row.subtask { padding-left: 24px; }
 .card-task-row .task-title { white-space: normal; overflow: visible; text-overflow: unset; }
 .task-num { padding-top: 1px; }
@@ -282,8 +279,6 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .card-completed-row[draggable="true"] { cursor: grab; }
 .card-completed-row:hover { background: var(--bg-raised); }
 .card-completed-row.drag-insert-before { border-top-color: var(--text-dim) !important; }
-.card-completed-row .task-actions { opacity: 0; }
-.card-completed-row:hover .task-actions { opacity: 1; }
 .card-completed-date { font-size: 10px; color: var(--text-dim); flex-shrink: 0; white-space: nowrap; }
 .card-completed-title { font-size: 11px; color: var(--text-dim); text-decoration: line-through; text-decoration-color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
 
@@ -303,8 +298,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .comp-note  { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
 .comp-note::before { content: '└─ '; }
 .comp-pri   { font-size: 10px; color: var(--text-dim); }
-.comp-card-actions { flex-shrink: 0; opacity: 0; transition: opacity 120ms ease; }
-.comp-card-row:hover .comp-card-actions { opacity: 1; }
+.comp-card-actions { flex-shrink: 0; }
 
 /* ── Add task / common form elements ────────────────────────────────────── */
 .add-task-form { display: flex; gap: 6px; flex-direction: column; }
@@ -365,8 +359,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .pv-task-title { color: var(--text); font-size: 12px; word-break: break-word; cursor: pointer; }
 .pv-task-title:hover { color: var(--accent); }
 .pv-task-meta { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
-.pv-task-actions { flex-shrink: 0; display: flex; gap: 4px; opacity: 0; transition: opacity 120ms ease; }
-.pv-task-row:hover .pv-task-actions { opacity: 1; }
+.pv-task-actions { flex-shrink: 0; display: flex; gap: 4px; }
 .pv-done .pv-task-title { text-decoration: line-through; text-decoration-color: var(--text-dim); color: var(--text-dim); }
 .pv-done .pv-task-meta { opacity: 0.6; }
 .project-card-title-btn { cursor: pointer; transition: color 120ms ease; }
