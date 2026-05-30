@@ -72,39 +72,18 @@ $csrfToken = $_SESSION['csrf_token'];
   --warning:    #f0b429;
 }
 
-html, body {
-  height: 100%;
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-}
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 13px; }
 
 /* ── Retro terminal scrollbars ──────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track {
-  background: var(--bg);
-  border-left: 1px solid var(--border);
-}
+::-webkit-scrollbar-track { background: var(--bg); border-left: 1px solid var(--border); }
 ::-webkit-scrollbar-thumb {
-  background: repeating-linear-gradient(
-    to bottom,
-    var(--text-dim)  0px,
-    var(--text-dim)  2px,
-    transparent      2px,
-    transparent      5px
-  );
+  background: repeating-linear-gradient(to bottom, var(--text-dim) 0px, var(--text-dim) 2px, transparent 2px, transparent 5px);
   border-left: 1px solid var(--border);
   border-right: 1px solid var(--border);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: repeating-linear-gradient(
-    to bottom,
-    var(--text-muted) 0px,
-    var(--text-muted) 2px,
-    transparent       2px,
-    transparent       5px
-  );
+  background: repeating-linear-gradient(to bottom, var(--text-muted) 0px, var(--text-muted) 2px, transparent 2px, transparent 5px);
 }
 ::-webkit-scrollbar-corner { background: var(--bg); }
 ::-webkit-scrollbar-button { display: none; }
@@ -116,11 +95,10 @@ html, body {
   z-index: 100;
   background: var(--bg);
   border-bottom: 1px solid var(--border);
+  height: 44px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 0 20px;
-  height: 44px;
 }
 .nav-inner {
   display: flex;
@@ -132,555 +110,209 @@ html, body {
 }
 @media (max-width: 1300px) { .nav-inner { max-width: 85%; } }
 @media (max-width: 900px)  { .nav-inner { max-width: 100%; } }
-
-.nav-brand {
-  color: var(--accent);
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  font-size: 12px;
-  text-transform: uppercase;
-  margin-right: 24px;
-  flex-shrink: 0;
-}
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  flex: 1;
-  flex-wrap: wrap;
-}
+.nav-brand { color: var(--accent); font-weight: 700; letter-spacing: 0.15em; font-size: 12px; text-transform: uppercase; margin-right: 20px; flex-shrink: 0; }
+.nav-links { display: flex; align-items: center; gap: 2px; flex: 1; flex-wrap: wrap; }
 .nav-btn {
-  background: none;
-  border: none;
+  background: none; border: none;
   color: var(--text-muted);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  cursor: pointer;
-  padding: 6px 10px;
-  position: relative;
-  transition: color 120ms ease;
-  white-space: nowrap;
+  font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer; padding: 6px 10px; position: relative;
+  transition: color 120ms ease; white-space: nowrap;
 }
 .nav-btn:hover { color: var(--text); }
 .nav-btn.active { color: var(--accent); }
 .nav-btn.active::after {
-  content: '';
-  position: absolute;
-  bottom: 0; left: 10px; right: 10px;
-  height: 1px;
-  background: var(--accent);
+  content: ''; position: absolute; bottom: 0; left: 10px; right: 10px;
+  height: 1px; background: var(--accent);
 }
-.nav-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
+.nav-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .nav-icon-btn {
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  padding: 4px 10px;
-  cursor: pointer;
-  letter-spacing: 0.08em;
-  transition: border-color 120ms ease, color 120ms ease;
+  background: none; border: 1px solid var(--border);
+  color: var(--text-muted); font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; padding: 4px 10px; cursor: pointer;
+  letter-spacing: 0.08em; transition: border-color 120ms ease, color 120ms ease;
 }
 .nav-icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+.nav-add-btn {
+  background: var(--accent); border: none;
+  color: var(--bg); font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; padding: 4px 12px; cursor: pointer;
+  letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700;
+  transition: background 120ms ease;
+}
+.nav-add-btn:hover { background: var(--accent-dim); }
 
 /* ── Layout ─────────────────────────────────────────────────────────────── */
-#main {
-  margin-top: 44px;
-  padding: 24px 20px;
-  min-height: calc(100vh - 44px);
-}
-.content-wrap {
-  max-width: 60%;
-  margin: 0 auto;
-  width: 100%;
-}
+#main { margin-top: 44px; padding: 24px 20px; min-height: calc(100vh - 44px); }
+.content-wrap { max-width: 60%; margin: 0 auto; width: 100%; }
 @media (max-width: 1300px) { .content-wrap { max-width: 85%; } }
 @media (max-width: 900px)  { .content-wrap { max-width: 100%; } }
-@media (max-width: 600px)  {
-  #main { padding: 16px 10px; }
-  .nav-brand { display: none; }
-}
+@media (max-width: 600px)  { #main { padding: 16px 10px; } .nav-brand { display: none; } }
 
-/* ── Section headers (priority view) ────────────────────────────────────── */
+/* ── Section headers ────────────────────────────────────────────────────── */
 .section-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 6px;
-  cursor: pointer;
-  user-select: none;
-  color: var(--text-muted);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 2px;
-  transition: background 120ms ease, color 120ms ease;
-  border-radius: 0;
+  display: flex; align-items: center; gap: 8px; padding: 8px 6px;
+  cursor: pointer; user-select: none; color: var(--text-muted);
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  border-bottom: 1px solid var(--border); margin-bottom: 2px;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
 }
-.section-header.drag-target {
-  color: var(--accent);
-  background: rgba(255,103,119,0.06);
-  border-bottom-color: var(--accent);
-}
-.section-header .pri-icon { font-size: 13px; }
+.section-header.drag-target { color: var(--accent); background: rgba(255,103,119,0.06); border-bottom-color: var(--accent); }
 .pri-asap  { color: var(--accent); }
 .pri-soon  { color: var(--text); }
 .pri-back  { color: var(--text-muted); }
-.section-header .count   { color: var(--text-dim); font-size: 11px; }
-.section-header .toggle  { margin-left: auto; color: var(--text-dim); }
+.section-header .count  { color: var(--text-dim); font-size: 11px; }
+.section-header .toggle { margin-left: auto; color: var(--text-dim); }
 
 /* ── Task rows ──────────────────────────────────────────────────────────── */
 .task-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border-left: 2px solid transparent;
-  border-top: 2px solid transparent;
+  display: flex; align-items: center; gap: 8px; padding: 6px 8px;
+  border-left: 2px solid transparent; border-top: 2px solid transparent;
   transition: background 120ms ease, border-color 120ms ease;
-  position: relative;
-  cursor: default;
 }
 .task-row[draggable="true"] { cursor: grab; }
 .task-row[draggable="true"]:active { cursor: grabbing; }
-.task-row:hover {
-  background: var(--bg-raised);
-  border-left-color: var(--accent);
-}
+.task-row:hover { background: var(--bg-raised); border-left-color: var(--accent); }
 .task-row.is-dragging { opacity: 0.3; }
 .task-row.drag-insert-before { border-top-color: var(--accent) !important; }
 .task-row.subtask { padding-left: 24px; }
 .subtask-prefix { color: var(--text-dim); flex-shrink: 0; font-size: 11px; }
-.drag-handle {
-  color: var(--text-dim);
-  cursor: grab;
-  flex-shrink: 0;
-  font-size: 11px;
-  opacity: 0;
-  transition: opacity 120ms ease;
-  user-select: none;
-}
+.drag-handle { color: var(--text-dim); cursor: grab; flex-shrink: 0; font-size: 11px; opacity: 0; transition: opacity 120ms ease; user-select: none; }
 .task-row:hover .drag-handle { opacity: 1; }
-.project-tag {
-  display: inline-block;
-  padding: 1px 6px;
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  border: 1px solid;
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-.task-title {
-  flex: 1;
-  color: var(--text);
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.task-actions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-  opacity: 0;
-  transition: opacity 120ms ease;
-}
+.project-tag { display: inline-block; padding: 1px 6px; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; border: 1px solid; flex-shrink: 0; white-space: nowrap; }
+.task-title { flex: 1; color: var(--text); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.task-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; opacity: 0; transition: opacity 120ms ease; }
 .task-row:hover .task-actions { opacity: 1; }
-.task-btn {
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  padding: 2px 6px;
-  cursor: pointer;
-  transition: border-color 120ms ease, color 120ms ease;
-}
+.task-btn { background: none; border: 1px solid var(--border); color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 2px 6px; cursor: pointer; transition: border-color 120ms ease, color 120ms ease; }
 .task-btn:hover { border-color: var(--accent); color: var(--accent); }
 .task-btn.success:hover { border-color: var(--success); color: var(--success); }
 
 /* ── Inline edit ─────────────────────────────────────────────────────────── */
-.inline-edit-form {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex: 1;
-  min-width: 0;
-}
+.inline-edit-form { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
 .inline-edit-form input,
 .inline-edit-form select {
-  background: var(--bg-raised);
-  border: 1px solid var(--accent);
-  color: var(--text);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  padding: 3px 6px;
-  outline: none;
+  background: var(--bg-raised); border: 1px solid var(--accent);
+  color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 3px 6px; outline: none;
 }
 .inline-edit-form input  { flex: 1; min-width: 0; }
 .inline-edit-form select { font-size: 11px; }
 
-/* ── Dropdown menu ──────────────────────────────────────────────────────── */
+/* ── Dropdown ────────────────────────────────────────────────────────────── */
 .dropdown-wrap { position: relative; }
-.dropdown-menu {
-  position: absolute;
-  right: 0; top: 100%;
-  z-index: 50;
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  min-width: 160px;
-  padding: 4px 0;
-}
-.dropdown-item {
-  display: block;
-  width: 100%;
-  background: none;
-  border: none;
-  color: var(--text);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  padding: 6px 12px;
-  text-align: left;
-  cursor: pointer;
-  letter-spacing: 0.06em;
-  transition: background 120ms ease, color 120ms ease;
-}
+.dropdown-menu { position: absolute; right: 0; top: 100%; z-index: 50; background: var(--bg-surface); border: 1px solid var(--border); min-width: 160px; padding: 4px 0; }
+.dropdown-item { display: block; width: 100%; background: none; border: none; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 6px 12px; text-align: left; cursor: pointer; letter-spacing: 0.06em; transition: background 120ms ease, color 120ms ease; }
 .dropdown-item:hover { background: var(--bg-raised); color: var(--accent); }
 
-/* ── Priority view ──────────────────────────────────────────────────────── */
+/* ── Priority view sections ──────────────────────────────────────────────── */
 .priority-section { margin-bottom: 24px; }
 
-/* ── Dashboard ──────────────────────────────────────────────────────────── */
-.dashboard-scroll {
-  display: flex;
-  gap: 16px;
-  overflow-x: auto;
-  padding-bottom: 16px;
-  align-items: flex-start;
-}
+/* ── Dashboard & Completed board shared card styles ────────────────────── */
+.board-scroll { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 16px; align-items: flex-start; }
 .project-card {
-  border: 1px solid var(--border);
-  min-width: 260px;
-  max-width: 280px;
-  flex-shrink: 0;
-  background: var(--bg-surface);
-  display: flex;
-  flex-direction: column;
+  border: 1px solid var(--border); min-width: 260px; max-width: 280px; flex-shrink: 0;
+  background: var(--bg-surface); display: flex; flex-direction: column;
   transition: border-color 120ms ease, opacity 120ms ease;
 }
 .project-card[draggable="true"] { cursor: grab; }
 .project-card[draggable="true"]:active { cursor: grabbing; }
 .project-card.is-dragging { opacity: 0.3; }
 .project-card.drag-target { border-color: var(--accent); }
-.project-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border);
-}
-.project-card-title {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  flex: 1;
-}
-.project-card-body {
-  padding: 8px 0;
-  flex: 1;
-  overflow-y: auto;
-  max-height: 420px;
-}
-.card-section-header {
-  padding: 4px 12px;
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.card-task-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  border-left: 2px solid transparent;
-  transition: background 120ms ease, border-color 120ms ease;
-}
+.project-card-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+.project-card-title { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.project-card-body { padding: 8px 0; flex: 1; overflow-y: auto; max-height: 420px; }
+.card-section-header { padding: 4px 12px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+.card-task-row { display: flex; align-items: center; gap: 6px; padding: 4px 12px; border-left: 2px solid transparent; transition: background 120ms ease, border-color 120ms ease; }
 .card-task-row:hover { background: var(--bg-raised); border-left-color: var(--accent); }
 .card-task-row .task-title { font-size: 12px; }
 .card-task-row .task-actions { opacity: 0; }
 .card-task-row:hover .task-actions { opacity: 1; }
 .card-task-row.subtask { padding-left: 24px; }
 .project-card-footer { border-top: 1px solid var(--border); padding: 8px 12px; }
+
+/* ── Completed tasks in dashboard card ──────────────────────────────────── */
+.card-completed-divider { margin: 4px 12px; border: none; border-top: 1px dashed var(--border); }
+.card-completed-row {
+  display: flex; align-items: baseline; gap: 6px; padding: 3px 12px;
+  border-left: 2px solid transparent; border-top: 2px solid transparent;
+  transition: background 120ms ease;
+}
+.card-completed-row[draggable="true"] { cursor: grab; }
+.card-completed-row:hover { background: var(--bg-raised); }
+.card-completed-row.drag-insert-before { border-top-color: var(--text-dim) !important; }
+.card-completed-date { font-size: 10px; color: var(--text-dim); flex-shrink: 0; white-space: nowrap; }
+.card-completed-title { font-size: 11px; color: var(--text-dim); text-decoration: line-through; text-decoration-color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+
+/* ── Completed board cards ──────────────────────────────────────────────── */
+.comp-card-row {
+  display: flex; align-items: flex-start; gap: 8px; padding: 6px 12px;
+  border-left: 2px solid transparent; border-top: 2px solid transparent;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.comp-card-row[draggable="true"] { cursor: grab; }
+.comp-card-row:hover { background: var(--bg-raised); border-left-color: var(--text-dim); }
+.comp-card-row.is-dragging { opacity: 0.3; }
+.comp-card-row.drag-insert-before { border-top-color: var(--accent) !important; }
+.comp-date  { font-size: 10px; color: var(--text-dim); flex-shrink: 0; padding-top: 1px; min-width: 68px; }
+.comp-body  { flex: 1; min-width: 0; }
+.comp-title { font-size: 12px; color: var(--text-muted); text-decoration: line-through; text-decoration-color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.comp-note  { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+.comp-note::before { content: '└─ '; }
+.comp-pri   { font-size: 10px; color: var(--text-dim); }
+.comp-card-actions { flex-shrink: 0; opacity: 0; transition: opacity 120ms ease; }
+.comp-card-row:hover .comp-card-actions { opacity: 1; }
+
+/* ── Add task / common form elements ────────────────────────────────────── */
 .add-task-form { display: flex; gap: 6px; flex-direction: column; }
-.add-task-form input,
-.add-task-form select {
-  background: var(--bg-raised);
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  padding: 5px 8px;
-  outline: none;
-  width: 100%;
+.add-task-form input, .add-task-form select {
+  background: var(--bg-raised); border: 1px solid var(--border); color: var(--text);
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 5px 8px; outline: none; width: 100%;
   transition: border-color 120ms ease;
 }
-.add-task-form input:focus,
-.add-task-form select:focus { border-color: var(--accent); }
+.add-task-form input:focus, .add-task-form select:focus { border-color: var(--accent); }
 .add-task-row { display: flex; gap: 6px; }
 .add-task-row select { width: auto; flex-shrink: 0; }
-
-.btn {
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 5px 12px;
-  cursor: pointer;
-  transition: border-color 120ms ease, color 120ms ease;
-}
+.btn { background: none; border: 1px solid var(--border); color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 12px; cursor: pointer; transition: border-color 120ms ease, color 120ms ease; }
 .btn:hover { border-color: var(--accent); color: var(--accent); }
 .btn-accent { border-color: var(--accent); color: var(--accent); }
 .btn-accent:hover { background: var(--accent); color: var(--bg); }
 .btn-sm { padding: 3px 8px; font-size: 10px; }
-.btn-text {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  cursor: pointer;
-  padding: 4px 0;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  transition: color 120ms ease;
-}
+.btn-text { background: none; border: none; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: pointer; padding: 4px 0; letter-spacing: 0.08em; text-transform: uppercase; transition: color 120ms ease; }
 .btn-text:hover { color: var(--accent); }
-.new-project-card {
-  border: 1px dashed var(--border);
-  min-width: 180px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  cursor: pointer;
-  transition: border-color 120ms ease;
-  background: transparent;
-  flex-shrink: 0;
-}
+.new-project-card { border: 1px dashed var(--border); min-width: 180px; display: flex; align-items: center; justify-content: center; padding: 20px; cursor: pointer; transition: border-color 120ms ease; background: transparent; flex-shrink: 0; }
 .new-project-card:hover { border-color: var(--accent); }
-.new-project-label {
-  color: var(--text-muted);
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  transition: color 120ms ease;
-}
+.new-project-label { color: var(--text-muted); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; transition: color 120ms ease; }
 .new-project-card:hover .new-project-label { color: var(--accent); }
 
-/* ── Archive view ───────────────────────────────────────────────────────── */
-.archive-header {
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 16px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border);
-}
-
-/* ── Completed view ─────────────────────────────────────────────────────── */
-.completed-header {
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 16px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.completed-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 8px 8px;
-  border-left: 2px solid transparent;
-  border-top: 2px solid transparent;
-  transition: background 120ms ease, border-color 120ms ease;
-}
-.completed-row[draggable="true"] { cursor: grab; }
-.completed-row[draggable="true"]:active { cursor: grabbing; }
-.completed-row:hover { background: var(--bg-raised); border-left-color: var(--text-dim); }
-.completed-row.is-dragging { opacity: 0.3; }
-.completed-row.drag-insert-before { border-top-color: var(--accent) !important; }
-.completed-meta {
-  font-size: 10px;
-  color: var(--text-dim);
-  white-space: nowrap;
-  padding-top: 2px;
-  flex-shrink: 0;
-  width: 110px;
-}
-.completed-body { flex: 1; min-width: 0; }
-.completed-title {
-  color: var(--text-muted);
-  font-size: 12px;
-  text-decoration: line-through;
-  text-decoration-color: var(--text-dim);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.completed-note {
-  color: var(--text-dim);
-  font-size: 11px;
-  margin-top: 3px;
-}
-.completed-note::before { content: '└─ '; }
-.completed-actions { flex-shrink: 0; opacity: 0; transition: opacity 120ms ease; }
-.completed-row:hover .completed-actions { opacity: 1; }
+/* ── Archive / Completed view headers ───────────────────────────────────── */
+.view-header { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
 
 /* ── Modals ─────────────────────────────────────────────────────────────── */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.75);
-  z-index: 200;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-.modal {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  min-width: 360px;
-  max-width: 540px;
-  width: 100%;
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-}
+.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.modal { background: var(--bg-surface); border: 1px solid var(--border); min-width: 360px; max-width: 540px; width: 100%; max-height: 80vh; display: flex; flex-direction: column; }
 @media (max-width: 600px) { .modal { min-width: 0; } }
-.modal-header {
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--border);
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--accent);
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
+.modal-header { padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); font-weight: 700; display: flex; align-items: center; justify-content: space-between; }
 .modal-body { padding: 20px 16px; overflow-y: auto; flex: 1; }
-.modal-footer {
-  padding: 12px 16px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-.modal-task-title {
-  color: var(--text);
-  font-size: 13px;
-  margin-bottom: 16px;
-  padding: 8px;
-  background: var(--bg-raised);
-  border-left: 2px solid var(--accent);
-}
-.modal-label {
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 6px;
-  display: block;
-}
-.modal-textarea {
-  width: 100%;
-  background: var(--bg-raised);
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  padding: 8px;
-  resize: vertical;
-  min-height: 80px;
-  outline: none;
-  transition: border-color 120ms ease;
-}
+.modal-footer { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+.modal-task-title { color: var(--text); font-size: 13px; margin-bottom: 16px; padding: 8px; background: var(--bg-raised); border-left: 2px solid var(--accent); }
+.modal-label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; display: block; }
+.modal-textarea { width: 100%; background: var(--bg-raised); border: 1px solid var(--border); color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 8px; resize: vertical; min-height: 80px; outline: none; transition: border-color 120ms ease; }
 .modal-textarea:focus { border-color: var(--accent); }
-.modal-input {
-  width: 100%;
-  background: var(--bg-raised);
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  padding: 7px 8px;
-  outline: none;
-  transition: border-color 120ms ease;
-}
+.modal-input { width: 100%; background: var(--bg-raised); border: 1px solid var(--border); color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 7px 8px; outline: none; transition: border-color 120ms ease; }
 .modal-input:focus { border-color: var(--accent); }
+.modal-select { width: 100%; background: var(--bg-raised); border: 1px solid var(--border); color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 7px 8px; outline: none; transition: border-color 120ms ease; }
+.modal-select:focus { border-color: var(--accent); }
+.modal-field { margin-bottom: 16px; }
 
 /* ── Devices panel ──────────────────────────────────────────────────────── */
 .devices-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.devices-table th {
-  text-align: left;
-  color: var(--text-muted);
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 4px 8px;
-  border-bottom: 1px solid var(--border);
-  font-weight: 400;
-}
+.devices-table th { text-align: left; color: var(--text-muted); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 8px; border-bottom: 1px solid var(--border); font-weight: 400; }
 .devices-table td { padding: 8px 8px; border-bottom: 1px solid var(--bg-raised); vertical-align: middle; }
-.current-dot {
-  display: inline-block;
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: var(--success);
-  margin-right: 4px;
-  vertical-align: middle;
-}
+.current-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--success); margin-right: 4px; vertical-align: middle; }
 
-/* ── History log ────────────────────────────────────────────────────────── */
+/* ── History ─────────────────────────────────────────────────────────────── */
 .history-entry { padding: 8px 0; border-bottom: 1px solid var(--bg-raised); }
-.history-meta {
-  font-size: 11px;
-  color: var(--text-muted);
-  margin-bottom: 4px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+.history-meta { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
 .history-action-completed { color: var(--success); }
 .history-action-reopened  { color: var(--warning); }
 .history-action-updated   { color: var(--text-muted); }
@@ -689,67 +321,28 @@ html, body {
 
 /* ── Colour picker ──────────────────────────────────────────────────────── */
 .colour-swatches { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-.colour-swatch {
-  width: 24px; height: 24px;
-  border: 2px solid transparent;
-  cursor: pointer;
-  transition: border-color 120ms ease;
-}
+.colour-swatch { width: 24px; height: 24px; border: 2px solid transparent; cursor: pointer; transition: border-color 120ms ease; }
 .colour-swatch.selected, .colour-swatch:hover { border-color: var(--text); }
 .colour-custom { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
-.colour-custom input[type=color] {
-  width: 32px; height: 24px;
-  border: 1px solid var(--border);
-  background: none;
-  cursor: pointer;
-  padding: 0;
-}
+.colour-custom input[type=color] { width: 32px; height: 24px; border: 1px solid var(--border); background: none; cursor: pointer; padding: 0; }
 
-/* ── Toast notifications ────────────────────────────────────────────────── */
-#toast-area {
-  position: fixed;
-  bottom: 20px; right: 20px;
-  z-index: 300;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  pointer-events: none;
-}
-.toast {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  padding: 10px 16px;
-  font-size: 12px;
-  max-width: 300px;
-  animation: toastIn 200ms ease;
-}
+/* ── Toast ───────────────────────────────────────────────────────────────── */
+#toast-area { position: fixed; bottom: 20px; right: 20px; z-index: 300; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.toast { background: var(--bg-surface); border: 1px solid var(--border); padding: 10px 16px; font-size: 12px; max-width: 300px; animation: toastIn 200ms ease; }
 .toast.success { border-left: 3px solid var(--success); }
 .toast.error   { border-left: 3px solid var(--accent); }
 .toast.info    { border-left: 3px solid var(--text-muted); }
-@keyframes toastIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
+@keyframes toastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-/* ── Loading bar ────────────────────────────────────────────────────────── */
-.loading-bar {
-  position: fixed;
-  top: 44px; left: 0; right: 0;
-  height: 2px;
-  background: var(--accent);
-  z-index: 150;
-  animation: loadPulse 1s ease infinite;
-}
-@keyframes loadPulse {
-  0%,100% { opacity: 0.4; }
-  50%      { opacity: 1; }
-}
+/* ── Loading bar ─────────────────────────────────────────────────────────── */
+.loading-bar { position: fixed; top: 44px; left: 0; right: 0; height: 2px; background: var(--accent); z-index: 150; animation: loadPulse 1s ease infinite; }
+@keyframes loadPulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
 
-/* ── Misc ───────────────────────────────────────────────────────────────── */
+/* ── Misc ────────────────────────────────────────────────────────────────── */
 .empty-state { color: var(--text-dim); font-size: 12px; padding: 12px 8px; letter-spacing: 0.06em; }
 *:focus-visible { outline: 1px solid var(--accent); outline-offset: 1px; }
-button:focus    { outline: none; }
-[x-cloak]       { display: none !important; }
+button:focus { outline: none; }
+[x-cloak] { display: none !important; }
 </style>
 </head>
 <body x-data="app()" x-init="init()">
@@ -762,13 +355,14 @@ button:focus    { outline: none; }
     <div style="display:flex;align-items:center;flex:1;min-width:0">
       <span class="nav-brand">░░ ORGANIZER</span>
       <div class="nav-links">
-        <button class="nav-btn" :class="{active:view==='priority'}"   @click="switchView('priority')">PRIORITY</button>
-        <button class="nav-btn" :class="{active:view==='dashboard'}"  @click="switchView('dashboard')">DASHBOARD</button>
-        <button class="nav-btn" :class="{active:view==='archive'}"    @click="switchView('archive')">ARCHIVE</button>
-        <button class="nav-btn" :class="{active:view==='completed'}"  @click="switchView('completed')">COMPLETED</button>
+        <button class="nav-btn" :class="{active:view==='priority'}"  @click="switchView('priority')">PRIORITY</button>
+        <button class="nav-btn" :class="{active:view==='dashboard'}" @click="switchView('dashboard')">DASHBOARD</button>
+        <button class="nav-btn" :class="{active:view==='archive'}"   @click="switchView('archive')">ARCHIVE</button>
+        <button class="nav-btn" :class="{active:view==='completed'}" @click="switchView('completed')">COMPLETED</button>
       </div>
     </div>
     <div class="nav-right">
+      <button class="nav-add-btn" @click="openAddTaskModal()">+ TASK</button>
       <button class="nav-icon-btn" @click="openDevices()">⚙ DEVICES</button>
     </div>
   </div>
@@ -786,28 +380,26 @@ button:focus    { outline: none; }
            @dragleave="onSectionDragLeave($event, pri)"
            @drop.prevent="onSectionDrop($event, pri)">
 
-        <!-- Section header — drop zone to change priority -->
         <div class="section-header"
              :class="{'drag-target': dragOverPri===pri && drag.priority!==pri}"
              @click="toggleSection(pri)">
-          <span class="pri-icon" :class="{'pri-asap':pri==='ASAP','pri-soon':pri==='Soon','pri-back':pri==='Backlog'}"
+          <span :class="{'pri-asap':pri==='ASAP','pri-soon':pri==='Soon','pri-back':pri==='Backlog'}"
             x-text="pri==='ASAP'?'!!':pri==='Soon'?'◈':'·'"></span>
           <span x-text="pri"></span>
           <span class="count" x-text="'('+countPriTasks(pri)+')'"></span>
-          <span class="toggle" x-text="collapsedSections[pri] ? '▸' : '▾'"></span>
+          <span class="toggle" x-text="collapsedSections[pri]?'▸':'▾'"></span>
         </div>
 
         <div x-show="!collapsedSections[pri]">
           <template x-if="countPriTasks(pri)===0">
-            <div class="empty-state">· drop tasks here or add via dashboard</div>
+            <div class="empty-state">· drop tasks here or add via + TASK</div>
           </template>
           <template x-for="task in priorityTasks[pri]" :key="task.id">
             <div>
-              <!-- Main task row -->
               <div class="task-row"
                    draggable="true"
                    :data-id="task.id"
-                   :class="{'is-dragging': drag.id===task.id, 'drag-insert-before': dragOverId===task.id && drag.priority===pri}"
+                   :class="{'is-dragging': drag.id===task.id && drag.type==='task', 'drag-insert-before': dragOverId===task.id && drag.priority===pri}"
                    @dragstart="onTaskDragStart($event, task)"
                    @dragend="onDragEnd()"
                    @dragover.prevent.stop="onTaskDragOver($event, task)"
@@ -820,7 +412,7 @@ button:focus    { outline: none; }
                   <div class="inline-edit-form" @click.stop>
                     <input type="text" x-model="editingTask.title"
                       @keydown.enter="saveEdit()" @keydown.escape="editingTask=null"
-                      @blur="saveEditBlur()" x-ref="editInput" x-init="$nextTick(()=>$el.focus())">
+                      @blur="saveEditBlur()" x-init="$nextTick(()=>$el.focus())">
                     <select x-model="editingTask.priority">
                       <option value="ASAP">!! ASAP</option>
                       <option value="Soon">◈ Soon</option>
@@ -837,27 +429,24 @@ button:focus    { outline: none; }
                   <span class="task-title" x-text="task.title"></span>
                 </template>
                 <div class="task-actions">
-                  <button class="task-btn success" @click.stop="openCompleteModal(task)" title="Complete">✓</button>
-                  <button class="task-btn" @click.stop="startEdit(task)" title="Edit">✎</button>
+                  <button class="task-btn success" @click.stop="openCompleteModal(task)">✓</button>
+                  <button class="task-btn" @click.stop="startEdit(task)">✎</button>
                   <div class="dropdown-wrap" @click.outside="closeDropdown(task.id)">
                     <button class="task-btn" @click.stop="toggleDropdown(task.id)">⋮</button>
                     <div class="dropdown-menu" x-show="openDropdownId===task.id" x-cloak @click.stop>
                       <button class="dropdown-item" @click="openHistory(task.id); closeDropdown(task.id)">View History</button>
                       <template x-for="p in projects.filter(p=>p.id!=task.project_id)" :key="p.id">
-                        <button class="dropdown-item"
-                          @click="moveTask(task.id, p.id); closeDropdown(task.id)"
-                          x-text="'→ '+p.name"></button>
+                        <button class="dropdown-item" @click="moveTask(task.id,p.id); closeDropdown(task.id)" x-text="'→ '+p.name"></button>
                       </template>
                       <button class="dropdown-item" @click="deleteTask(task.id); closeDropdown(task.id)">Delete</button>
                     </div>
                   </div>
                 </div>
               </div>
-              <!-- Subtasks -->
               <template x-for="sub in task.subtasks||[]" :key="sub.id">
                 <div class="task-row subtask"
                      draggable="true"
-                     :class="{'is-dragging': drag.id===sub.id}"
+                     :class="{'is-dragging': drag.id===sub.id && drag.type==='task'}"
                      @dragstart="onTaskDragStart($event, sub)"
                      @dragend="onDragEnd()">
                   <span class="subtask-prefix">└─</span>
@@ -898,7 +487,7 @@ button:focus    { outline: none; }
 
   <!-- ── DASHBOARD VIEW ─────────────────────────────────────────────────── -->
   <div x-show="view==='dashboard'" x-cloak>
-    <div class="dashboard-scroll">
+    <div class="board-scroll">
       <template x-for="project in projects" :key="project.id">
         <div class="project-card"
              draggable="true"
@@ -907,6 +496,7 @@ button:focus    { outline: none; }
              @dragend="onDragEnd()"
              @dragover.prevent="onProjDragOver($event, project)"
              @drop.prevent="onProjDrop($event, project)">
+
           <div class="project-card-header" style="border-left:3px solid" :style="'border-left-color:'+project.colour">
             <span class="project-card-title" x-text="project.name"></span>
             <div class="dropdown-wrap" @click.outside="closeDropdown('proj_'+project.id)" @click.stop>
@@ -918,7 +508,9 @@ button:focus    { outline: none; }
               </div>
             </div>
           </div>
+
           <div class="project-card-body">
+            <!-- Active tasks by priority -->
             <template x-for="pri in ['ASAP','Soon','Backlog']" :key="pri">
               <template x-if="getProjectTasks(project.id, pri).length > 0">
                 <div>
@@ -953,7 +545,25 @@ button:focus    { outline: none; }
             <template x-if="getProjectAllTasks(project.id).length===0">
               <div class="empty-state" style="padding:8px 12px">· no active tasks</div>
             </template>
+
+            <!-- Last 3 completed tasks -->
+            <template x-if="(projectCompletedCache[project.id]||[]).length > 0">
+              <div>
+                <hr class="card-completed-divider">
+                <div class="card-section-header" style="color:var(--text-dim)">
+                  <span>✓</span>
+                  <span>recently completed</span>
+                </div>
+                <template x-for="ct in (projectCompletedCache[project.id]||[])" :key="ct.id">
+                  <div class="card-completed-row">
+                    <span class="card-completed-date" x-text="formatShortDate(ct.completed_at)"></span>
+                    <span class="card-completed-title" x-text="ct.title"></span>
+                  </div>
+                </template>
+              </div>
+            </template>
           </div>
+
           <div class="project-card-footer">
             <template x-if="addingTaskTo!==project.id">
               <button class="btn-text" @click.stop="startAddTask(project.id)">+ ADD TASK</button>
@@ -978,6 +588,7 @@ button:focus    { outline: none; }
           </div>
         </div>
       </template>
+
       <button class="new-project-card" @click="openNewProjectModal()">
         <span class="new-project-label">+ NEW PROJECT</span>
       </button>
@@ -986,8 +597,8 @@ button:focus    { outline: none; }
 
   <!-- ── ARCHIVE VIEW ────────────────────────────────────────────────────── -->
   <div x-show="view==='archive'" x-cloak>
-    <p class="archive-header">── ARCHIVED PROJECTS ──</p>
-    <div class="dashboard-scroll">
+    <div class="view-header"><span>── ARCHIVED PROJECTS ──</span></div>
+    <div class="board-scroll">
       <template x-if="archivedProjects.length===0">
         <div class="empty-state">· no archived projects</div>
       </template>
@@ -997,8 +608,7 @@ button:focus    { outline: none; }
             <span class="project-card-title" x-text="project.name"></span>
             <div style="display:flex;gap:4px">
               <button class="btn btn-sm" @click="archiveProject(project.id)">UNARCHIVE</button>
-              <button class="btn btn-sm" style="color:var(--accent);border-color:var(--accent)"
-                @click="deleteProject(project.id)">DELETE</button>
+              <button class="btn btn-sm" style="color:var(--accent);border-color:var(--accent)" @click="deleteProject(project.id)">DELETE</button>
             </div>
           </div>
           <div class="project-card-body">
@@ -1011,49 +621,104 @@ button:focus    { outline: none; }
     </div>
   </div>
 
-  <!-- ── COMPLETED VIEW ─────────────────────────────────────────────────── -->
+  <!-- ── COMPLETED BOARD VIEW ───────────────────────────────────────────── -->
   <div x-show="view==='completed'" x-cloak>
-    <div class="completed-header">
-      <span>── COMPLETED TASKS ── <span style="color:var(--text-dim)" x-text="completedTasks.length ? '('+completedTasks.length+')' : ''"></span></span>
-      <span style="color:var(--text-dim);font-size:10px">drag to reorder</span>
+    <div class="view-header">
+      <span>── COMPLETED TASKS ──
+        <span style="color:var(--text-dim)" x-text="completedTasks.length ? '('+completedTasks.length+')' : ''"></span>
+      </span>
+      <span style="color:var(--text-dim);font-size:10px">newest first · drag within project to reorder</span>
     </div>
+
     <template x-if="completedTasks.length===0">
       <div class="empty-state">· no completed tasks yet</div>
     </template>
-    <template x-for="task in completedTasks" :key="task.id">
-      <div class="completed-row"
-           draggable="true"
-           :class="{'is-dragging': drag.id===task.id && drag.type==='completed', 'drag-insert-before': dragOverId==='comp_'+task.id}"
-           @dragstart="onCompletedDragStart($event, task)"
-           @dragend="onDragEnd()"
-           @dragover.prevent="onCompletedDragOver($event, task)"
-           @drop.prevent="onCompletedDrop($event, task)">
-        <div class="completed-meta" x-text="formatShortDate(task.completed_at)"></div>
-        <div class="completed-body">
-          <div class="completed-title" x-text="task.title"></div>
-          <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
-            <span class="project-tag"
-              :style="'color:'+task.project_colour+';border-color:'+task.project_colour+'40;font-size:9px'"
-              x-text="task.project_name"></span>
-            <span style="color:var(--text-dim);font-size:10px"
-              x-text="task.priority==='ASAP'?'!! '+task.priority : task.priority==='Soon'?'◈ '+task.priority:'· '+task.priority"></span>
+
+    <div class="board-scroll" x-show="completedTasks.length > 0">
+      <template x-for="group in completedByProject" :key="group.id">
+        <div class="project-card">
+          <div class="project-card-header" style="border-left:3px solid" :style="'border-left-color:'+group.colour">
+            <span class="project-card-title" x-text="group.name"></span>
+            <span style="color:var(--text-dim);font-size:10px" x-text="group.tasks.length"></span>
           </div>
-          <template x-if="task.completion_note">
-            <div class="completed-note" x-text="task.completion_note"></div>
-          </template>
+          <div class="project-card-body">
+            <template x-for="task in group.tasks" :key="task.id">
+              <div class="comp-card-row"
+                   draggable="true"
+                   :class="{'is-dragging': drag.id===task.id && drag.type==='completed', 'drag-insert-before': dragOverId==='comp_'+task.id}"
+                   @dragstart="onCompletedDragStart($event, task)"
+                   @dragend="onDragEnd()"
+                   @dragover.prevent="onCompletedDragOver($event, task)"
+                   @drop.prevent="onCompletedDrop($event, task)">
+                <div class="comp-date" x-text="formatShortDate(task.completed_at)"></div>
+                <div class="comp-body">
+                  <div class="comp-title" x-text="task.title"></div>
+                  <template x-if="task.completion_note">
+                    <div class="comp-note" x-text="task.completion_note"></div>
+                  </template>
+                  <div class="comp-pri"
+                    x-text="task.priority==='ASAP'?'!! ASAP':task.priority==='Soon'?'◈ Soon':'· Backlog'"></div>
+                </div>
+                <div class="comp-card-actions">
+                  <button class="task-btn btn-sm" @click="reopenTask(task.id)" title="Reopen">↺</button>
+                  <button class="task-btn btn-sm" @click="deleteTask(task.id)" title="Delete">✕</button>
+                </div>
+              </div>
+            </template>
+          </div>
         </div>
-        <div class="completed-actions">
-          <button class="task-btn btn-sm" @click="reopenTask(task.id)" title="Reopen">↺</button>
-          <button class="task-btn btn-sm" @click="deleteTask(task.id)" title="Delete">✕</button>
-        </div>
-      </div>
-    </template>
+      </template>
+    </div>
   </div>
 
 </div><!-- .content-wrap -->
 </main>
 
 <!-- ── MODALS ────────────────────────────────────────────────────────────── -->
+
+<!-- Add task (global) -->
+<div class="modal-backdrop" x-show="modal==='add-task'" x-cloak @click.self="modal=null">
+  <div class="modal">
+    <div class="modal-header">
+      <span>─ ADD TASK ──────────────────────</span>
+      <button class="task-btn" @click="modal=null">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-field">
+        <label class="modal-label">Task title:</label>
+        <input class="modal-input" type="text" x-model="newAnyTask.title"
+          @keydown.enter="submitAddAnyTask()"
+          @keydown.escape="modal=null"
+          placeholder="what needs doing..."
+          x-init="$nextTick(()=>$el.focus())">
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Project:</label>
+        <select class="modal-select" x-model="newAnyTask.projectId">
+          <template x-if="projects.length===0">
+            <option value="" disabled>— no projects yet —</option>
+          </template>
+          <template x-for="p in projects" :key="p.id">
+            <option :value="p.id" x-text="p.name"></option>
+          </template>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Priority:</label>
+        <select class="modal-select" x-model="newAnyTask.priority">
+          <option value="ASAP">!! ASAP</option>
+          <option value="Soon">◈ Soon</option>
+          <option value="Backlog">· Backlog</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" @click="modal=null">CANCEL</button>
+      <button class="btn btn-accent" @click="submitAddAnyTask()"
+        :disabled="!newAnyTask.title.trim() || !newAnyTask.projectId">ADD TASK</button>
+    </div>
+  </div>
+</div>
 
 <!-- Complete task -->
 <div class="modal-backdrop" x-show="modal==='complete'" x-cloak @click.self="modal=null">
@@ -1122,8 +787,7 @@ button:focus    { outline: none; }
       <label class="modal-label">Colour:</label>
       <div class="colour-swatches">
         <template x-for="c in colourSwatches" :key="c">
-          <div class="colour-swatch" :class="{selected:newProjectColour===c}"
-            :style="'background:'+c" @click="newProjectColour=c"></div>
+          <div class="colour-swatch" :class="{selected:newProjectColour===c}" :style="'background:'+c" @click="newProjectColour=c"></div>
         </template>
       </div>
       <div class="colour-custom">
@@ -1154,8 +818,7 @@ button:focus    { outline: none; }
       <label class="modal-label">Colour:</label>
       <div class="colour-swatches">
         <template x-for="c in colourSwatches" :key="c">
-          <div class="colour-swatch" :class="{selected:editProjectColour===c}"
-            :style="'background:'+c" @click="editProjectColour=c"></div>
+          <div class="colour-swatch" :class="{selected:editProjectColour===c}" :style="'background:'+c" @click="editProjectColour=c"></div>
         </template>
       </div>
       <div class="colour-custom">
@@ -1181,9 +844,7 @@ button:focus    { outline: none; }
     <div class="modal-body">
       <table class="devices-table">
         <thead>
-          <tr>
-            <th>ID</th><th>LABEL</th><th>LAST SEEN</th><th>REGISTERED</th><th></th>
-          </tr>
+          <tr><th>ID</th><th>LABEL</th><th>LAST SEEN</th><th>REGISTERED</th><th></th></tr>
         </thead>
         <tbody>
           <template x-for="dev in devices" :key="dev.id">
@@ -1191,12 +852,9 @@ button:focus    { outline: none; }
               <td style="color:var(--text-muted)" x-text="String(dev.id).padStart(2,'0')"></td>
               <td>
                 <template x-if="dev.is_current">
-                  <span><span class="current-dot"></span><span x-text="dev.device_label"></span>
-                  <span style="color:var(--text-dim);font-size:10px"> (this device)</span></span>
+                  <span><span class="current-dot"></span><span x-text="dev.device_label"></span><span style="color:var(--text-dim);font-size:10px"> (this device)</span></span>
                 </template>
-                <template x-if="!dev.is_current">
-                  <span x-text="dev.device_label"></span>
-                </template>
+                <template x-if="!dev.is_current"><span x-text="dev.device_label"></span></template>
               </td>
               <td style="color:var(--text-muted);font-size:11px" x-text="relativeTime(dev.last_seen)"></td>
               <td style="color:var(--text-dim);font-size:11px" x-text="dev.created_at.substring(0,10)"></td>
@@ -1204,8 +862,7 @@ button:focus    { outline: none; }
                 <div style="display:flex;gap:4px">
                   <button class="btn btn-sm" @click="promptLabelDevice(dev)">LABEL</button>
                   <template x-if="!dev.is_current">
-                    <button class="btn btn-sm" style="color:var(--accent);border-color:var(--accent)"
-                      @click="revokeDevice(dev.id)">REVOKE</button>
+                    <button class="btn btn-sm" style="color:var(--accent);border-color:var(--accent)" @click="revokeDevice(dev.id)">REVOKE</button>
                   </template>
                 </div>
               </td>
@@ -1257,6 +914,7 @@ function app() {
     projects: [],
     archivedProjects: [],
     projectTasksCache: {},
+    projectCompletedCache: {},
     priorityTasks: { ASAP: [], Soon: [], Backlog: [] },
     completedTasks: [],
     loading: false,
@@ -1271,6 +929,7 @@ function app() {
     addingTaskTo: null,
     newTaskTitle: '',
     newTaskPriority: 'Soon',
+    newAnyTask: { title: '', projectId: null, priority: 'Soon' },
     newProjectName: '',
     newProjectColour: '#FF6777',
     editProjectId: null,
@@ -1291,6 +950,17 @@ function app() {
     dragOverId: null,
     dragOverPri: null,
 
+    // ── Getter: completed tasks grouped by project ────────────────────────
+    get completedByProject() {
+      const map = {};
+      for (const task of this.completedTasks) {
+        const pid = task.project_id;
+        if (!map[pid]) map[pid] = { id: pid, name: task.project_name, colour: task.project_colour, tasks: [] };
+        map[pid].tasks.push(task);
+      }
+      return Object.values(map);
+    },
+
     // ── Init ──────────────────────────────────────────────────────────────
     async init() {
       await Promise.all([this.fetchProjects(), this.fetchPriorityTasks()]);
@@ -1301,10 +971,10 @@ function app() {
       this.view = v;
       this.modal = null;
       this.editingTask = null;
-      if (v === 'priority')   await Promise.all([this.fetchProjects(), this.fetchPriorityTasks()]);
-      if (v === 'dashboard')  { await this.fetchProjects(); await this.fetchAllProjectTasks(); }
-      if (v === 'archive')    await this.fetchArchivedProjects();
-      if (v === 'completed')  await this.fetchCompletedTasks();
+      if (v === 'priority')  await Promise.all([this.fetchProjects(), this.fetchPriorityTasks()]);
+      if (v === 'dashboard') { await this.fetchProjects(); await this.fetchAllProjectTasks(); }
+      if (v === 'archive')   await this.fetchArchivedProjects();
+      if (v === 'completed') await this.fetchCompletedTasks();
     },
 
     // ── Data fetching ─────────────────────────────────────────────────────
@@ -1325,16 +995,26 @@ function app() {
       if (d && !d.error) this.completedTasks = d;
     },
     async fetchAllProjectTasks() {
-      const cache = {};
+      const tCache = {};
+      const cCache = {};
       await Promise.all(this.projects.map(async p => {
-        const d = await this.api('get_tasks', { project_id: p.id });
-        if (d && !d.error) cache[p.id] = d;
+        const [active, completed] = await Promise.all([
+          this.api('get_tasks', { project_id: p.id }),
+          this.api('get_project_completed', { project_id: p.id, limit: 3 }),
+        ]);
+        if (active && !active.error)     tCache[p.id] = active;
+        if (completed && !completed.error) cCache[p.id] = completed;
       }));
-      this.projectTasksCache = cache;
+      this.projectTasksCache    = tCache;
+      this.projectCompletedCache = cCache;
     },
     async fetchProjectTasks(pid) {
-      const d = await this.api('get_tasks', { project_id: pid });
-      if (d && !d.error) this.projectTasksCache = { ...this.projectTasksCache, [pid]: d };
+      const [active, completed] = await Promise.all([
+        this.api('get_tasks', { project_id: pid }),
+        this.api('get_project_completed', { project_id: pid, limit: 3 }),
+      ]);
+      if (active && !active.error)     this.projectTasksCache    = { ...this.projectTasksCache, [pid]: active };
+      if (completed && !completed.error) this.projectCompletedCache = { ...this.projectCompletedCache, [pid]: completed };
     },
 
     // ── Task helpers ──────────────────────────────────────────────────────
@@ -1377,14 +1057,35 @@ function app() {
         await this.refresh();
       }
     },
-
-    // ── Reopen task ───────────────────────────────────────────────────────
     async reopenTask(id) {
       const ok = await this.apiPost('reopen_task', { id });
       if (ok) {
         this.showNotification('↺ task reopened', 'info');
         await this.fetchCompletedTasks();
         await this.fetchPriorityTasks();
+      }
+    },
+
+    // ── Add task (global modal) ───────────────────────────────────────────
+    openAddTaskModal() {
+      this.newAnyTask = {
+        title: '',
+        projectId: this.projects[0] ? this.projects[0].id : null,
+        priority: 'Soon',
+      };
+      this.modal = 'add-task';
+    },
+    async submitAddAnyTask() {
+      if (!this.newAnyTask.title.trim() || !this.newAnyTask.projectId) return;
+      const ok = await this.apiPost('create_task', {
+        project_id: this.newAnyTask.projectId,
+        title:      this.newAnyTask.title.trim(),
+        priority:   this.newAnyTask.priority,
+      });
+      if (ok) {
+        this.modal = null;
+        this.showNotification('task added', 'success');
+        await this.refresh();
       }
     },
 
@@ -1403,11 +1104,10 @@ function app() {
       await this.refresh();
     },
     saveEditBlur() {
-      // Small delay to allow select @change to fire first
       setTimeout(() => { if (this.editingTask) this.saveEdit(); }, 150);
     },
 
-    // ── Delete task ───────────────────────────────────────────────────────
+    // ── Delete / move task ────────────────────────────────────────────────
     async deleteTask(id) {
       if (!confirm('Delete this task?')) return;
       await this.apiPost('delete_task', { id });
@@ -1415,8 +1115,6 @@ function app() {
       await this.refresh();
       if (this.view === 'completed') await this.fetchCompletedTasks();
     },
-
-    // ── Move task (between projects) ──────────────────────────────────────
     async moveTask(id, projectId) {
       const task = this.findTask(id);
       if (!task) return;
@@ -1425,10 +1123,10 @@ function app() {
       await this.refresh();
     },
 
-    // ── Add task (dashboard) ──────────────────────────────────────────────
+    // ── Add task inline (dashboard card) ──────────────────────────────────
     startAddTask(pid) {
-      this.addingTaskTo = pid;
-      this.newTaskTitle = '';
+      this.addingTaskTo   = pid;
+      this.newTaskTitle   = '';
       this.newTaskPriority = 'Soon';
     },
     async submitAddTask(pid) {
@@ -1533,16 +1231,14 @@ function app() {
       if (this.view === 'completed') await this.fetchCompletedTasks();
     },
 
-    // ── Drag and drop — TASKS (priority view) ─────────────────────────────
+    // ── Drag: tasks in priority view ─────────────────────────────────────
     onTaskDragStart(e, task) {
       e.dataTransfer.effectAllowed = 'move';
       e.dataTransfer.setData('text/plain', String(task.id));
       this.drag = { id: task.id, type: 'task', priority: task.priority, projectId: task.project_id };
     },
-
     onSectionDragOver(e, pri) {
       if (this.drag.type !== 'task') return;
-      // Only activate section highlight if not over a specific task row
       this.dragOverPri = pri;
     },
     onSectionDragLeave(e, pri) {
@@ -1550,14 +1246,14 @@ function app() {
     },
     onSectionDrop(e, pri) {
       if (this.drag.type !== 'task') return;
-      // Only handle if not dropped on a task (tasks stop propagation)
-      if (this.drag.priority !== pri) {
-        this._changeTaskPriority(this.drag.id, pri);
+      // Capture and clear drag state immediately so re-render doesn't re-apply is-dragging
+      const dragId  = this.drag.id;
+      const dragPri = this.drag.priority;
+      this.onDragEnd();
+      if (dragPri !== pri) {
+        this._changeTaskPriority(dragId, pri);
       }
-      this.dragOverPri = null;
-      this.dragOverId  = null;
     },
-
     onTaskDragOver(e, task) {
       if (this.drag.type !== 'task' || this.drag.id === task.id) return;
       if (this.drag.priority === task.priority) {
@@ -1570,15 +1266,16 @@ function app() {
     },
     onTaskDrop(e, task) {
       if (this.drag.type !== 'task' || this.drag.id === task.id) return;
-      if (this.drag.priority === task.priority) {
-        this._reorderTasksInSection(this.drag.id, task.id, task.priority);
+      // Capture and clear drag state immediately — prevents greyed-out remnant
+      const dragId  = this.drag.id;
+      const dragPri = this.drag.priority;
+      this.onDragEnd();
+      if (dragPri === task.priority) {
+        this._reorderTasksInSection(dragId, task.id, task.priority);
       } else {
-        this._changeTaskPriority(this.drag.id, task.priority);
+        this._changeTaskPriority(dragId, task.priority);
       }
-      this.dragOverId  = null;
-      this.dragOverPri = null;
     },
-
     _reorderTasksInSection(dragId, targetId, pri) {
       const arr = [...(this.priorityTasks[pri] || [])];
       const fi  = arr.findIndex(t => t.id == dragId);
@@ -1589,24 +1286,21 @@ function app() {
       this.priorityTasks = { ...this.priorityTasks, [pri]: arr };
       this.apiPost('reorder_tasks', { order: arr.map(t => t.id) });
     },
-
     async _changeTaskPriority(taskId, newPri) {
       const task = this.findTask(taskId);
       if (!task) return;
       const oldPri = task.priority;
-      // Optimistic: move in local state
+      // Optimistic update
       this.priorityTasks[oldPri] = (this.priorityTasks[oldPri] || []).filter(t => t.id != taskId);
-      const updated = { ...task, priority: newPri };
-      this.priorityTasks[newPri] = [...(this.priorityTasks[newPri] || []), updated];
+      this.priorityTasks[newPri] = [...(this.priorityTasks[newPri] || []), { ...task, priority: newPri }];
       await this.apiPost('update_task', { id: taskId, title: task.title, priority: newPri, project_id: task.project_id });
       this.showNotification('priority → ' + newPri, 'success');
       await this.fetchPriorityTasks();
     },
 
-    // ── Drag and drop — PROJECTS (dashboard) ──────────────────────────────
+    // ── Drag: project cards ───────────────────────────────────────────────
     onProjDragStart(e, project) {
       e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', 'proj_' + project.id);
       this.drag = { id: project.id, type: 'project', priority: null, projectId: null };
     },
     onProjDragOver(e, project) {
@@ -1618,47 +1312,47 @@ function app() {
       const arr = [...this.projects];
       const fi  = arr.findIndex(p => p.id == this.drag.id);
       const ti  = arr.findIndex(p => p.id == project.id);
+      this.onDragEnd();
       if (fi !== -1 && ti !== -1) {
         const [item] = arr.splice(fi, 1);
         arr.splice(ti, 0, item);
         this.projects = arr;
         this.apiPost('reorder_projects', { order: arr.map(p => p.id) });
       }
-      this.dragOverId = null;
-      this.onDragEnd();
     },
 
-    // ── Drag and drop — COMPLETED TASKS ───────────────────────────────────
+    // ── Drag: completed board ─────────────────────────────────────────────
     onCompletedDragStart(e, task) {
       e.dataTransfer.effectAllowed = 'move';
-      this.drag = { id: task.id, type: 'completed', priority: null, projectId: null };
+      this.drag = { id: task.id, type: 'completed', priority: null, projectId: task.project_id };
     },
     onCompletedDragOver(e, task) {
       if (this.drag.type !== 'completed' || this.drag.id === task.id) return;
+      if (this.drag.projectId !== task.project_id) return; // same-card only
       this.dragOverId = 'comp_' + task.id;
     },
     onCompletedDrop(e, task) {
       if (this.drag.type !== 'completed' || this.drag.id === task.id) { this.dragOverId = null; return; }
+      if (this.drag.projectId !== task.project_id) { this.dragOverId = null; return; }
       const arr = [...this.completedTasks];
       const fi  = arr.findIndex(t => t.id == this.drag.id);
       const ti  = arr.findIndex(t => t.id == task.id);
+      this.onDragEnd();
       if (fi !== -1 && ti !== -1) {
         const [item] = arr.splice(fi, 1);
         arr.splice(ti, 0, item);
         this.completedTasks = arr;
         this.apiPost('reorder_tasks', { order: arr.map(t => t.id) });
       }
-      this.dragOverId = null;
-      this.onDragEnd();
     },
 
     onDragEnd() {
       this.drag       = { id: null, type: null, priority: null, projectId: null };
-      this.dragOverId = null;
+      this.dragOverId  = null;
       this.dragOverPri = null;
     },
 
-    // ── API wrappers ──────────────────────────────────────────────────────
+    // ── API ───────────────────────────────────────────────────────────────
     async api(action, params = {}) {
       this.loading = true;
       try {
@@ -1709,9 +1403,9 @@ function app() {
       const d    = new Date(str.replace(' ', 'T'));
       const now  = new Date();
       const diff = (now - d) / 1000;
-      if (diff < 86400) return 'today ' + d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+      if (diff < 86400)  return 'today';
       if (diff < 172800) return 'yesterday';
-      return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' });
+      return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short' });
     },
     relativeTime(str) {
       if (!str) return '';

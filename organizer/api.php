@@ -428,6 +428,29 @@ try {
             $stmt->execute([':tid' => $taskId]);
             jsonOut($stmt->fetchAll());
 
+        case 'get_project_completed':
+            requireAuth();
+            $pid   = (int)($_GET['project_id'] ?? 0);
+            $limit = max(1, min((int)($_GET['limit'] ?? 3), 20));
+            if (!$pid) jsonError('project_id required');
+            $pdo  = getDb();
+            $stmt = $pdo->prepare(
+                "SELECT t.*,
+                    (SELECT MAX(tl.logged_at) FROM task_logs tl
+                     WHERE tl.task_id = t.id AND tl.action = 'completed') AS completed_at,
+                    (SELECT tl.note FROM task_logs tl
+                     WHERE tl.task_id = t.id AND tl.action = 'completed'
+                     ORDER BY tl.logged_at DESC LIMIT 1) AS completion_note
+                 FROM tasks t
+                 WHERE t.project_id = :pid AND t.status = 'completed'
+                 ORDER BY completed_at DESC, t.id DESC
+                 LIMIT :lim"
+            );
+            $stmt->bindValue(':pid', $pid, PDO::PARAM_INT);
+            $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+            $stmt->execute();
+            jsonOut($stmt->fetchAll());
+
         case 'get_completed_tasks':
             requireAuth();
             $pdo  = getDb();
