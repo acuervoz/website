@@ -208,9 +208,14 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .priority-section { margin-bottom: 24px; }
 
 /* ── Dashboard & Completed board shared card styles ────────────────────── */
-.board-scroll { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 16px; align-items: flex-start; }
+.board-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
 .project-card {
-  border: 1px solid var(--border); min-width: 260px; max-width: 280px; flex-shrink: 0;
+  border: 1px solid var(--border);
   background: var(--bg-surface); display: flex; flex-direction: column;
   transition: border-color 120ms ease, opacity 120ms ease;
 }
@@ -279,7 +284,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .btn-sm { padding: 3px 8px; font-size: 10px; }
 .btn-text { background: none; border: none; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: pointer; padding: 4px 0; letter-spacing: 0.08em; text-transform: uppercase; transition: color 120ms ease; }
 .btn-text:hover { color: var(--accent); }
-.new-project-card { border: 1px dashed var(--border); min-width: 180px; display: flex; align-items: center; justify-content: center; padding: 20px; cursor: pointer; transition: border-color 120ms ease; background: transparent; flex-shrink: 0; }
+.new-project-card { border: 1px dashed var(--border); min-height: 80px; display: flex; align-items: center; justify-content: center; padding: 20px; cursor: pointer; transition: border-color 120ms ease; background: transparent; flex-shrink: 0; }
 .new-project-card:hover { border-color: var(--accent); }
 .new-project-label { color: var(--text-muted); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; transition: color 120ms ease; }
 .new-project-card:hover .new-project-label { color: var(--accent); }
@@ -487,7 +492,7 @@ button:focus { outline: none; }
 
   <!-- ── DASHBOARD VIEW ─────────────────────────────────────────────────── -->
   <div x-show="view==='dashboard'" x-cloak>
-    <div class="board-scroll">
+    <div class="board-grid">
       <template x-for="project in projects" :key="project.id">
         <div class="project-card"
              draggable="true"
@@ -598,7 +603,7 @@ button:focus { outline: none; }
   <!-- ── ARCHIVE VIEW ────────────────────────────────────────────────────── -->
   <div x-show="view==='archive'" x-cloak>
     <div class="view-header"><span>── ARCHIVED PROJECTS ──</span></div>
-    <div class="board-scroll">
+    <div class="board-grid">
       <template x-if="archivedProjects.length===0">
         <div class="empty-state">· no archived projects</div>
       </template>
@@ -634,7 +639,7 @@ button:focus { outline: none; }
       <div class="empty-state">· no completed tasks yet</div>
     </template>
 
-    <div class="board-scroll" x-show="completedTasks.length > 0">
+    <div class="board-grid" x-show="completedTasks.length > 0" style="align-items:start">
       <template x-for="group in completedByProject" :key="group.id">
         <div class="project-card">
           <div class="project-card-header" style="border-left:3px solid" :style="'border-left-color:'+group.colour">
@@ -694,14 +699,42 @@ button:focus { outline: none; }
       </div>
       <div class="modal-field">
         <label class="modal-label">Project:</label>
-        <select class="modal-select" x-model="newAnyTask.projectId">
-          <template x-if="projects.length===0">
-            <option value="" disabled>— no projects yet —</option>
-          </template>
-          <template x-for="p in projects" :key="p.id">
-            <option :value="p.id" x-text="p.name"></option>
-          </template>
-        </select>
+        <template x-if="!showNewProjectInline">
+          <div>
+            <template x-if="projects.length===0">
+              <p style="color:var(--text-dim);font-size:11px;padding:6px 0">no projects yet — create one below</p>
+            </template>
+            <template x-if="projects.length>0">
+              <select class="modal-select" x-model="newAnyTask.projectId" style="margin-bottom:6px">
+                <template x-for="p in projects" :key="p.id">
+                  <option :value="p.id" x-text="p.name"></option>
+                </template>
+              </select>
+            </template>
+            <button class="btn-text" style="font-size:10px" @click="showNewProjectInline=true">+ NEW PROJECT</button>
+          </div>
+        </template>
+        <template x-if="showNewProjectInline">
+          <div style="border:1px solid var(--border);padding:12px;background:var(--bg-raised)">
+            <label class="modal-label">Project name:</label>
+            <input class="modal-input" type="text" x-model="newProjectInlineName"
+              placeholder="project name..." style="margin-bottom:10px"
+              @keydown.enter="createProjectAndSelectInModal()"
+              @keydown.escape="showNewProjectInline=false"
+              x-init="$nextTick(()=>$el.focus())">
+            <label class="modal-label">Colour:</label>
+            <div class="colour-swatches" style="margin-bottom:10px">
+              <template x-for="c in colourSwatches" :key="c">
+                <div class="colour-swatch" :class="{selected:newProjectInlineColour===c}"
+                  :style="'background:'+c" @click="newProjectInlineColour=c"></div>
+              </template>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-sm" @click="showNewProjectInline=false; newProjectInlineName=''">CANCEL</button>
+              <button class="btn btn-accent btn-sm" @click="createProjectAndSelectInModal()">CREATE + SELECT</button>
+            </div>
+          </div>
+        </template>
       </div>
       <div class="modal-field">
         <label class="modal-label">Priority:</label>
@@ -930,6 +963,9 @@ function app() {
     newTaskTitle: '',
     newTaskPriority: 'Soon',
     newAnyTask: { title: '', projectId: null, priority: 'Soon' },
+    showNewProjectInline: false,
+    newProjectInlineName: '',
+    newProjectInlineColour: '#FF6777',
     newProjectName: '',
     newProjectColour: '#FF6777',
     editProjectId: null,
@@ -1073,7 +1109,25 @@ function app() {
         projectId: this.projects[0] ? this.projects[0].id : null,
         priority: 'Soon',
       };
+      this.showNewProjectInline   = false;
+      this.newProjectInlineName   = '';
+      this.newProjectInlineColour = '#FF6777';
       this.modal = 'add-task';
+    },
+    async createProjectAndSelectInModal() {
+      if (!this.newProjectInlineName.trim()) return;
+      const res = await this.apiPost('create_project', {
+        name:   this.newProjectInlineName.trim(),
+        colour: this.newProjectInlineColour,
+      });
+      if (res && res.id) {
+        await this.fetchProjects();
+        this.newAnyTask.projectId   = res.id;
+        this.showNewProjectInline   = false;
+        this.newProjectInlineName   = '';
+        this.newProjectInlineColour = '#FF6777';
+        this.showNotification('project created', 'success');
+      }
     },
     async submitAddAnyTask() {
       if (!this.newAnyTask.title.trim() || !this.newAnyTask.projectId) return;
