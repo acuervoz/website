@@ -142,6 +142,30 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   transition: background 120ms ease;
 }
 .nav-add-btn:hover { background: var(--accent-dim); }
+.hamburger-btn {
+  display: none; background: none; border: 1px solid var(--border);
+  color: var(--text-muted); font-family: 'JetBrains Mono', monospace;
+  font-size: 14px; padding: 3px 8px; cursor: pointer; line-height: 1;
+  transition: border-color 120ms ease, color 120ms ease;
+}
+.hamburger-btn:hover { border-color: var(--accent); color: var(--accent); }
+@media (max-width: 640px) { .nav-links { display: none; } .hamburger-btn { display: block; } }
+
+/* ── Mobile menu ─────────────────────────────────────────────────────────── */
+.mobile-menu {
+  position: fixed; top: 44px; left: 0; right: 0; z-index: 99;
+  background: var(--bg-surface); border-bottom: 1px solid var(--border);
+  padding: 4px 0;
+}
+.mobile-menu-item {
+  display: block; width: 100%; background: none; border: none;
+  color: var(--text-muted); font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 12px 20px; text-align: left; cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+.mobile-menu-item:hover { background: var(--bg-raised); color: var(--text); }
+.mobile-menu-item.active { color: var(--accent); }
 
 /* ── Layout ─────────────────────────────────────────────────────────────── */
 #main { margin-top: 44px; padding: 24px 20px; min-height: calc(100vh - 44px); }
@@ -243,13 +267,15 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 /* ── Completed tasks in dashboard card ──────────────────────────────────── */
 .card-completed-divider { margin: 4px 12px; border: none; border-top: 1px dashed var(--border); }
 .card-completed-row {
-  display: flex; align-items: baseline; gap: 6px; padding: 3px 12px;
+  display: flex; align-items: center; gap: 6px; padding: 3px 12px;
   border-left: 2px solid transparent; border-top: 2px solid transparent;
   transition: background 120ms ease;
 }
 .card-completed-row[draggable="true"] { cursor: grab; }
 .card-completed-row:hover { background: var(--bg-raised); }
 .card-completed-row.drag-insert-before { border-top-color: var(--text-dim) !important; }
+.card-completed-row .task-actions { opacity: 0; }
+.card-completed-row:hover .task-actions { opacity: 1; }
 .card-completed-date { font-size: 10px; color: var(--text-dim); flex-shrink: 0; white-space: nowrap; }
 .card-completed-title { font-size: 11px; color: var(--text-dim); text-decoration: line-through; text-decoration-color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
 
@@ -374,9 +400,18 @@ button:focus { outline: none; }
     <div class="nav-right">
       <button class="nav-add-btn" @click="openAddTaskModal()">+ TASK</button>
       <button class="nav-icon-btn" @click="openDevices()">⚙ DEVICES</button>
+      <button class="hamburger-btn" @click="mobileMenuOpen = !mobileMenuOpen" :class="{active:mobileMenuOpen}">☰</button>
     </div>
   </div>
 </nav>
+
+<!-- ── Mobile menu ────────────────────────────────────────────────────────── -->
+<div class="mobile-menu" x-show="mobileMenuOpen" x-cloak @click.outside="mobileMenuOpen=false">
+  <button class="mobile-menu-item" :class="{active:view==='priority'}"  @click="switchView('priority');  mobileMenuOpen=false">PRIORITY</button>
+  <button class="mobile-menu-item" :class="{active:view==='dashboard'}" @click="switchView('dashboard'); mobileMenuOpen=false">DASHBOARD</button>
+  <button class="mobile-menu-item" :class="{active:view==='archive'}"   @click="switchView('archive');   mobileMenuOpen=false">ARCHIVE</button>
+  <button class="mobile-menu-item" :class="{active:view==='completed'}" @click="switchView('completed'); mobileMenuOpen=false">COMPLETED</button>
+</div>
 
 <!-- ── Main ─────────────────────────────────────────────────────────────── -->
 <main id="main">
@@ -481,6 +516,8 @@ button:focus { outline: none; }
               <button class="task-btn" @click.stop="toggleDropdown('proj_'+project.id)">⋮</button>
               <div class="dropdown-menu" x-show="openDropdownId==='proj_'+project.id" x-cloak @click.stop>
                 <button class="dropdown-item" @click="openRenameProject(project); closeDropdown('proj_'+project.id)">Rename</button>
+                <button class="dropdown-item" @click="moveProjectUp(project.id); closeDropdown('proj_'+project.id)">↑ Move Up</button>
+                <button class="dropdown-item" @click="moveProjectDown(project.id); closeDropdown('proj_'+project.id)">↓ Move Down</button>
                 <button class="dropdown-item" @click="archiveProject(project.id); closeDropdown('proj_'+project.id)">Archive</button>
                 <button class="dropdown-item" @click="deleteProject(project.id); closeDropdown('proj_'+project.id)">Delete</button>
               </div>
@@ -542,6 +579,9 @@ button:focus { outline: none; }
                   <div class="card-completed-row">
                     <span class="card-completed-date" x-text="formatShortDate(ct.completed_at)"></span>
                     <span class="card-completed-title" x-text="ct.title"></span>
+                    <div class="task-actions">
+                      <button class="task-btn btn-sm" @click.stop="reopenTaskInDashboard(ct.id, project.id)" title="Reopen">↺</button>
+                    </div>
                   </div>
                 </template>
               </div>
@@ -977,6 +1017,7 @@ function app() {
     historyTask: null,
     historyLog: [],
     editTaskForm: { id: null, title: '', priority: 'Soon', projectId: null },
+    mobileMenuOpen: false,
     openDropdownId: null,
     addingTaskTo: null,
     newTaskTitle: '',
@@ -1242,6 +1283,29 @@ function app() {
       this.showNotification('project updated', 'success');
       await this.fetchProjects();
       if (this.view === 'dashboard') await this.fetchAllProjectTasks();
+    },
+    moveProjectUp(projectId) {
+      const arr = [...this.projects];
+      const i   = arr.findIndex(p => p.id == projectId);
+      if (i <= 0) return;
+      [arr[i - 1], arr[i]] = [arr[i], arr[i - 1]];
+      this.projects = arr;
+      this.apiPost('reorder_projects', { order: arr.map(p => p.id) });
+    },
+    moveProjectDown(projectId) {
+      const arr = [...this.projects];
+      const i   = arr.findIndex(p => p.id == projectId);
+      if (i === -1 || i >= arr.length - 1) return;
+      [arr[i], arr[i + 1]] = [arr[i + 1], arr[i]];
+      this.projects = arr;
+      this.apiPost('reorder_projects', { order: arr.map(p => p.id) });
+    },
+    async reopenTaskInDashboard(taskId, projectId) {
+      const ok = await this.apiPost('reopen_task', { id: taskId });
+      if (ok) {
+        this.showNotification('↺ task reopened', 'info');
+        await this.fetchProjectTasks(projectId);
+      }
     },
     async archiveProject(id) {
       await this.apiPost('archive_project', { id });
