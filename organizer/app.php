@@ -590,6 +590,7 @@ button:focus { outline: none; }
                   <div class="task-actions">
                     <button class="task-btn success btn-sm" @click="openCompleteModal(task)">✓</button>
                     <button class="task-btn btn-sm" @click="openEditTaskModal(task)">✎</button>
+                    <button class="task-btn btn-sm" @click.stop="deleteTask(task.id)">✕</button>
                   </div>
                 </div>
                 <template x-for="sub in task.subtasks||[]" :key="sub.id">
@@ -603,6 +604,7 @@ button:focus { outline: none; }
                     </div>
                     <div class="task-actions">
                       <button class="task-btn success btn-sm" @click="openCompleteModal(sub)">✓</button>
+                      <button class="task-btn btn-sm" @click.stop="deleteTask(sub.id)">✕</button>
                     </div>
                   </div>
                 </template>
@@ -623,6 +625,7 @@ button:focus { outline: none; }
                     <span class="card-completed-title task-title-btn" x-text="ct.title" :title="ct.title" @click.stop="openEditTaskModal(ct)"></span>
                     <div class="task-actions">
                       <button class="task-btn btn-sm" @click.stop="reopenTaskInDashboard(ct.id, project.id)" title="Reopen">↺</button>
+                      <button class="task-btn btn-sm" @click.stop="deleteTask(ct.id)">✕</button>
                     </div>
                   </div>
                 </template>
@@ -1122,6 +1125,7 @@ button:focus { outline: none; }
                 <button class="task-btn btn-sm" @click.stop="reopenInProjectView(task.id)" title="Reopen">↺</button>
               </template>
               <button class="task-btn btn-sm" @click.stop="openEditTaskModal(task)">✎</button>
+              <button class="task-btn btn-sm" @click.stop="deleteTask(task.id)">✕</button>
             </div>
           </div>
           <template x-for="sub in task.subtasks||[]" :key="sub.id">
@@ -1142,6 +1146,7 @@ button:focus { outline: none; }
                   <button class="task-btn btn-sm" @click.stop="reopenInProjectView(sub.id)" title="Reopen">↺</button>
                 </template>
                 <button class="task-btn btn-sm" @click.stop="openEditTaskModal(sub)">✎</button>
+                <button class="task-btn btn-sm" @click.stop="deleteTask(sub.id)">✕</button>
               </div>
             </div>
           </template>
@@ -1514,8 +1519,12 @@ function app() {
       if (!confirm('Delete this task?')) return;
       await this.apiPost('delete_task', { id });
       this.showNotification('task deleted', 'info');
-      await this.refresh();
-      if (this.view === 'completed') await this.fetchCompletedTasks();
+      if (this.modal === 'project-view') {
+        await this._fetchProjectViewData(this.projectViewProject.id);
+      } else {
+        await this.refresh();
+        if (this.view === 'completed') await this.fetchCompletedTasks();
+      }
     },
     async moveTask(id, projectId) {
       const task = this.findTask(id);
