@@ -514,7 +514,7 @@ button:focus { outline: none; }
                      @dragend="onDragEnd()">
                   <span class="subtask-prefix">└─</span>
                   <div class="task-info">
-                    <span class="task-title task-title-btn" x-text="sub.title" :title="sub.title" @click.stop="openEditTaskModal(sub)"></span>
+                    <span class="task-title task-title-btn" x-text="sub.title" :title="sub.title" @click.stop="openEditTaskModal(task)"></span>
                     <template x-if="sub.description">
                       <span class="task-desc" x-text="sub.description"></span>
                     </template>
@@ -597,7 +597,7 @@ button:focus { outline: none; }
                   <div class="card-task-row subtask">
                     <span class="subtask-prefix">└─</span>
                     <div class="task-info">
-                      <span class="task-title task-title-btn" x-text="sub.title" :title="sub.title" @click.stop="openEditTaskModal(sub)"></span>
+                      <span class="task-title task-title-btn" x-text="sub.title" :title="sub.title" @click.stop="openEditTaskModal(task)"></span>
                       <template x-if="sub.description">
                         <span class="task-desc" x-text="sub.description"></span>
                       </template>
@@ -1133,7 +1133,7 @@ button:focus { outline: none; }
               <span class="pv-drag-handle" style="visibility:hidden">⠿</span>
               <span class="pv-task-num">└─</span>
               <div class="pv-task-info">
-                <div class="pv-task-title" x-text="sub.title" @click.stop="openEditTaskModal(sub)"></div>
+                <div class="pv-task-title" x-text="sub.title" @click.stop="openEditTaskModal(task)"></div>
                 <template x-if="sub.description">
                   <div class="pv-task-meta" x-text="sub.description"></div>
                 </template>
