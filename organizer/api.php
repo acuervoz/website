@@ -87,12 +87,29 @@ function postAll(): array {
     return is_array($data) ? $data : $_POST;
 }
 
+// ── Schema migrations (idempotent, run every request) ────────────────────────
+
+function ensureMigrations(PDO $pdo): void {
+    // Add description column if not present
+    $col = $pdo->query("SHOW COLUMNS FROM tasks LIKE 'description'")->fetch();
+    if (!$col) {
+        $pdo->exec("ALTER TABLE tasks ADD COLUMN description TEXT DEFAULT NULL");
+    }
+    // Extend priority ENUM to include 'No Priority' if not already present
+    $pri = $pdo->query("SHOW COLUMNS FROM tasks LIKE 'priority'")->fetch();
+    if ($pri && strpos($pri['Type'], 'No Priority') === false) {
+        $pdo->exec("ALTER TABLE tasks MODIFY COLUMN priority ENUM('ASAP','Soon','Backlog','No Priority') DEFAULT 'Soon'");
+    }
+}
+
 // ── Routing ───────────────────────────────────────────────────────────────────
 
 $action = $_GET['action'] ?? $_POST['action'] ?? postAll()['action'] ?? '';
 $method = $_SERVER['REQUEST_METHOD'];
 
 try {
+    ensureMigrations(getDb());
+
     switch ($action) {
 
         // ── AUTH ──────────────────────────────────────────────────────────────
@@ -283,6 +300,7 @@ try {
                  FROM tasks t
                  JOIN projects p ON p.id = t.project_id
                  WHERE t.status = 'active' AND p.archived = 0
+                   AND (t.parent_task_id IS NOT NULL OR t.priority != 'No Priority')
                  ORDER BY t.priority ASC, t.sort_order ASC, t.created_at ASC"
             );
             $rows   = $stmt->fetchAll();
@@ -314,12 +332,13 @@ try {
             $parentTaskId = isset($body['parent_task_id']) ? (int)$body['parent_task_id'] : null;
             $title        = trim($body['title'] ?? '');
             $priority     = $body['priority'] ?? 'Soon';
+            $description  = isset($body['description']) ? trim($body['description']) ?: null : null;
             if (!$projectId || !$title) jsonError('project_id and title required');
-            if (!in_array($priority, ['ASAP','Soon','Backlog'])) $priority = 'Soon';
+            if (!in_array($priority, ['ASAP','Soon','Backlog','No Priority'])) $priority = 'Soon';
             $pdo  = getDb();
             $stmt = $pdo->prepare(
-                "INSERT INTO tasks (project_id, parent_task_id, title, priority, sort_order)
-                 VALUES (:pid, :ptid, :title, :pri,
+                "INSERT INTO tasks (project_id, parent_task_id, title, priority, description, sort_order)
+                 VALUES (:pid, :ptid, :title, :pri, :desc,
                     (SELECT COALESCE(MAX(t2.sort_order),0)+1 FROM tasks t2
                      WHERE t2.project_id=:pid2 AND t2.parent_task_id <=> :ptid2))"
             );
@@ -328,6 +347,7 @@ try {
                 ':ptid'  => $parentTaskId,
                 ':title' => $title,
                 ':pri'   => $priority,
+                ':desc'  => $description,
                 ':pid2'  => $projectId,
                 ':ptid2' => $parentTaskId,
             ]);
@@ -336,22 +356,29 @@ try {
         case 'update_task':
             requireAuth();
             requireCsrf();
-            $body      = postAll();
-            $id        = (int)($body['id'] ?? 0);
-            $title     = trim($body['title'] ?? '');
-            $priority  = $body['priority'] ?? 'Soon';
-            $projectId = isset($body['project_id']) ? (int)$body['project_id'] : null;
+            $body        = postAll();
+            $id          = (int)($body['id'] ?? 0);
+            $title       = trim($body['title'] ?? '');
+            $priority    = $body['priority'] ?? 'Soon';
+            $projectId   = isset($body['project_id']) ? (int)$body['project_id'] : null;
+            $description = array_key_exists('description', $body) ? (trim($body['description']) ?: null) : false;
             if (!$id) jsonError('id required');
-            if (!in_array($priority, ['ASAP','Soon','Backlog'])) $priority = 'Soon';
+            if (!in_array($priority, ['ASAP','Soon','Backlog','No Priority'])) $priority = 'Soon';
             $pdo = getDb();
             if ($projectId) {
+                $descSql = $description !== false ? ', description=:desc' : '';
                 $stmt = $pdo->prepare(
-                    "UPDATE tasks SET title=:t, priority=:p, project_id=:pid WHERE id=:id"
+                    "UPDATE tasks SET title=:t, priority=:p, project_id=:pid{$descSql} WHERE id=:id"
                 );
-                $stmt->execute([':t'=>$title,':p'=>$priority,':pid'=>$projectId,':id'=>$id]);
+                $params = [':t'=>$title,':p'=>$priority,':pid'=>$projectId,':id'=>$id];
+                if ($description !== false) $params[':desc'] = $description;
+                $stmt->execute($params);
             } else {
-                $stmt = $pdo->prepare("UPDATE tasks SET title=:t, priority=:p WHERE id=:id");
-                $stmt->execute([':t'=>$title,':p'=>$priority,':id'=>$id]);
+                $descSql = $description !== false ? ', description=:desc' : '';
+                $stmt = $pdo->prepare("UPDATE tasks SET title=:t, priority=:p{$descSql} WHERE id=:id");
+                $params = [':t'=>$title,':p'=>$priority,':id'=>$id];
+                if ($description !== false) $params[':desc'] = $description;
+                $stmt->execute($params);
             }
             // Log update
             $log = $pdo->prepare(

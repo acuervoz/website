@@ -206,6 +206,10 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .task-row:hover .drag-handle { opacity: 1; }
 .project-tag { display: inline-block; padding: 1px 6px; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; border: 1px solid; flex-shrink: 0; white-space: nowrap; }
 .task-title { flex: 1; color: var(--text); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.task-info  { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.task-info .task-title { flex: none; }
+.task-desc  { font-size: 10px; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.task-num   { font-size: 10px; color: var(--text-dim); flex-shrink: 0; min-width: 20px; }
 .task-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; opacity: 0; transition: opacity 120ms ease; }
 .task-row:hover .task-actions { opacity: 1; }
 .task-btn { background: none; border: 1px solid var(--border); color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 2px 6px; cursor: pointer; transition: border-color 120ms ease, color 120ms ease; }
@@ -453,7 +457,12 @@ button:focus { outline: none; }
                 <span class="project-tag"
                   :style="'color:'+task.project_colour+';border-color:'+task.project_colour+'40'"
                   x-text="task.project_name"></span>
-                <span class="task-title" x-text="task.title"></span>
+                <div class="task-info">
+                  <span class="task-title" x-text="task.title"></span>
+                  <template x-if="task.description">
+                    <span class="task-desc" x-text="task.description"></span>
+                  </template>
+                </div>
                 <div class="task-actions">
                   <button class="task-btn success" @click.stop="openCompleteModal(task)">✓</button>
                   <button class="task-btn" @click.stop="openEditTaskModal(task)">✎</button>
@@ -476,7 +485,12 @@ button:focus { outline: none; }
                      @dragstart="onTaskDragStart($event, sub)"
                      @dragend="onDragEnd()">
                   <span class="subtask-prefix">└─</span>
-                  <span class="task-title" x-text="sub.title"></span>
+                  <div class="task-info">
+                    <span class="task-title" x-text="sub.title"></span>
+                    <template x-if="sub.description">
+                      <span class="task-desc" x-text="sub.description"></span>
+                    </template>
+                  </div>
                   <div class="task-actions">
                     <button class="task-btn success" @click.stop="openCompleteModal(sub)">✓</button>
                     <button class="task-btn" @click.stop="openEditTaskModal(sub)">✎</button>
@@ -525,46 +539,46 @@ button:focus { outline: none; }
           </div>
 
           <div class="project-card-body">
-            <!-- Active tasks by priority -->
-            <template x-for="pri in ['ASAP','Soon','Backlog']" :key="pri">
-              <template x-if="getProjectTasks(project.id, pri).length > 0">
-                <div>
-                  <div class="card-section-header">
-                    <span :class="{'pri-asap':pri==='ASAP','pri-soon':pri==='Soon','pri-back':pri==='Backlog'}"
-                      x-text="pri==='ASAP'?'!!':pri==='Soon'?'◈':'·'"></span>
-                    <span x-text="getProjectTasks(project.id,pri).length+' '+pri"></span>
-                  </div>
-                  <template x-for="task in getProjectTasks(project.id, pri)" :key="task.id">
-                    <div>
-                      <div class="card-task-row"
-                           draggable="true"
-                           :class="{'is-dragging': drag.id===task.id && drag.type==='dashboard-task', 'drag-insert-before': dragOverId===task.id}"
-                           @dragstart.stop="onDashTaskDragStart($event, task, project.id)"
-                           @dragend="onDragEnd()"
-                           @dragover.prevent.stop="onDashTaskDragOver($event, task, project.id)"
-                           @drop.prevent.stop="onDashTaskDrop($event, task, project.id)">
-                        <span class="task-title" x-text="task.title"></span>
-                        <div class="task-actions">
-                          <button class="task-btn success btn-sm" @click="openCompleteModal(task)">✓</button>
-                          <button class="task-btn btn-sm" @click="openEditTaskModal(task)">✎</button>
-                        </div>
-                      </div>
-                      <template x-for="sub in task.subtasks||[]" :key="sub.id">
-                        <div class="card-task-row subtask">
-                          <span class="subtask-prefix">└─</span>
-                          <span class="task-title" x-text="sub.title"></span>
-                          <div class="task-actions">
-                            <button class="task-btn success btn-sm" @click="openCompleteModal(sub)">✓</button>
-                          </div>
-                        </div>
-                      </template>
-                    </div>
-                  </template>
-                </div>
-              </template>
-            </template>
+            <!-- Active tasks as numbered list -->
             <template x-if="getProjectAllTasks(project.id).length===0">
               <div class="empty-state" style="padding:8px 12px">· no active tasks</div>
+            </template>
+            <template x-for="(task, i) in getProjectAllTasks(project.id)" :key="task.id">
+              <div>
+                <div class="card-task-row"
+                     draggable="true"
+                     :class="{'is-dragging': drag.id===task.id && drag.type==='dashboard-task', 'drag-insert-before': dragOverId===task.id}"
+                     @dragstart.stop="onDashTaskDragStart($event, task, project.id)"
+                     @dragend="onDragEnd()"
+                     @dragover.prevent.stop="onDashTaskDragOver($event, task, project.id)"
+                     @drop.prevent.stop="onDashTaskDrop($event, task, project.id)">
+                  <span class="task-num" x-text="(i+1)+'.'"></span>
+                  <div class="task-info">
+                    <span class="task-title" x-text="task.title"></span>
+                    <template x-if="task.description">
+                      <span class="task-desc" x-text="task.description"></span>
+                    </template>
+                  </div>
+                  <div class="task-actions">
+                    <button class="task-btn success btn-sm" @click="openCompleteModal(task)">✓</button>
+                    <button class="task-btn btn-sm" @click="openEditTaskModal(task)">✎</button>
+                  </div>
+                </div>
+                <template x-for="sub in task.subtasks||[]" :key="sub.id">
+                  <div class="card-task-row subtask">
+                    <span class="subtask-prefix">└─</span>
+                    <div class="task-info">
+                      <span class="task-title" x-text="sub.title"></span>
+                      <template x-if="sub.description">
+                        <span class="task-desc" x-text="sub.description"></span>
+                      </template>
+                    </div>
+                    <div class="task-actions">
+                      <button class="task-btn success btn-sm" @click="openCompleteModal(sub)">✓</button>
+                    </div>
+                  </div>
+                </template>
+              </div>
             </template>
 
             <!-- Last 3 completed tasks -->
@@ -603,6 +617,7 @@ button:focus { outline: none; }
                     <option value="ASAP">!! ASAP</option>
                     <option value="Soon">◈ Soon</option>
                     <option value="Backlog">· Backlog</option>
+                    <option value="No Priority">— No Priority</option>
                   </select>
                   <button class="btn btn-accent btn-sm" @click="submitAddTask(project.id)">ADD</button>
                   <button class="btn btn-sm" @click="addingTaskTo=null; newTaskTitle=''">✕</button>
@@ -762,7 +777,13 @@ button:focus { outline: none; }
           <option value="ASAP">!! ASAP</option>
           <option value="Soon">◈ Soon</option>
           <option value="Backlog">· Backlog</option>
+          <option value="No Priority">— No Priority</option>
         </select>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Description (optional):</label>
+        <textarea class="modal-textarea" x-model="newAnyTask.description"
+          placeholder="additional details..." style="min-height:60px"></textarea>
       </div>
     </div>
     <div class="modal-footer">
@@ -794,6 +815,7 @@ button:focus { outline: none; }
           <option value="ASAP">!! ASAP</option>
           <option value="Soon">◈ Soon</option>
           <option value="Backlog">· Backlog</option>
+          <option value="No Priority">— No Priority</option>
         </select>
       </div>
       <div class="modal-field">
@@ -803,6 +825,11 @@ button:focus { outline: none; }
             <option :value="p.id" x-text="p.name"></option>
           </template>
         </select>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Description (optional):</label>
+        <textarea class="modal-textarea" x-model="editTaskForm.description"
+          placeholder="additional details..." style="min-height:60px"></textarea>
       </div>
     </div>
     <div class="modal-footer">
@@ -1016,13 +1043,13 @@ function app() {
     completeNote: '',
     historyTask: null,
     historyLog: [],
-    editTaskForm: { id: null, title: '', priority: 'Soon', projectId: null },
+    editTaskForm: { id: null, title: '', priority: 'Soon', projectId: null, description: '' },
     mobileMenuOpen: false,
     openDropdownId: null,
     addingTaskTo: null,
     newTaskTitle: '',
     newTaskPriority: 'Soon',
-    newAnyTask: { title: '', projectId: null, priority: 'Soon' },
+    newAnyTask: { title: '', projectId: null, priority: 'Soon', description: '' },
     showNewProjectInline: false,
     newProjectInlineName: '',
     newProjectInlineColour: '#FF6777',
@@ -1167,6 +1194,7 @@ function app() {
         title: '',
         projectId: this.projects[0] ? this.projects[0].id : null,
         priority: 'Soon',
+        description: '',
       };
       this.showNewProjectInline   = false;
       this.newProjectInlineName   = '';
@@ -1191,9 +1219,10 @@ function app() {
     async submitAddAnyTask() {
       if (!this.newAnyTask.title.trim() || !this.newAnyTask.projectId) return;
       const ok = await this.apiPost('create_task', {
-        project_id: this.newAnyTask.projectId,
-        title:      this.newAnyTask.title.trim(),
-        priority:   this.newAnyTask.priority,
+        project_id:  this.newAnyTask.projectId,
+        title:       this.newAnyTask.title.trim(),
+        priority:    this.newAnyTask.priority,
+        description: this.newAnyTask.description.trim() || null,
       });
       if (ok) {
         this.modal = null;
@@ -1204,16 +1233,17 @@ function app() {
 
     // ── Edit task modal ───────────────────────────────────────────────────
     openEditTaskModal(task) {
-      this.editTaskForm = { id: task.id, title: task.title, priority: task.priority, projectId: task.project_id };
+      this.editTaskForm = { id: task.id, title: task.title, priority: task.priority, projectId: task.project_id, description: task.description || '' };
       this.modal = 'edit-task';
     },
     async submitEditTask() {
       if (!this.editTaskForm.title.trim()) return;
       const ok = await this.apiPost('update_task', {
-        id:         this.editTaskForm.id,
-        title:      this.editTaskForm.title.trim(),
-        priority:   this.editTaskForm.priority,
-        project_id: parseInt(this.editTaskForm.projectId),
+        id:          this.editTaskForm.id,
+        title:       this.editTaskForm.title.trim(),
+        priority:    this.editTaskForm.priority,
+        project_id:  parseInt(this.editTaskForm.projectId),
+        description: this.editTaskForm.description.trim() || null,
       });
       if (ok) {
         this.modal = null;
