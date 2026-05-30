@@ -486,7 +486,6 @@ button:focus { outline: none; }
                 </div>
                 <div class="task-actions">
                   <button class="task-btn success" @click.stop="openCompleteModal(task)">✓</button>
-                  <button class="task-btn" @click.stop="openEditTaskModal(task)">✎</button>
                   <div class="dropdown-wrap" @click.outside="closeDropdown(task.id)">
                     <button class="task-btn" @click.stop="toggleDropdown(task.id)">⋮</button>
                     <div class="dropdown-menu" x-show="openDropdownId===task.id" x-cloak @click.stop>
@@ -514,7 +513,6 @@ button:focus { outline: none; }
                   </div>
                   <div class="task-actions">
                     <button class="task-btn success" @click.stop="openCompleteModal(sub)">✓</button>
-                    <button class="task-btn" @click.stop="openEditTaskModal(sub)">✎</button>
                     <div class="dropdown-wrap" @click.outside="closeDropdown(sub.id)">
                       <button class="task-btn" @click.stop="toggleDropdown(sub.id)">⋮</button>
                       <div class="dropdown-menu" x-show="openDropdownId===sub.id" x-cloak @click.stop>
@@ -582,7 +580,6 @@ button:focus { outline: none; }
                   </div>
                   <div class="task-actions">
                     <button class="task-btn success btn-sm" @click="openCompleteModal(task)">✓</button>
-                    <button class="task-btn btn-sm" @click="openEditTaskModal(task)">✎</button>
                     <button class="task-btn btn-sm" @click.stop="deleteTask(task.id)">✕</button>
                   </div>
                 </div>
@@ -723,7 +720,6 @@ button:focus { outline: none; }
                     x-text="task.priority==='ASAP'?'!! ASAP':task.priority==='Soon'?'◈ Soon':'· Backlog'"></div>
                 </div>
                 <div class="comp-card-actions">
-                  <button class="task-btn btn-sm" @click="openEditTaskModal(task)" title="Edit">✎</button>
                   <button class="task-btn btn-sm" @click="reopenTask(task.id)" title="Reopen">↺</button>
                   <button class="task-btn btn-sm" @click="deleteTask(task.id)" title="Delete">✕</button>
                 </div>
@@ -1117,7 +1113,6 @@ button:focus { outline: none; }
               <template x-if="task.status==='completed'">
                 <button class="task-btn btn-sm" @click.stop="reopenInProjectView(task.id)" title="Reopen">↺</button>
               </template>
-              <button class="task-btn btn-sm" @click.stop="openEditTaskModal(task)">✎</button>
               <button class="task-btn btn-sm" @click.stop="deleteTask(task.id)">✕</button>
             </div>
           </div>
@@ -1138,7 +1133,6 @@ button:focus { outline: none; }
                 <template x-if="sub.status==='completed'">
                   <button class="task-btn btn-sm" @click.stop="reopenInProjectView(sub.id)" title="Reopen">↺</button>
                 </template>
-                <button class="task-btn btn-sm" @click.stop="openEditTaskModal(sub)">✎</button>
                 <button class="task-btn btn-sm" @click.stop="deleteTask(sub.id)">✕</button>
               </div>
             </div>
