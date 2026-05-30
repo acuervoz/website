@@ -255,7 +255,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .project-card-title { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
 .project-card-body { padding: 8px 0; flex: 1; overflow-y: auto; max-height: 420px; }
 .card-section-header { padding: 4px 12px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
-.card-task-row { display: flex; align-items: center; gap: 6px; padding: 4px 12px; border-left: 2px solid transparent; border-top: 2px solid transparent; transition: background 120ms ease, border-color 120ms ease; }
+.card-task-row { display: flex; align-items: flex-start; gap: 6px; padding: 4px 12px; border-left: 2px solid transparent; border-top: 2px solid transparent; transition: background 120ms ease, border-color 120ms ease; }
 .card-task-row:hover { background: var(--bg-raised); border-left-color: var(--accent); }
 .card-task-row[draggable="true"] { cursor: grab; }
 .card-task-row.is-dragging { opacity: 0.3; }
@@ -264,6 +264,10 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .card-task-row .task-actions { opacity: 0; }
 .card-task-row:hover .task-actions { opacity: 1; }
 .card-task-row.subtask { padding-left: 24px; }
+.card-task-row .task-title { white-space: normal; overflow: visible; text-overflow: unset; }
+.task-num { padding-top: 1px; }
+.task-title-btn { cursor: pointer; }
+.task-title-btn:hover { color: var(--accent); }
 .card-drag-handle { color: var(--text-dim); cursor: grab; font-size: 11px; opacity: 0; flex-shrink: 0; user-select: none; transition: opacity 120ms ease; }
 .project-card-header:hover .card-drag-handle { opacity: 1; }
 .project-card-footer { border-top: 1px solid var(--border); padding: 8px 12px; }
@@ -461,7 +465,7 @@ button:focus { outline: none; }
                   :style="'color:'+task.project_colour+';border-color:'+task.project_colour+'40'"
                   x-text="task.project_name"></span>
                 <div class="task-info">
-                  <span class="task-title" x-text="task.title" :title="task.title"></span>
+                  <span class="task-title task-title-btn" x-text="task.title" :title="task.title" @click.stop="openEditTaskModal(task)"></span>
                   <template x-if="task.description">
                     <span class="task-desc" x-text="task.description"></span>
                   </template>
@@ -489,7 +493,7 @@ button:focus { outline: none; }
                      @dragend="onDragEnd()">
                   <span class="subtask-prefix">└─</span>
                   <div class="task-info">
-                    <span class="task-title" x-text="sub.title" :title="sub.title"></span>
+                    <span class="task-title task-title-btn" x-text="sub.title" :title="sub.title" @click.stop="openEditTaskModal(sub)"></span>
                     <template x-if="sub.description">
                       <span class="task-desc" x-text="sub.description"></span>
                     </template>
@@ -557,7 +561,7 @@ button:focus { outline: none; }
                      @drop.prevent.stop="onDashTaskDrop($event, task, project.id)">
                   <span class="task-num" x-text="(i+1)+'.'"></span>
                   <div class="task-info">
-                    <span class="task-title" x-text="task.title" :title="task.title"></span>
+                    <span class="task-title task-title-btn" x-text="task.title" :title="task.title" @click.stop="openEditTaskModal(task)"></span>
                     <template x-if="task.description">
                       <span class="task-desc" x-text="task.description"></span>
                     </template>
@@ -571,7 +575,7 @@ button:focus { outline: none; }
                   <div class="card-task-row subtask">
                     <span class="subtask-prefix">└─</span>
                     <div class="task-info">
-                      <span class="task-title" x-text="sub.title" :title="sub.title"></span>
+                      <span class="task-title task-title-btn" x-text="sub.title" :title="sub.title" @click.stop="openEditTaskModal(sub)"></span>
                       <template x-if="sub.description">
                         <span class="task-desc" x-text="sub.description"></span>
                       </template>
@@ -595,7 +599,7 @@ button:focus { outline: none; }
                 <template x-for="ct in (projectCompletedCache[project.id]||[])" :key="ct.id">
                   <div class="card-completed-row">
                     <span class="card-completed-date" x-text="formatShortDate(ct.completed_at)"></span>
-                    <span class="card-completed-title" x-text="ct.title" :title="ct.title"></span>
+                    <span class="card-completed-title task-title-btn" x-text="ct.title" :title="ct.title" @click.stop="openEditTaskModal(ct)"></span>
                     <div class="task-actions">
                       <button class="task-btn btn-sm" @click.stop="reopenTaskInDashboard(ct.id, project.id)" title="Reopen">↺</button>
                     </div>
@@ -694,7 +698,7 @@ button:focus { outline: none; }
                    @drop.prevent="onCompletedDrop($event, task)">
                 <div class="comp-date" x-text="formatShortDate(task.completed_at)"></div>
                 <div class="comp-body">
-                  <div class="comp-title" x-text="task.title" :title="task.title"></div>
+                  <div class="comp-title task-title-btn" x-text="task.title" :title="task.title" @click.stop="openEditTaskModal(task)"></div>
                   <template x-if="task.completion_note">
                     <div class="comp-note" x-text="task.completion_note"></div>
                   </template>
