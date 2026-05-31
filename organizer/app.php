@@ -411,6 +411,11 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 *:focus-visible { outline: 1px solid var(--accent); outline-offset: 1px; }
 button:focus { outline: none; }
 [x-cloak] { display: none !important; }
+@media (max-width: 640px) {
+  .card-task-row .task-info { overflow-x: auto; overflow-y: hidden; }
+  .card-task-row .task-info::-webkit-scrollbar { height: 3px; }
+  .card-task-row .task-title { white-space: nowrap; }
+}
 </style>
 </head>
 <body x-data="app()" x-init="init()">
