@@ -174,8 +174,8 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 @media (max-width: 900px)  { .content-wrap { max-width: 100%; } }
 @media (max-width: 600px)  { #main { padding: 16px 10px; } .nav-brand { display: none; } }
 @media (max-width: 640px)  {
-  .task-title { white-space: normal; overflow: visible; text-overflow: unset; }
-  .task-row   { align-items: flex-start; }
+  .task-row .task-title { white-space: normal; overflow: visible; text-overflow: clip; }
+  .task-row             { align-items: flex-start; }
 }
 
 /* ── Section headers ────────────────────────────────────────────────────── */
@@ -490,6 +490,7 @@ button:focus { outline: none; }
                 </div>
                 <div class="task-actions">
                   <button class="task-btn success" @click.stop="openCompleteModal(task)">✓</button>
+                  <button class="task-btn" @click.stop="deleteTask(task.id)">✕</button>
                   <div class="dropdown-wrap" @click.outside="closeDropdown(task.id)">
                     <button class="task-btn" @click.stop="toggleDropdown(task.id)">⋮</button>
                     <div class="dropdown-menu" x-show="openDropdownId===task.id" x-cloak @click.stop>
@@ -497,7 +498,6 @@ button:focus { outline: none; }
                       <template x-for="p in projects.filter(p=>p.id!=task.project_id)" :key="p.id">
                         <button class="dropdown-item" @click="moveTask(task.id,p.id); closeDropdown(task.id)" x-text="'→ '+p.name"></button>
                       </template>
-                      <button class="dropdown-item" @click="deleteTask(task.id); closeDropdown(task.id)">Delete</button>
                     </div>
                   </div>
                 </div>
@@ -517,11 +517,11 @@ button:focus { outline: none; }
                   </div>
                   <div class="task-actions">
                     <button class="task-btn success" @click.stop="openCompleteModal(sub)">✓</button>
+                    <button class="task-btn" @click.stop="deleteTask(sub.id)">✕</button>
                     <div class="dropdown-wrap" @click.outside="closeDropdown(sub.id)">
                       <button class="task-btn" @click.stop="toggleDropdown(sub.id)">⋮</button>
                       <div class="dropdown-menu" x-show="openDropdownId===sub.id" x-cloak @click.stop>
                         <button class="dropdown-item" @click="openHistory(sub.id); closeDropdown(sub.id)">View History</button>
-                        <button class="dropdown-item" @click="deleteTask(sub.id); closeDropdown(sub.id)">Delete</button>
                       </div>
                     </div>
                   </div>
