@@ -189,28 +189,21 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .section-header .count  { color: var(--text-dim); font-size: 11px; }
 .section-header .toggle { margin-left: auto; color: var(--text-dim); }
 
-/* ── Priority view: horizontal scrolling cards ──────────────────────────── */
-.pri-h-scroll { overflow-x: auto; padding-bottom: 2px; }
-.pri-h-scroll::-webkit-scrollbar { height: 3px; }
-.pri-h-inner { display: flex; gap: 8px; padding: 8px 6px; min-width: max-content; }
-.pri-task-card {
-  min-width: 200px; max-width: 280px;
-  border: 1px solid var(--border); border-left: 2px solid transparent;
-  background: var(--bg-surface); padding: 8px;
-  display: flex; flex-direction: column; gap: 6px;
-  cursor: grab; user-select: none;
-  transition: border-color 120ms ease, background 120ms ease;
+/* ── Task rows ──────────────────────────────────────────────────────────── */
+.task-row {
+  overflow-x: auto;
+  border-left: 2px solid transparent; border-top: 2px solid transparent;
+  transition: background 120ms ease, border-color 120ms ease;
 }
-.pri-task-card:active { cursor: grabbing; }
-.pri-task-card:hover { background: var(--bg-raised); border-color: var(--accent); }
-.pri-task-card.is-dragging { opacity: 0.3; }
-.pri-task-card.drag-insert-left { border-left-color: var(--accent) !important; }
-.pri-card-actions { display: flex; justify-content: flex-end; }
-.pri-task-card .task-title { white-space: normal; overflow: visible; text-overflow: clip; flex: none; line-height: 1.4; }
-.pri-card-desc { font-size: 10px; color: var(--text-dim); }
-.pri-subtask-row { display: flex; align-items: center; gap: 6px; padding-top: 4px; border-top: 1px solid var(--bg-raised); }
-.pri-subtask-pfx { color: var(--text-dim); font-size: 11px; flex-shrink: 0; }
-.pri-subtask-row .task-title { flex: 1; min-width: 0; white-space: normal; font-size: 11px; }
+.task-row::-webkit-scrollbar { height: 3px; }
+.task-row[draggable="true"] { cursor: grab; }
+.task-row[draggable="true"]:active { cursor: grabbing; }
+.task-row:hover { background: var(--bg-raised); border-left-color: var(--accent); }
+.task-row.is-dragging { opacity: 0.3; }
+.task-row.drag-insert-before { border-top-color: var(--accent) !important; }
+.task-row-inner { display: flex; align-items: center; gap: 8px; padding: 6px 8px; width: max-content; min-width: 100%; }
+.task-row.subtask .task-row-inner { padding-left: 24px; }
+.task-row .task-title { overflow: visible; text-overflow: clip; }
 .subtask-prefix { color: var(--text-dim); flex-shrink: 0; font-size: 11px; }
 .drag-handle { color: var(--text-dim); cursor: grab; flex-shrink: 0; font-size: 11px; opacity: 0; transition: opacity 120ms ease; user-select: none; }
 .task-row:hover .drag-handle { opacity: 1; }
@@ -225,6 +218,29 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .task-btn:hover { border-color: var(--accent); color: var(--accent); }
 .task-btn.success:hover { border-color: var(--success); color: var(--success); }
 
+
+/* ── Priority view: horizontal card strips ──────────────────────────────── */
+.pri-h-scroll { overflow-x: auto; padding-bottom: 2px; }
+.pri-h-scroll::-webkit-scrollbar { height: 3px; }
+.pri-h-inner { display: flex; gap: 8px; padding: 8px 6px; min-width: max-content; }
+.pri-task-card {
+  width: 220px; flex-shrink: 0;
+  border: 1px solid var(--border); border-left: 2px solid transparent;
+  background: var(--bg-surface); padding: 8px;
+  display: flex; flex-direction: column; gap: 8px;
+  cursor: grab; user-select: none;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+.pri-task-card:active { cursor: grabbing; }
+.pri-task-card:hover { background: var(--bg-raised); border-color: var(--accent); }
+.pri-task-card.is-dragging { opacity: 0.3; }
+.pri-task-card.drag-insert-left { border-left-color: var(--accent) !important; }
+.pri-card-header { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.pri-task-card .task-title { white-space: normal; overflow: visible; text-overflow: clip; flex: none; font-size: 13px; line-height: 1.4; }
+.pri-card-desc { font-size: 10px; color: var(--text-dim); }
+.pri-subtask-row { display: flex; align-items: center; gap: 6px; padding-top: 4px; border-top: 1px solid var(--bg-raised); }
+.pri-subtask-pfx { color: var(--text-dim); font-size: 11px; flex-shrink: 0; }
+.pri-subtask-row .task-title { flex: 1; min-width: 0; white-space: normal; font-size: 11px; }
 
 /* ── Inline edit ─────────────────────────────────────────────────────────── */
 .inline-edit-form { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
@@ -490,7 +506,11 @@ button:focus { outline: none; }
                      @dragend="onDragEnd()"
                      @dragover.prevent.stop="onTaskDragOver($event, task)"
                      @drop.prevent.stop="onTaskDrop($event, task)">
-                  <div class="pri-card-actions">
+                  <!-- Header: project tag left, buttons right -->
+                  <div class="pri-card-header">
+                    <span class="project-tag"
+                      :style="'color:'+task.project_colour+';border-color:'+task.project_colour+'40'"
+                      x-text="task.project_name"></span>
                     <div class="task-actions">
                       <button class="task-btn success btn-sm" @click.stop="openCompleteModal(task)">✓</button>
                       <button class="task-btn btn-sm" @click.stop="deleteTask(task.id)">✕</button>
@@ -505,13 +525,12 @@ button:focus { outline: none; }
                       </div>
                     </div>
                   </div>
+                  <!-- Task name -->
                   <span class="task-title task-title-btn" x-text="task.title" :title="task.title" @click.stop="openEditTaskModal(task)"></span>
                   <template x-if="task.description">
                     <span class="pri-card-desc" x-text="task.description"></span>
                   </template>
-                  <span class="project-tag"
-                    :style="'color:'+task.project_colour+';border-color:'+task.project_colour+'40'"
-                    x-text="task.project_name"></span>
+                  <!-- Subtasks -->
                   <template x-for="sub in task.subtasks||[]" :key="sub.id">
                     <div class="pri-subtask-row">
                       <span class="pri-subtask-pfx">└─</span>
@@ -519,12 +538,6 @@ button:focus { outline: none; }
                       <div class="task-actions" style="margin-left:auto;flex-shrink:0">
                         <button class="task-btn success btn-sm" @click.stop="openCompleteModal(sub)">✓</button>
                         <button class="task-btn btn-sm" @click.stop="deleteTask(sub.id)">✕</button>
-                        <div class="dropdown-wrap" @click.outside="closeDropdown(sub.id)">
-                          <button class="task-btn btn-sm" @click.stop="toggleDropdown(sub.id)">⋮</button>
-                          <div class="dropdown-menu" x-show="openDropdownId===sub.id" x-cloak @click.stop>
-                            <button class="dropdown-item" @click="openHistory(sub.id); closeDropdown(sub.id)">View History</button>
-                          </div>
-                        </div>
                       </div>
                     </div>
                   </template>
