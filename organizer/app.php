@@ -1158,6 +1158,23 @@ button:focus { outline: none; }
   </div>
 </div>
 
+<!-- Delete task confirm -->
+<div class="modal-backdrop" x-show="modal==='delete-confirm'" x-cloak @click.self="cancelDeleteTask()">
+  <div class="modal" style="min-width:0;max-width:360px">
+    <div class="modal-header">
+      <span>─ DELETE TASK ───────────────────</span>
+      <button class="task-btn" @click="cancelDeleteTask()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--text)">This action cannot be undone.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" @click="cancelDeleteTask()">CANCEL</button>
+      <button class="btn" style="color:var(--accent);border-color:var(--accent)" @click="confirmDeleteTask()">DELETE</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast area -->
 <div id="toast-area">
   <template x-for="t in toasts" :key="t.id">
@@ -1178,6 +1195,7 @@ function app() {
     projectViewProject: null,
     projectViewTasks: [],
     projectViewActive: false,
+    deleteTaskId: null,
     pvDrag: { id: null },
     pvDragOver: null,
     priorityTasks: { ASAP: [], Soon: [], Backlog: [] },
@@ -1516,15 +1534,33 @@ function app() {
     },
 
     // ── Delete / move task ────────────────────────────────────────────────
-    async deleteTask(id) {
-      if (!confirm('Delete this task?')) return;
+    deleteTask(id) {
+      this.projectViewActive = (this.modal === 'project-view');
+      this.deleteTaskId = id;
+      this.modal = 'delete-confirm';
+    },
+    async confirmDeleteTask() {
+      const id = this.deleteTaskId;
+      this.deleteTaskId = null;
       await this.apiPost('delete_task', { id });
       this.showNotification('task deleted', 'info');
-      if (this.modal === 'project-view') {
+      if (this.projectViewActive) {
+        this.projectViewActive = false;
+        this.modal = 'project-view';
         await this._fetchProjectViewData(this.projectViewProject.id);
       } else {
+        this.modal = null;
         await this.refresh();
         if (this.view === 'completed') await this.fetchCompletedTasks();
+      }
+    },
+    cancelDeleteTask() {
+      this.deleteTaskId = null;
+      if (this.projectViewActive) {
+        this.projectViewActive = false;
+        this.modal = 'project-view';
+      } else {
+        this.modal = null;
       }
     },
     async moveTask(id, projectId) {
