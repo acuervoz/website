@@ -191,16 +191,19 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 /* ── Task rows ──────────────────────────────────────────────────────────── */
 .task-row {
-  display: flex; align-items: center; gap: 8px; padding: 6px 8px;
+  overflow-x: auto;
   border-left: 2px solid transparent; border-top: 2px solid transparent;
   transition: background 120ms ease, border-color 120ms ease;
 }
+.task-row::-webkit-scrollbar { height: 3px; }
 .task-row[draggable="true"] { cursor: grab; }
 .task-row[draggable="true"]:active { cursor: grabbing; }
 .task-row:hover { background: var(--bg-raised); border-left-color: var(--accent); }
 .task-row.is-dragging { opacity: 0.3; }
 .task-row.drag-insert-before { border-top-color: var(--accent) !important; }
-.task-row.subtask { padding-left: 24px; }
+.task-row-inner { display: flex; align-items: center; gap: 8px; padding: 6px 8px; width: max-content; min-width: 100%; }
+.task-row.subtask .task-row-inner { padding-left: 24px; }
+.task-row .task-title { overflow: visible; text-overflow: clip; }
 .subtask-prefix { color: var(--text-dim); flex-shrink: 0; font-size: 11px; }
 .drag-handle { color: var(--text-dim); cursor: grab; flex-shrink: 0; font-size: 11px; opacity: 0; transition: opacity 120ms ease; user-select: none; }
 .task-row:hover .drag-handle { opacity: 1; }
@@ -215,12 +218,6 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .task-btn:hover { border-color: var(--accent); color: var(--accent); }
 .task-btn.success:hover { border-color: var(--success); color: var(--success); }
 
-/* ── Priority view: scrollable title area ───────────────────────────────── */
-.task-scroll-area { flex: 1; min-width: 0; overflow-x: auto; }
-.task-scroll-area::-webkit-scrollbar { height: 3px; }
-.task-scroll-inner { display: flex; align-items: center; gap: 8px; min-width: max-content; }
-.task-scroll-inner .task-title { overflow: visible; text-overflow: clip; }
-.task-scroll-inner .task-info { flex-shrink: 0; }
 
 /* ── Inline edit ─────────────────────────────────────────────────────────── */
 .inline-edit-form { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
@@ -486,32 +483,30 @@ button:focus { outline: none; }
                    @dragend="onDragEnd()"
                    @dragover.prevent.stop="onTaskDragOver($event, task)"
                    @drop.prevent.stop="onTaskDrop($event, task)">
-                <span class="drag-handle">⠿</span>
-                <div class="task-actions">
-                  <button class="task-btn success" @click.stop="openCompleteModal(task)">✓</button>
-                  <button class="task-btn" @click.stop="deleteTask(task.id)">✕</button>
-                  <div class="dropdown-wrap" @click.outside="closeDropdown(task.id)">
-                    <button class="task-btn" @click.stop="toggleDropdown(task.id)">⋮</button>
-                    <div class="dropdown-menu" x-show="openDropdownId===task.id" x-cloak @click.stop>
-                      <button class="dropdown-item" @click="openHistory(task.id); closeDropdown(task.id)">View History</button>
-                      <template x-for="p in projects.filter(p=>p.id!=task.project_id)" :key="p.id">
-                        <button class="dropdown-item" @click="moveTask(task.id,p.id); closeDropdown(task.id)" x-text="'→ '+p.name"></button>
-                      </template>
+                <div class="task-row-inner">
+                  <span class="drag-handle">⠿</span>
+                  <div class="task-actions">
+                    <button class="task-btn success" @click.stop="openCompleteModal(task)">✓</button>
+                    <button class="task-btn" @click.stop="deleteTask(task.id)">✕</button>
+                    <div class="dropdown-wrap" @click.outside="closeDropdown(task.id)">
+                      <button class="task-btn" @click.stop="toggleDropdown(task.id)">⋮</button>
+                      <div class="dropdown-menu" x-show="openDropdownId===task.id" x-cloak @click.stop>
+                        <button class="dropdown-item" @click="openHistory(task.id); closeDropdown(task.id)">View History</button>
+                        <template x-for="p in projects.filter(p=>p.id!=task.project_id)" :key="p.id">
+                          <button class="dropdown-item" @click="moveTask(task.id,p.id); closeDropdown(task.id)" x-text="'→ '+p.name"></button>
+                        </template>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div class="task-scroll-area">
-                  <div class="task-scroll-inner">
-                    <div class="task-info">
-                      <span class="task-title task-title-btn" x-text="task.title" :title="task.title" @click.stop="openEditTaskModal(task)"></span>
-                      <template x-if="task.description">
-                        <span class="task-desc" x-text="task.description"></span>
-                      </template>
-                    </div>
-                    <span class="project-tag"
-                      :style="'color:'+task.project_colour+';border-color:'+task.project_colour+'40'"
-                      x-text="task.project_name"></span>
+                  <div class="task-info">
+                    <span class="task-title task-title-btn" x-text="task.title" :title="task.title" @click.stop="openEditTaskModal(task)"></span>
+                    <template x-if="task.description">
+                      <span class="task-desc" x-text="task.description"></span>
+                    </template>
                   </div>
+                  <span class="project-tag"
+                    :style="'color:'+task.project_colour+';border-color:'+task.project_colour+'40'"
+                    x-text="task.project_name"></span>
                 </div>
               </div>
               <template x-for="sub in task.subtasks||[]" :key="sub.id">
@@ -520,25 +515,23 @@ button:focus { outline: none; }
                      :class="{'is-dragging': drag.id===sub.id && drag.type==='task'}"
                      @dragstart="onTaskDragStart($event, sub)"
                      @dragend="onDragEnd()">
-                  <span class="subtask-prefix">└─</span>
-                  <div class="task-actions">
-                    <button class="task-btn success" @click.stop="openCompleteModal(sub)">✓</button>
-                    <button class="task-btn" @click.stop="deleteTask(sub.id)">✕</button>
-                    <div class="dropdown-wrap" @click.outside="closeDropdown(sub.id)">
-                      <button class="task-btn" @click.stop="toggleDropdown(sub.id)">⋮</button>
-                      <div class="dropdown-menu" x-show="openDropdownId===sub.id" x-cloak @click.stop>
-                        <button class="dropdown-item" @click="openHistory(sub.id); closeDropdown(sub.id)">View History</button>
+                  <div class="task-row-inner">
+                    <span class="subtask-prefix">└─</span>
+                    <div class="task-actions">
+                      <button class="task-btn success" @click.stop="openCompleteModal(sub)">✓</button>
+                      <button class="task-btn" @click.stop="deleteTask(sub.id)">✕</button>
+                      <div class="dropdown-wrap" @click.outside="closeDropdown(sub.id)">
+                        <button class="task-btn" @click.stop="toggleDropdown(sub.id)">⋮</button>
+                        <div class="dropdown-menu" x-show="openDropdownId===sub.id" x-cloak @click.stop>
+                          <button class="dropdown-item" @click="openHistory(sub.id); closeDropdown(sub.id)">View History</button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div class="task-scroll-area">
-                    <div class="task-scroll-inner">
-                      <div class="task-info">
-                        <span class="task-title task-title-btn" x-text="sub.title" :title="sub.title" @click.stop="openEditTaskModal(task)"></span>
-                        <template x-if="sub.description">
-                          <span class="task-desc" x-text="sub.description"></span>
-                        </template>
-                      </div>
+                    <div class="task-info">
+                      <span class="task-title task-title-btn" x-text="sub.title" :title="sub.title" @click.stop="openEditTaskModal(task)"></span>
+                      <template x-if="sub.description">
+                        <span class="task-desc" x-text="sub.description"></span>
+                      </template>
                     </div>
                   </div>
                 </div>
