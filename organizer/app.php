@@ -215,6 +215,13 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .task-btn:hover { border-color: var(--accent); color: var(--accent); }
 .task-btn.success:hover { border-color: var(--success); color: var(--success); }
 
+/* ── Priority view: scrollable title area ───────────────────────────────── */
+.task-scroll-area { flex: 1; min-width: 0; overflow-x: auto; }
+.task-scroll-area::-webkit-scrollbar { height: 3px; }
+.task-scroll-inner { display: flex; align-items: center; gap: 8px; min-width: max-content; }
+.task-scroll-inner .task-title { overflow: visible; text-overflow: clip; }
+.task-scroll-inner .task-info { flex-shrink: 0; }
+
 /* ── Inline edit ─────────────────────────────────────────────────────────── */
 .inline-edit-form { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
 .inline-edit-form input,
@@ -475,15 +482,6 @@ button:focus { outline: none; }
                    @dragover.prevent.stop="onTaskDragOver($event, task)"
                    @drop.prevent.stop="onTaskDrop($event, task)">
                 <span class="drag-handle">⠿</span>
-                <span class="project-tag"
-                  :style="'color:'+task.project_colour+';border-color:'+task.project_colour+'40'"
-                  x-text="task.project_name"></span>
-                <div class="task-info">
-                  <span class="task-title task-title-btn" x-text="task.title" :title="task.title" @click.stop="openEditTaskModal(task)"></span>
-                  <template x-if="task.description">
-                    <span class="task-desc" x-text="task.description"></span>
-                  </template>
-                </div>
                 <div class="task-actions">
                   <button class="task-btn success" @click.stop="openCompleteModal(task)">✓</button>
                   <button class="task-btn" @click.stop="deleteTask(task.id)">✕</button>
@@ -497,6 +495,19 @@ button:focus { outline: none; }
                     </div>
                   </div>
                 </div>
+                <div class="task-scroll-area">
+                  <div class="task-scroll-inner">
+                    <div class="task-info">
+                      <span class="task-title task-title-btn" x-text="task.title" :title="task.title" @click.stop="openEditTaskModal(task)"></span>
+                      <template x-if="task.description">
+                        <span class="task-desc" x-text="task.description"></span>
+                      </template>
+                    </div>
+                    <span class="project-tag"
+                      :style="'color:'+task.project_colour+';border-color:'+task.project_colour+'40'"
+                      x-text="task.project_name"></span>
+                  </div>
+                </div>
               </div>
               <template x-for="sub in task.subtasks||[]" :key="sub.id">
                 <div class="task-row subtask"
@@ -505,12 +516,6 @@ button:focus { outline: none; }
                      @dragstart="onTaskDragStart($event, sub)"
                      @dragend="onDragEnd()">
                   <span class="subtask-prefix">└─</span>
-                  <div class="task-info">
-                    <span class="task-title task-title-btn" x-text="sub.title" :title="sub.title" @click.stop="openEditTaskModal(task)"></span>
-                    <template x-if="sub.description">
-                      <span class="task-desc" x-text="sub.description"></span>
-                    </template>
-                  </div>
                   <div class="task-actions">
                     <button class="task-btn success" @click.stop="openCompleteModal(sub)">✓</button>
                     <button class="task-btn" @click.stop="deleteTask(sub.id)">✕</button>
@@ -518,6 +523,16 @@ button:focus { outline: none; }
                       <button class="task-btn" @click.stop="toggleDropdown(sub.id)">⋮</button>
                       <div class="dropdown-menu" x-show="openDropdownId===sub.id" x-cloak @click.stop>
                         <button class="dropdown-item" @click="openHistory(sub.id); closeDropdown(sub.id)">View History</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="task-scroll-area">
+                    <div class="task-scroll-inner">
+                      <div class="task-info">
+                        <span class="task-title task-title-btn" x-text="sub.title" :title="sub.title" @click.stop="openEditTaskModal(task)"></span>
+                        <template x-if="sub.description">
+                          <span class="task-desc" x-text="sub.description"></span>
+                        </template>
                       </div>
                     </div>
                   </div>
@@ -572,29 +587,29 @@ button:focus { outline: none; }
                      @dragover.prevent.stop="onDashTaskDragOver($event, task, project.id)"
                      @drop.prevent.stop="onDashTaskDrop($event, task, project.id)">
                   <span class="task-num" x-text="(i+1)+'.'"></span>
+                  <div class="task-actions">
+                    <button class="task-btn success btn-sm" @click="openCompleteModal(task)">✓</button>
+                    <button class="task-btn btn-sm" @click.stop="deleteTask(task.id)">✕</button>
+                  </div>
                   <div class="task-info">
                     <span class="task-title task-title-btn" x-text="task.title" :title="task.title" @click.stop="openEditTaskModal(task)"></span>
                     <template x-if="task.description">
                       <span class="task-desc" x-text="task.description"></span>
                     </template>
                   </div>
-                  <div class="task-actions">
-                    <button class="task-btn success btn-sm" @click="openCompleteModal(task)">✓</button>
-                    <button class="task-btn btn-sm" @click.stop="deleteTask(task.id)">✕</button>
-                  </div>
                 </div>
                 <template x-for="sub in task.subtasks||[]" :key="sub.id">
                   <div class="card-task-row subtask">
                     <span class="subtask-prefix">└─</span>
+                    <div class="task-actions">
+                      <button class="task-btn success btn-sm" @click="openCompleteModal(sub)">✓</button>
+                      <button class="task-btn btn-sm" @click.stop="deleteTask(sub.id)">✕</button>
+                    </div>
                     <div class="task-info">
                       <span class="task-title task-title-btn" x-text="sub.title" :title="sub.title" @click.stop="openEditTaskModal(task)"></span>
                       <template x-if="sub.description">
                         <span class="task-desc" x-text="sub.description"></span>
                       </template>
-                    </div>
-                    <div class="task-actions">
-                      <button class="task-btn success btn-sm" @click="openCompleteModal(sub)">✓</button>
-                      <button class="task-btn btn-sm" @click.stop="deleteTask(sub.id)">✕</button>
                     </div>
                   </div>
                 </template>
@@ -612,11 +627,11 @@ button:focus { outline: none; }
                 <template x-for="ct in (projectCompletedCache[project.id]||[])" :key="ct.id">
                   <div class="card-completed-row">
                     <span class="card-completed-date" x-text="formatShortDate(ct.completed_at)"></span>
-                    <span class="card-completed-title task-title-btn" x-text="ct.title" :title="ct.title" @click.stop="openEditTaskModal(ct)"></span>
                     <div class="task-actions">
                       <button class="task-btn btn-sm" @click.stop="reopenTaskInDashboard(ct.id, project.id)" title="Reopen">↺</button>
                       <button class="task-btn btn-sm" @click.stop="deleteTask(ct.id)">✕</button>
                     </div>
+                    <span class="card-completed-title task-title-btn" x-text="ct.title" :title="ct.title" @click.stop="openEditTaskModal(ct)"></span>
                   </div>
                 </template>
               </div>
@@ -711,6 +726,10 @@ button:focus { outline: none; }
                    @dragover.prevent="onCompletedDragOver($event, task)"
                    @drop.prevent="onCompletedDrop($event, task)">
                 <div class="comp-date" x-text="formatShortDate(task.completed_at)"></div>
+                <div class="comp-card-actions">
+                  <button class="task-btn btn-sm" @click="reopenTask(task.id)" title="Reopen">↺</button>
+                  <button class="task-btn btn-sm" @click="deleteTask(task.id)" title="Delete">✕</button>
+                </div>
                 <div class="comp-body">
                   <div class="comp-title task-title-btn" x-text="task.title" :title="task.title" @click.stop="openEditTaskModal(task)"></div>
                   <template x-if="task.completion_note">
@@ -718,10 +737,6 @@ button:focus { outline: none; }
                   </template>
                   <div class="comp-pri"
                     x-text="task.priority==='ASAP'?'!! ASAP':task.priority==='Soon'?'◈ Soon':'· Backlog'"></div>
-                </div>
-                <div class="comp-card-actions">
-                  <button class="task-btn btn-sm" @click="reopenTask(task.id)" title="Reopen">↺</button>
-                  <button class="task-btn btn-sm" @click="deleteTask(task.id)" title="Delete">✕</button>
                 </div>
               </div>
             </template>
@@ -1098,14 +1113,6 @@ button:focus { outline: none; }
                @drop.prevent.stop="onPVDrop($event, task)">
             <span class="pv-drag-handle">⠿</span>
             <span class="pv-task-num" x-text="(i+1)+'.'"></span>
-            <div class="pv-task-info">
-              <div class="pv-task-title" x-text="task.title" @click.stop="openEditTaskModal(task)"></div>
-              <template x-if="task.description">
-                <div class="pv-task-meta" x-text="task.description"></div>
-              </template>
-              <div class="pv-task-meta"
-                x-text="task.priority==='ASAP'?'!! ASAP':task.priority==='Soon'?'◈ Soon':task.priority==='Backlog'?'· Backlog':'— No Priority'"></div>
-            </div>
             <div class="pv-task-actions">
               <template x-if="task.status==='active'">
                 <button class="task-btn success btn-sm" @click.stop="openCompleteModal(task)">✓</button>
@@ -1115,17 +1122,19 @@ button:focus { outline: none; }
               </template>
               <button class="task-btn btn-sm" @click.stop="deleteTask(task.id)">✕</button>
             </div>
+            <div class="pv-task-info">
+              <div class="pv-task-title" x-text="task.title" @click.stop="openEditTaskModal(task)"></div>
+              <template x-if="task.description">
+                <div class="pv-task-meta" x-text="task.description"></div>
+              </template>
+              <div class="pv-task-meta"
+                x-text="task.priority==='ASAP'?'!! ASAP':task.priority==='Soon'?'◈ Soon':task.priority==='Backlog'?'· Backlog':'— No Priority'"></div>
+            </div>
           </div>
           <template x-for="sub in task.subtasks||[]" :key="sub.id">
             <div class="pv-task-row subtask" :class="{'pv-done': sub.status==='completed'}">
               <span class="pv-drag-handle" style="visibility:hidden">⠿</span>
               <span class="pv-task-num">└─</span>
-              <div class="pv-task-info">
-                <div class="pv-task-title" x-text="sub.title" @click.stop="openEditTaskModal(task)"></div>
-                <template x-if="sub.description">
-                  <div class="pv-task-meta" x-text="sub.description"></div>
-                </template>
-              </div>
               <div class="pv-task-actions">
                 <template x-if="sub.status==='active'">
                   <button class="task-btn success btn-sm" @click.stop="openCompleteModal(sub)">✓</button>
@@ -1134,6 +1143,12 @@ button:focus { outline: none; }
                   <button class="task-btn btn-sm" @click.stop="reopenInProjectView(sub.id)" title="Reopen">↺</button>
                 </template>
                 <button class="task-btn btn-sm" @click.stop="deleteTask(sub.id)">✕</button>
+              </div>
+              <div class="pv-task-info">
+                <div class="pv-task-title" x-text="sub.title" @click.stop="openEditTaskModal(task)"></div>
+                <template x-if="sub.description">
+                  <div class="pv-task-meta" x-text="sub.description"></div>
+                </template>
               </div>
             </div>
           </template>
