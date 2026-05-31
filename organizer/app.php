@@ -427,11 +427,6 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 *:focus-visible { outline: 1px solid var(--accent); outline-offset: 1px; }
 button:focus { outline: none; }
 [x-cloak] { display: none !important; }
-@media (max-width: 640px) {
-  .card-task-row .task-info { overflow-x: auto; overflow-y: hidden; }
-  .card-task-row .task-info::-webkit-scrollbar { height: 3px; }
-  .card-task-row .task-title { white-space: nowrap; }
-}
 </style>
 </head>
 <body x-data="app()" x-init="init()">
@@ -594,6 +589,13 @@ button:focus { outline: none; }
                   <div class="task-actions">
                     <button class="task-btn success btn-sm" @click="openCompleteModal(task)">✓</button>
                     <button class="task-btn btn-sm" @click.stop="deleteTask(task.id)">✕</button>
+                    <div class="dropdown-wrap" @click.outside="closeDropdown('dash_'+task.id)">
+                      <button class="task-btn btn-sm" @click.stop="toggleDropdown('dash_'+task.id)">⋮</button>
+                      <div class="dropdown-menu" x-show="openDropdownId==='dash_'+task.id" x-cloak @click.stop>
+                        <button class="dropdown-item" @click="moveDashTaskUp(task.id, project.id); closeDropdown('dash_'+task.id)">↑ Move Up</button>
+                        <button class="dropdown-item" @click="moveDashTaskDown(task.id, project.id); closeDropdown('dash_'+task.id)">↓ Move Down</button>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <template x-for="sub in task.subtasks||[]" :key="sub.id">
@@ -1644,6 +1646,22 @@ function app() {
       if (i === -1 || i >= arr.length - 1) return;
       [arr[i], arr[i + 1]] = [arr[i + 1], arr[i]];
       this.priorityTasks = { ...this.priorityTasks, [pri]: arr };
+      this.apiPost('reorder_tasks', { order: arr.map(t => t.id) });
+    },
+    moveDashTaskUp(taskId, projectId) {
+      const arr = [...(this.projectTasksCache[projectId] || [])];
+      const i   = arr.findIndex(t => t.id == taskId);
+      if (i <= 0) return;
+      [arr[i - 1], arr[i]] = [arr[i], arr[i - 1]];
+      this.projectTasksCache = { ...this.projectTasksCache, [projectId]: arr };
+      this.apiPost('reorder_tasks', { order: arr.map(t => t.id) });
+    },
+    moveDashTaskDown(taskId, projectId) {
+      const arr = [...(this.projectTasksCache[projectId] || [])];
+      const i   = arr.findIndex(t => t.id == taskId);
+      if (i === -1 || i >= arr.length - 1) return;
+      [arr[i], arr[i + 1]] = [arr[i + 1], arr[i]];
+      this.projectTasksCache = { ...this.projectTasksCache, [projectId]: arr };
       this.apiPost('reorder_tasks', { order: arr.map(t => t.id) });
     },
     async reopenTaskInDashboard(taskId, projectId) {
