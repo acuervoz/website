@@ -173,10 +173,6 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 @media (max-width: 1300px) { .content-wrap { max-width: 85%; } }
 @media (max-width: 900px)  { .content-wrap { max-width: 100%; } }
 @media (max-width: 600px)  { #main { padding: 16px 10px; } .nav-brand { display: none; } }
-@media (max-width: 640px)  {
-  .task-row .task-title { white-space: normal; overflow: visible; text-overflow: clip; }
-  .task-row             { align-items: flex-start; }
-}
 
 /* ── Section headers ────────────────────────────────────────────────────── */
 .section-header {
