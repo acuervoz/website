@@ -219,12 +219,8 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .task-btn.success:hover { border-color: var(--success); color: var(--success); }
 
 
-/* ── Priority view: horizontal card strips ──────────────────────────────── */
-.pri-h-scroll { overflow-x: auto; padding-bottom: 2px; }
-.pri-h-scroll::-webkit-scrollbar { height: 3px; }
-.pri-h-inner { display: flex; gap: 8px; padding: 8px 6px; min-width: max-content; }
+/* ── Priority view: cards ────────────────────────────────────────────────── */
 .pri-task-card {
-  width: 220px; flex-shrink: 0;
   border: 1px solid var(--border); border-left: 2px solid transparent;
   background: var(--bg-surface); padding: 8px;
   display: flex; flex-direction: column; gap: 8px;
@@ -496,9 +492,7 @@ button:focus { outline: none; }
           <template x-if="countPriTasks(pri)===0">
             <div class="empty-state">· drop tasks here or add via + TASK</div>
           </template>
-          <div class="pri-h-scroll">
-            <div class="pri-h-inner">
-              <template x-for="task in priorityTasks[pri]" :key="task.id">
+          <template x-for="task in priorityTasks[pri]" :key="task.id">
                 <div class="pri-task-card"
                      draggable="true"
                      :class="{'is-dragging': drag.id===task.id && drag.type==='task', 'drag-insert-left': dragOverId===task.id && drag.priority===pri}"
@@ -542,9 +536,7 @@ button:focus { outline: none; }
                     </div>
                   </template>
                 </div>
-              </template>
-            </div>
-          </div>
+          </template>
         </div>
       </div>
     </template>
