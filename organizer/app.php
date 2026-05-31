@@ -189,21 +189,28 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .section-header .count  { color: var(--text-dim); font-size: 11px; }
 .section-header .toggle { margin-left: auto; color: var(--text-dim); }
 
-/* ── Task rows ──────────────────────────────────────────────────────────── */
-.task-row {
-  overflow-x: auto;
-  border-left: 2px solid transparent; border-top: 2px solid transparent;
-  transition: background 120ms ease, border-color 120ms ease;
+/* ── Priority view: horizontal scrolling cards ──────────────────────────── */
+.pri-h-scroll { overflow-x: auto; padding-bottom: 2px; }
+.pri-h-scroll::-webkit-scrollbar { height: 3px; }
+.pri-h-inner { display: flex; gap: 8px; padding: 8px 6px; min-width: max-content; }
+.pri-task-card {
+  min-width: 200px; max-width: 280px;
+  border: 1px solid var(--border); border-left: 2px solid transparent;
+  background: var(--bg-surface); padding: 8px;
+  display: flex; flex-direction: column; gap: 6px;
+  cursor: grab; user-select: none;
+  transition: border-color 120ms ease, background 120ms ease;
 }
-.task-row::-webkit-scrollbar { height: 3px; }
-.task-row[draggable="true"] { cursor: grab; }
-.task-row[draggable="true"]:active { cursor: grabbing; }
-.task-row:hover { background: var(--bg-raised); border-left-color: var(--accent); }
-.task-row.is-dragging { opacity: 0.3; }
-.task-row.drag-insert-before { border-top-color: var(--accent) !important; }
-.task-row-inner { display: flex; align-items: center; gap: 8px; padding: 6px 8px; width: max-content; min-width: 100%; }
-.task-row.subtask .task-row-inner { padding-left: 24px; }
-.task-row .task-title { overflow: visible; text-overflow: clip; }
+.pri-task-card:active { cursor: grabbing; }
+.pri-task-card:hover { background: var(--bg-raised); border-color: var(--accent); }
+.pri-task-card.is-dragging { opacity: 0.3; }
+.pri-task-card.drag-insert-left { border-left-color: var(--accent) !important; }
+.pri-card-actions { display: flex; justify-content: flex-end; }
+.pri-task-card .task-title { white-space: normal; overflow: visible; text-overflow: clip; flex: none; line-height: 1.4; }
+.pri-card-desc { font-size: 10px; color: var(--text-dim); }
+.pri-subtask-row { display: flex; align-items: center; gap: 6px; padding-top: 4px; border-top: 1px solid var(--bg-raised); }
+.pri-subtask-pfx { color: var(--text-dim); font-size: 11px; flex-shrink: 0; }
+.pri-subtask-row .task-title { flex: 1; min-width: 0; white-space: normal; font-size: 11px; }
 .subtask-prefix { color: var(--text-dim); flex-shrink: 0; font-size: 11px; }
 .drag-handle { color: var(--text-dim); cursor: grab; flex-shrink: 0; font-size: 11px; opacity: 0; transition: opacity 120ms ease; user-select: none; }
 .task-row:hover .drag-handle { opacity: 1; }
@@ -473,71 +480,58 @@ button:focus { outline: none; }
           <template x-if="countPriTasks(pri)===0">
             <div class="empty-state">· drop tasks here or add via + TASK</div>
           </template>
-          <template x-for="task in priorityTasks[pri]" :key="task.id">
-            <div>
-              <div class="task-row"
-                   draggable="true"
-                   :data-id="task.id"
-                   :class="{'is-dragging': drag.id===task.id && drag.type==='task', 'drag-insert-before': dragOverId===task.id && drag.priority===pri}"
-                   @dragstart="onTaskDragStart($event, task)"
-                   @dragend="onDragEnd()"
-                   @dragover.prevent.stop="onTaskDragOver($event, task)"
-                   @drop.prevent.stop="onTaskDrop($event, task)">
-                <div class="task-row-inner">
-                  <span class="drag-handle">⠿</span>
-                  <div class="task-actions">
-                    <button class="task-btn success" @click.stop="openCompleteModal(task)">✓</button>
-                    <button class="task-btn" @click.stop="deleteTask(task.id)">✕</button>
-                    <div class="dropdown-wrap" @click.outside="closeDropdown(task.id)">
-                      <button class="task-btn" @click.stop="toggleDropdown(task.id)">⋮</button>
-                      <div class="dropdown-menu" x-show="openDropdownId===task.id" x-cloak @click.stop>
-                        <button class="dropdown-item" @click="openHistory(task.id); closeDropdown(task.id)">View History</button>
-                        <template x-for="p in projects.filter(p=>p.id!=task.project_id)" :key="p.id">
-                          <button class="dropdown-item" @click="moveTask(task.id,p.id); closeDropdown(task.id)" x-text="'→ '+p.name"></button>
-                        </template>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="task-info">
-                    <span class="task-title task-title-btn" x-text="task.title" :title="task.title" @click.stop="openEditTaskModal(task)"></span>
-                    <template x-if="task.description">
-                      <span class="task-desc" x-text="task.description"></span>
-                    </template>
-                  </div>
-                  <span class="project-tag"
-                    :style="'color:'+task.project_colour+';border-color:'+task.project_colour+'40'"
-                    x-text="task.project_name"></span>
-                </div>
-              </div>
-              <template x-for="sub in task.subtasks||[]" :key="sub.id">
-                <div class="task-row subtask"
+          <div class="pri-h-scroll">
+            <div class="pri-h-inner">
+              <template x-for="task in priorityTasks[pri]" :key="task.id">
+                <div class="pri-task-card"
                      draggable="true"
-                     :class="{'is-dragging': drag.id===sub.id && drag.type==='task'}"
-                     @dragstart="onTaskDragStart($event, sub)"
-                     @dragend="onDragEnd()">
-                  <div class="task-row-inner">
-                    <span class="subtask-prefix">└─</span>
+                     :class="{'is-dragging': drag.id===task.id && drag.type==='task', 'drag-insert-left': dragOverId===task.id && drag.priority===pri}"
+                     @dragstart="onTaskDragStart($event, task)"
+                     @dragend="onDragEnd()"
+                     @dragover.prevent.stop="onTaskDragOver($event, task)"
+                     @drop.prevent.stop="onTaskDrop($event, task)">
+                  <div class="pri-card-actions">
                     <div class="task-actions">
-                      <button class="task-btn success" @click.stop="openCompleteModal(sub)">✓</button>
-                      <button class="task-btn" @click.stop="deleteTask(sub.id)">✕</button>
-                      <div class="dropdown-wrap" @click.outside="closeDropdown(sub.id)">
-                        <button class="task-btn" @click.stop="toggleDropdown(sub.id)">⋮</button>
-                        <div class="dropdown-menu" x-show="openDropdownId===sub.id" x-cloak @click.stop>
-                          <button class="dropdown-item" @click="openHistory(sub.id); closeDropdown(sub.id)">View History</button>
+                      <button class="task-btn success btn-sm" @click.stop="openCompleteModal(task)">✓</button>
+                      <button class="task-btn btn-sm" @click.stop="deleteTask(task.id)">✕</button>
+                      <div class="dropdown-wrap" @click.outside="closeDropdown(task.id)">
+                        <button class="task-btn btn-sm" @click.stop="toggleDropdown(task.id)">⋮</button>
+                        <div class="dropdown-menu" x-show="openDropdownId===task.id" x-cloak @click.stop>
+                          <button class="dropdown-item" @click="openHistory(task.id); closeDropdown(task.id)">View History</button>
+                          <template x-for="p in projects.filter(p=>p.id!=task.project_id)" :key="p.id">
+                            <button class="dropdown-item" @click="moveTask(task.id,p.id); closeDropdown(task.id)" x-text="'→ '+p.name"></button>
+                          </template>
                         </div>
                       </div>
                     </div>
-                    <div class="task-info">
-                      <span class="task-title task-title-btn" x-text="sub.title" :title="sub.title" @click.stop="openEditTaskModal(task)"></span>
-                      <template x-if="sub.description">
-                        <span class="task-desc" x-text="sub.description"></span>
-                      </template>
-                    </div>
                   </div>
+                  <span class="task-title task-title-btn" x-text="task.title" :title="task.title" @click.stop="openEditTaskModal(task)"></span>
+                  <template x-if="task.description">
+                    <span class="pri-card-desc" x-text="task.description"></span>
+                  </template>
+                  <span class="project-tag"
+                    :style="'color:'+task.project_colour+';border-color:'+task.project_colour+'40'"
+                    x-text="task.project_name"></span>
+                  <template x-for="sub in task.subtasks||[]" :key="sub.id">
+                    <div class="pri-subtask-row">
+                      <span class="pri-subtask-pfx">└─</span>
+                      <span class="task-title task-title-btn" x-text="sub.title" :title="sub.title" @click.stop="openEditTaskModal(task)"></span>
+                      <div class="task-actions" style="margin-left:auto;flex-shrink:0">
+                        <button class="task-btn success btn-sm" @click.stop="openCompleteModal(sub)">✓</button>
+                        <button class="task-btn btn-sm" @click.stop="deleteTask(sub.id)">✕</button>
+                        <div class="dropdown-wrap" @click.outside="closeDropdown(sub.id)">
+                          <button class="task-btn btn-sm" @click.stop="toggleDropdown(sub.id)">⋮</button>
+                          <div class="dropdown-menu" x-show="openDropdownId===sub.id" x-cloak @click.stop>
+                            <button class="dropdown-item" @click="openHistory(sub.id); closeDropdown(sub.id)">View History</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
                 </div>
               </template>
             </div>
-          </template>
+          </div>
         </div>
       </div>
     </template>
