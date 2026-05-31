@@ -506,6 +506,8 @@ button:focus { outline: none; }
                       :style="'color:'+task.project_colour+';border-color:'+task.project_colour+'40'"
                       x-text="task.project_name"></span>
                     <div class="task-actions">
+                      <button class="task-btn btn-sm" @click.stop="movePriTaskUp(task, pri)">↑</button>
+                      <button class="task-btn btn-sm" @click.stop="movePriTaskDown(task, pri)">↓</button>
                       <button class="task-btn success btn-sm" @click.stop="openCompleteModal(task)">✓</button>
                       <button class="task-btn btn-sm" @click.stop="deleteTask(task.id)">✕</button>
                       <div class="dropdown-wrap" @click.outside="closeDropdown(task.id)">
@@ -1594,6 +1596,22 @@ function app() {
       [arr[i], arr[i + 1]] = [arr[i + 1], arr[i]];
       this.projects = arr;
       this.apiPost('reorder_projects', { order: arr.map(p => p.id) });
+    },
+    movePriTaskUp(task, pri) {
+      const arr = [...(this.priorityTasks[pri] || [])];
+      const i   = arr.findIndex(t => t.id == task.id);
+      if (i <= 0) return;
+      [arr[i - 1], arr[i]] = [arr[i], arr[i - 1]];
+      this.priorityTasks = { ...this.priorityTasks, [pri]: arr };
+      this.apiPost('reorder_tasks', { order: arr.map(t => t.id) });
+    },
+    movePriTaskDown(task, pri) {
+      const arr = [...(this.priorityTasks[pri] || [])];
+      const i   = arr.findIndex(t => t.id == task.id);
+      if (i === -1 || i >= arr.length - 1) return;
+      [arr[i], arr[i + 1]] = [arr[i + 1], arr[i]];
+      this.priorityTasks = { ...this.priorityTasks, [pri]: arr };
+      this.apiPost('reorder_tasks', { order: arr.map(t => t.id) });
     },
     async reopenTaskInDashboard(taskId, projectId) {
       const ok = await this.apiPost('reopen_task', { id: taskId });
