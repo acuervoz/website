@@ -557,7 +557,6 @@ button:focus { outline: none; }
              @drop.prevent="onProjDrop($event, project)">
 
           <div class="project-card-header" style="border-left:3px solid" :style="'border-left-color:'+project.colour">
-            <span class="card-drag-handle">⠿</span>
             <span class="project-card-title project-card-title-btn" x-text="project.name" @click.stop="openProjectView(project)"></span>
             <div class="dropdown-wrap" @click.outside="closeDropdown('proj_'+project.id)" @click.stop>
               <button class="task-btn" @click.stop="toggleDropdown('proj_'+project.id)">⋮</button>
@@ -1110,7 +1109,6 @@ button:focus { outline: none; }
                @dragend="onPVDragEnd()"
                @dragover.prevent.stop="onPVDragOver($event, task)"
                @drop.prevent.stop="onPVDrop($event, task)">
-            <span class="pv-drag-handle">⠿</span>
             <span class="pv-task-num" x-text="(i+1)+'.'"></span>
             <div class="pv-task-actions">
               <template x-if="task.status==='active'">
@@ -1132,7 +1130,6 @@ button:focus { outline: none; }
           </div>
           <template x-for="sub in task.subtasks||[]" :key="sub.id">
             <div class="pv-task-row subtask" :class="{'pv-done': sub.status==='completed'}">
-              <span class="pv-drag-handle" style="visibility:hidden">⠿</span>
               <span class="pv-task-num">└─</span>
               <div class="pv-task-actions">
                 <template x-if="sub.status==='active'">
