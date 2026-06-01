@@ -873,11 +873,37 @@ button:focus { outline: none; }
       </div>
       <div class="modal-field">
         <label class="modal-label">Project:</label>
-        <select class="modal-select" x-model="editTaskForm.projectId">
-          <template x-for="p in projects" :key="p.id">
-            <option :value="p.id" x-text="p.name"></option>
-          </template>
-        </select>
+        <template x-if="!showNewProjectInlineEdit">
+          <div>
+            <select class="modal-select" x-model="editTaskForm.projectId" style="margin-bottom:6px">
+              <template x-for="p in projects" :key="p.id">
+                <option :value="p.id" x-text="p.name"></option>
+              </template>
+            </select>
+            <button class="btn-text" style="font-size:10px" @click="showNewProjectInlineEdit=true">+ NEW PROJECT</button>
+          </div>
+        </template>
+        <template x-if="showNewProjectInlineEdit">
+          <div style="border:1px solid var(--border);padding:12px;background:var(--bg-raised)">
+            <label class="modal-label">Project name:</label>
+            <input class="modal-input" type="text" x-model="newProjectInlineEditName"
+              placeholder="project name..." style="margin-bottom:10px"
+              @keydown.enter="createProjectAndSelectInEditModal()"
+              @keydown.escape="showNewProjectInlineEdit=false"
+              x-init="$nextTick(()=>$el.focus())">
+            <label class="modal-label">Colour:</label>
+            <div class="colour-swatches" style="margin-bottom:10px">
+              <template x-for="c in colourSwatches" :key="c">
+                <div class="colour-swatch" :class="{selected:newProjectInlineEditColour===c}"
+                  :style="'background:'+c" @click="newProjectInlineEditColour=c"></div>
+              </template>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-sm" @click="showNewProjectInlineEdit=false; newProjectInlineEditName=''">CANCEL</button>
+              <button class="btn btn-accent btn-sm" @click="createProjectAndSelectInEditModal()">CREATE + SELECT</button>
+            </div>
+          </div>
+        </template>
       </div>
       <div class="modal-field">
         <label class="modal-label">Description (optional):</label>
@@ -1154,6 +1180,28 @@ button:focus { outline: none; }
       </template>
 
     </div>
+    <div class="modal-footer" style="padding:8px 16px">
+      <template x-if="!pvAddingTask">
+        <button class="btn-text" @click="pvAddingTask=true; pvNewTaskTitle=''; $nextTick(()=>{ const i=document.querySelector('.pv-add-task-input'); if(i) i.focus(); })">+ ADD TASK</button>
+      </template>
+      <template x-if="pvAddingTask">
+        <div class="add-task-form" style="width:100%" @click.stop>
+          <input type="text" class="pv-add-task-input" x-model="pvNewTaskTitle" placeholder="task title..."
+            @keydown.enter="pvSubmitAddTask()"
+            @keydown.escape="pvAddingTask=false; pvNewTaskTitle=''">
+          <div class="add-task-row">
+            <select x-model="pvNewTaskPriority">
+              <option value="ASAP">!! ASAP</option>
+              <option value="Soon">◈ Soon</option>
+              <option value="Backlog">· Backlog</option>
+              <option value="No Priority">— No Priority</option>
+            </select>
+            <button class="btn btn-accent btn-sm" @click="pvSubmitAddTask()">ADD</button>
+            <button class="btn btn-sm" @click="pvAddingTask=false; pvNewTaskTitle=''">✕</button>
+          </div>
+        </div>
+      </template>
+    </div>
   </div>
 </div>
 
@@ -1170,6 +1218,49 @@ button:focus { outline: none; }
     <div class="modal-footer">
       <button class="btn" @click="cancelDeleteTask()">CANCEL</button>
       <button class="btn" style="color:var(--accent);border-color:var(--accent)" @click="confirmDeleteTask()">DELETE</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk paste -->
+<div class="modal-backdrop" x-show="modal==='bulk-paste'" x-cloak @click.self="modal=null">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <span>─ BULK PASTE ────────────────────</span>
+      <button class="task-btn" @click="modal=null">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:11px;color:var(--text-muted);margin-bottom:12px" x-text="bulkPasteTasks.length+' task(s) detected'"></p>
+      <div style="max-height:200px;overflow-y:auto;margin-bottom:16px;border:1px solid var(--border);padding:8px">
+        <template x-for="(t, i) in bulkPasteTasks" :key="i">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+            <span style="color:var(--text-dim);font-size:10px" x-text="(i+1)+'.'"></span>
+            <input class="modal-input" type="text" x-model="bulkPasteTasks[i]" style="flex:1;font-size:11px">
+            <button class="task-btn btn-sm" @click="bulkPasteTasks.splice(i,1)">✕</button>
+          </div>
+        </template>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Project:</label>
+        <select class="modal-select" x-model="bulkPasteProjectId">
+          <template x-for="p in projects" :key="p.id">
+            <option :value="p.id" x-text="p.name"></option>
+          </template>
+        </select>
+      </div>
+      <div class="modal-field" style="margin-bottom:0">
+        <label class="modal-label">Priority:</label>
+        <select class="modal-select" x-model="bulkPastePriority">
+          <option value="ASAP">!! ASAP</option>
+          <option value="Soon">◈ Soon</option>
+          <option value="Backlog">· Backlog</option>
+          <option value="No Priority">— No Priority</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" @click="modal=null">CANCEL</button>
+      <button class="btn btn-accent" @click="submitBulkPaste()" :disabled="!bulkPasteProjectId || bulkPasteTasks.length===0">CREATE TASKS</button>
     </div>
   </div>
 </div>
@@ -1225,6 +1316,16 @@ function app() {
     labelDeviceId: null,
     labelDeviceValue: '',
     collapsedSections: { ASAP: false, Soon: false, Backlog: false },
+    projectLastPriority: {},
+    pvAddingTask: false,
+    pvNewTaskTitle: '',
+    pvNewTaskPriority: 'Soon',
+    showNewProjectInlineEdit: false,
+    newProjectInlineEditName: '',
+    newProjectInlineEditColour: '#FF6777',
+    bulkPasteTasks: [],
+    bulkPasteProjectId: null,
+    bulkPastePriority: 'Soon',
     toasts: [],
     colourSwatches: [
       '#FF6777','#cc4455','#f0b429','#4caf84','#5b8def',
@@ -1250,6 +1351,14 @@ function app() {
     // ── Init ──────────────────────────────────────────────────────────────
     async init() {
       await Promise.all([this.fetchProjects(), this.fetchPriorityTasks()]);
+      document.addEventListener('paste', (e) => {
+        const text = (e.clipboardData || window.clipboardData)?.getData('text') || '';
+        const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        if (lines.length < 2) return;
+        if (e.target.tagName === 'TEXTAREA') return;
+        e.preventDefault();
+        this.openBulkPasteModal(lines);
+      });
     },
 
     // ── View switching ────────────────────────────────────────────────────
@@ -1306,6 +1415,8 @@ function app() {
     async openProjectView(project) {
       this.projectViewProject = project;
       this.projectViewTasks   = [];
+      this.pvAddingTask       = false;
+      this.pvNewTaskTitle     = '';
       this.modal = 'project-view';
       await this._fetchProjectViewData(project.id);
     },
@@ -1433,6 +1544,21 @@ function app() {
         this.showNotification('project created', 'success');
       }
     },
+    async createProjectAndSelectInEditModal() {
+      if (!this.newProjectInlineEditName.trim()) return;
+      const res = await this.apiPost('create_project', {
+        name:   this.newProjectInlineEditName.trim(),
+        colour: this.newProjectInlineEditColour,
+      });
+      if (res && res.id) {
+        await this.fetchProjects();
+        this.editTaskForm.projectId     = res.id;
+        this.showNewProjectInlineEdit   = false;
+        this.newProjectInlineEditName   = '';
+        this.newProjectInlineEditColour = '#FF6777';
+        this.showNotification('project created', 'success');
+      }
+    },
     async submitAddAnyTask() {
       if (!this.newAnyTask.title.trim() || !this.newAnyTask.projectId) return;
       const res = await this.apiPost('create_task', {
@@ -1468,6 +1594,7 @@ function app() {
         subtasksToDelete: [],
       };
       this.pendingSubtask = '';
+      this.showNewProjectInlineEdit = false;
       this.modal = 'edit-task';
     },
     async submitEditTask() {
@@ -1572,18 +1699,64 @@ function app() {
 
     // ── Add task inline (dashboard card) ──────────────────────────────────
     startAddTask(pid) {
-      this.addingTaskTo   = pid;
-      this.newTaskTitle   = '';
-      this.newTaskPriority = 'Soon';
+      this.addingTaskTo    = pid;
+      this.newTaskTitle    = '';
+      this.newTaskPriority = this.projectLastPriority[pid] || 'Soon';
     },
     async submitAddTask(pid) {
-      if (!this.newTaskTitle.trim()) return;
-      await this.apiPost('create_task', { project_id: pid, title: this.newTaskTitle.trim(), priority: this.newTaskPriority });
-      this.addingTaskTo = null;
+      if (!this.newTaskTitle.trim()) { this.addingTaskTo = null; return; }
+      const priority = this.newTaskPriority;
+      await this.apiPost('create_task', { project_id: pid, title: this.newTaskTitle.trim(), priority });
+      this.projectLastPriority = { ...this.projectLastPriority, [pid]: priority };
       this.newTaskTitle = '';
       this.showNotification('task added', 'success');
       await this.fetchProjectTasks(pid);
       await this.fetchProjects();
+      setTimeout(() => {
+        const inp = document.querySelector('.add-task-form input[type="text"]');
+        if (inp) inp.focus();
+      }, 50);
+    },
+
+    // ── Add task from project view modal ──────────────────────────────────
+    async pvSubmitAddTask() {
+      if (!this.pvNewTaskTitle.trim()) { this.pvAddingTask = false; return; }
+      const pid = this.projectViewProject.id;
+      await this.apiPost('create_task', {
+        project_id: pid,
+        title:      this.pvNewTaskTitle.trim(),
+        priority:   this.pvNewTaskPriority,
+      });
+      this.pvNewTaskTitle = '';
+      this.showNotification('task added', 'success');
+      await this._fetchProjectViewData(pid);
+      setTimeout(() => {
+        const inp = document.querySelector('.pv-add-task-input');
+        if (inp) inp.focus();
+      }, 50);
+    },
+
+    // ── Bulk paste ────────────────────────────────────────────────────────
+    openBulkPasteModal(lines) {
+      if (this.projects.length === 0) { this.showNotification('create a project first', 'error'); return; }
+      this.bulkPasteTasks    = [...lines];
+      this.bulkPasteProjectId = this.projects[0].id;
+      this.bulkPastePriority  = 'Soon';
+      this.modal = 'bulk-paste';
+    },
+    async submitBulkPaste() {
+      if (!this.bulkPasteProjectId || this.bulkPasteTasks.length === 0) return;
+      const tasks = this.bulkPasteTasks.filter(t => t.trim());
+      for (const title of tasks) {
+        await this.apiPost('create_task', {
+          project_id: parseInt(this.bulkPasteProjectId),
+          title:      title.trim(),
+          priority:   this.bulkPastePriority,
+        });
+      }
+      this.modal = null;
+      this.showNotification(tasks.length + ' tasks added', 'success');
+      await this.refresh();
     },
 
     // ── Projects ──────────────────────────────────────────────────────────
