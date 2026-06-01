@@ -1316,6 +1316,7 @@ function app() {
     labelDeviceId: null,
     labelDeviceValue: '',
     collapsedSections: { ASAP: false, Soon: false, Backlog: false },
+    silentMode: false,
     projectLastPriority: {},
     pvAddingTask: false,
     pvNewTaskTitle: '',
@@ -1359,6 +1360,22 @@ function app() {
         e.preventDefault();
         this.openBulkPasteModal(lines);
       });
+      this.startPolling();
+    },
+
+    // ── Background polling ────────────────────────────────────────────────
+    startPolling() {
+      setInterval(() => this.pollRefresh(), 10000);
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) this.pollRefresh();
+      });
+    },
+    async pollRefresh() {
+      if (document.hidden) return;
+      if (this.modal || this.addingTaskTo || this.pvAddingTask || this.loading) return;
+      this.silentMode = true;
+      try { await this.refresh(); }
+      finally { this.silentMode = false; }
     },
 
     // ── View switching ────────────────────────────────────────────────────
@@ -2088,16 +2105,16 @@ function app() {
 
     // ── API ───────────────────────────────────────────────────────────────
     async api(action, params = {}) {
-      this.loading = true;
+      if (!this.silentMode) this.loading = true;
       try {
         const qs = new URLSearchParams({ action, ...params }).toString();
         const r  = await fetch('api.php?' + qs, { headers: { 'X-CSRF-Token': CSRF } });
         return await r.json();
       } catch (e) {
-        this.showNotification('network error', 'error');
+        if (!this.silentMode) this.showNotification('network error', 'error');
         return null;
       } finally {
-        this.loading = false;
+        if (!this.silentMode) this.loading = false;
       }
     },
     async apiPost(action, body = {}) {
