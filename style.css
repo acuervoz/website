@@ -305,4 +305,5 @@ footer a { color: var(--text-ghost); }
   .logo { font-size: 7px; }
   .proj-table th:last-child,
   .proj-table td:last-child { display: none; }
+  .page-body { max-width: 100%; margin: 1.5rem 0 0; }
 }
