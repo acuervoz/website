@@ -1445,7 +1445,12 @@ function app() {
       const ok = await this.apiPost('reopen_task', { id: taskId });
       if (ok) {
         this.showNotification('↺ task reopened', 'info');
-        await this._fetchProjectViewData(this.projectViewProject.id);
+        const pid = this.projectViewProject.id;
+        await Promise.all([
+          this._fetchProjectViewData(pid),
+          this.fetchProjectTasks(pid),
+          this.fetchPriorityTasks(),
+        ]);
       }
     },
     onPVDragStart(e, task) {
