@@ -209,7 +209,7 @@ nav a.active     { color: var(--accent); text-decoration: underline; }
 }
 
 .page-body {
-  max-width:   100%;
+  max-width:   40vw;
   margin-top:  1.5rem;
 }
 .page-body p {
