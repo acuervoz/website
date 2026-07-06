@@ -1,7 +1,10 @@
 RewriteEngine On
 
-# Redirect .html URLs to clean URLs (301)
-RewriteCond %{THE_REQUEST} \s/(.+)\.html[\s?] [NC]
+# Prefer PHP index files over static HTML for directory requests
+DirectoryIndex index.php index.html
+
+# Redirect .html / .php URLs to clean URLs (301)
+RewriteCond %{THE_REQUEST} \s/(.+)\.(html|php)[\s?] [NC]
 RewriteRule ^ /%1 [R=301,L]
 
 # Legacy flat story URLs -> new per-project nested structure
@@ -14,9 +17,13 @@ RewriteRule ^projects/a-deeply-rooted-curse/?$              /projects/pananormal
 RewriteRule ^projects/the-bodies-inside-the-laguna-negra/?$ /projects/pananormales/the-bodies-inside-the-laguna-negra/ [R=301,L]
 RewriteRule ^projects/the-machine-gods-manifesto/?$         /projects/futuristic-historical/the-machine-gods-manifesto/ [R=301,L]
 
-# Internally serve the .html file for clean URLs
+# Internally serve the .php file for clean URLs, else fall back to .html
 # (checked before !-d so /projects still maps to projects.html
 # even though a projects/ directory also exists for sub-pages)
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.+)$ $1.php [L]
+
 RewriteCond %{REQUEST_FILENAME}.html -f
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^(.+)$ $1.html [L]

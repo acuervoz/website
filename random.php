@@ -1,4 +1,14 @@
-﻿<!DOCTYPE html>
+<?php
+require __DIR__ . '/partials/content.php';
+$activeNav = 'random';
+
+// Every story in the registry is eligible for random — add a story to
+// partials/content.php and it shows up here automatically.
+$pieces = array();
+foreach ($STORIES as $slug => $story) {
+  $pieces[] = story_href($slug);
+}
+?><!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -8,13 +18,7 @@
 </head>
 <body>
 
-  <nav>
-    <a href="/">home</a>
-    <span class="nav-sep">/</span>
-    <a href="projects">projects</a>
-    <span class="nav-sep">/</span>
-    <a href="random" class="active">random</a>
-  </nav>
+<?php include __DIR__ . '/partials/nav.php'; ?>
 
   <div class="divider">- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</div>
 
@@ -28,21 +32,7 @@
   </div>
 
   <script>
-    /*
-     * ════════════════════════════════════════════════════
-     * ADD every new piece you publish to this list.
-     * Use the path relative to this file, e.g.:
-     *   "projects/your-story"
-     * ════════════════════════════════════════════════════
-     */
-    var pieces = [
-      "projects/unclassified/the-night-of-the-milipede",
-      "projects/unclassified/hells-janitor",
-      "projects/futuristic-historical/the-machine-gods-manifesto",
-      "projects/mirror-self/do-it-monday",
-      "projects/pananormales/a-deeply-rooted-curse",
-      "projects/pananormales/the-bodies-inside-the-laguna-negra"
-    ];
+    var pieces = <?php echo json_encode(array_values($pieces)); ?>;
 
     if (pieces.length > 0) {
       var pick = pieces[Math.floor(Math.random() * pieces.length)];
@@ -58,9 +48,7 @@
     <style>#fallback { display: block !important; } #status { display: none; }</style>
   </noscript>
 
-  <footer>
-    made by hand &nbsp;&middot;&nbsp; no trackers &nbsp;&middot;&nbsp; no cookies &nbsp;&middot;&nbsp; acuervoz.com
-  </footer>
+<?php include __DIR__ . '/partials/footer.php'; ?>
 
 </body>
 </html>

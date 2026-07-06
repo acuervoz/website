@@ -28,7 +28,42 @@
       "Bash(mv the-post-within-03.md the-post-within/the-post-within-03/the-post-within-03.md)",
       "Bash(mv the-post-within-04.md the-post-within/the-post-within-04/the-post-within-04.md)",
       "Bash(git reset *)",
-      "Bash(git rm *)"
+      "Bash(git rm *)",
+      "Bash(winget search *)",
+      "Bash(winget install *)",
+      "Read(//c/xampp/**)",
+      "Bash(\"/c/xampp/php/php.exe\" --version)",
+      "Bash(\"/c/xampp/apache/bin/httpd.exe\" -version)",
+      "Bash(grep -n \"^DocumentRoot\\\\|^<Directory \\\\\"\\\\${SRVROOT}/htdocs\\\\\"\\\\|LoadModule rewrite_module\\\\|AllowOverride\" \"/c/xampp/apache/conf/httpd.conf\" | head -30)",
+      "Read(//c/xampp/apache/conf/**)",
+      "Bash(\"/c/xampp/apache/bin/httpd.exe\" -t)",
+      "Bash(\"/c/xampp/apache/bin/httpd.exe\" -k start)",
+      "Bash(curl -s -o /dev/null -w \"HTTP: %{http_code}\\\\n\" http://localhost/)",
+      "Bash(\"/c/xampp/apache/bin/httpd.exe\")",
+      "Bash(curl -s http://localhost/)",
+      "Bash(curl -s -o /dev/null -w \"HTTP: %{http_code}  Effective: %{url_effective}\\\\n\" -L http://localhost/projects)",
+      "Bash(curl -s http://localhost/projects/unclassified/hells-janitor/)",
+      "Bash(curl -s -o /dev/null -w \"HTTP: %{http_code}  Location-follows-to: %{url_effective}\\\\n\" -L http://localhost/projects/hells-janitor)",
+      "Bash(curl -s -o /dev/null -w \"HTTP: %{http_code}\\\\n\" http://localhost/projects/unclassified/hells-janitor/hells-janitor.md)",
+      "Bash(curl -s -o /dev/null -w \"HTTP: %{http_code}\\\\n\" http://localhost/projects/the-post-within/)",
+      "Bash(curl -s -o /dev/null -w \"HTTP: %{http_code}\\\\n\" http://localhost/projects/the-post-within/the-post-within-01/the-post-within-01.md)",
+      "Bash(curl -s -o /dev/null -w \"HTTP: %{http_code}  Content-Type: %{content_type}\\\\n\" http://localhost/acuervoz-logo.svg)",
+      "Bash(curl -s http://localhost/projects/)",
+      "Bash(curl -s http://localhost/projects/unclassified/)",
+      "Bash(curl -s http://localhost/projects/unclassified/the-night-of-the-milipede/)",
+      "Bash(curl -s http://localhost/projects/pananormales/the-bodies-inside-the-laguna-negra/)",
+      "Bash(curl -s http://localhost/random)",
+      "Bash(curl -s -o /dev/null -w \"HTTP: %{http_code}  Effective: %{url_effective}\\\\n\" -L http://localhost/projects/hells-janitor)",
+      "Bash(curl -s -D - -o /tmp/body.html \"https://acuervoz.com/\")",
+      "Read(//tmp/**)",
+      "Bash(curl -s -o /dev/null -w \"style.css: HTTP %{http_code}\\\\n\" \"https://acuervoz.com/style.css\")",
+      "Bash(curl -s -o /dev/null -w \"the-post-within: HTTP %{http_code}\\\\n\" \"https://acuervoz.com/projects/the-post-within/\")",
+      "Bash(curl -s -o /dev/null -w \"homepage: HTTP %{http_code}\\\\n\" \"https://acuervoz.com/\")",
+      "Bash(curl -s -o /dev/null -w \"projects listing: HTTP %{http_code}\\\\n\" \"https://acuervoz.com/projects/\")",
+      "Bash(curl -s -o /dev/null -w \"a story page: HTTP %{http_code}\\\\n\" \"https://acuervoz.com/projects/unclassified/hells-janitor/\")"
+    ],
+    "additionalDirectories": [
+      "C:\\xampp\\apache\\conf"
     ]
   }
 }
