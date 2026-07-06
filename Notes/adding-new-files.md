@@ -4,7 +4,10 @@
 
 2. Copy any existing shell HTML, change the <title>, <h1>, <div class="page-meta">, and the fetch('...') filename
 
-3. Add a row to the table in index.html and projects.html
+3. Add a row to the table in index.html, projects.html, and projects/index.html
+   (projects/index.html is the same listing, with paths adjusted since it lives
+   one folder deeper — this is what loads when someone visits /projects/ with
+   a trailing slash)
 
 4. Add the path to the pieces array in random.html
 

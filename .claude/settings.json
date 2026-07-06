@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(git commit organizer/app.php -m ' *)",
+      "Bash(git merge *)",
+      "Bash(git stash *)",
+      "Bash(curl -s -o /dev/null -w \"URL: %{url_effective}\\\\nHTTP: %{http_code}\\\\nRedirect count: %{num_redirects}\\\\n---\\\\n\" -L -v \"https://acuervoz.com/projects/\")",
+      "Bash(curl -s \"https://acuervoz.com/\")",
+      "Bash(curl -s -D - -o /dev/null \"https://acuervoz.com/\")",
+      "Skill(run)",
+      "Skill(run:*)",
+      "Bash(chromium-cli --help)",
+      "Bash(npx --version)",
+      "Bash(npm ls *)",
+      "Bash(node -e \"require.resolve\\('playwright'\\)\")",
+      "PowerShell(node -v)",
+      "PowerShell(npx --version)",
+      "Bash(php --version)",
+      "Bash(curl -s -o /dev/null -w \"marked.js CDN status: %{http_code}\\\\n\" \"https://cdn.jsdelivr.net/npm/marked/marked.min.js\")",
+      "Bash(git mv *)",
+      "Bash(mv the-post-within.html the-post-within/index.html)",
+      "Bash(mv the-post-within-01.md the-post-within/the-post-within-01/the-post-within-01.md)",
+      "Bash(mv the-post-within-02.md the-post-within/the-post-within-02/the-post-within-02.md)",
+      "Bash(mv the-post-within-03.md the-post-within/the-post-within-03/the-post-within-03.md)",
+      "Bash(mv the-post-within-04.md the-post-within/the-post-within-04/the-post-within-04.md)",
+      "Bash(git reset *)"
+    ]
+  }
+}

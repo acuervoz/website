@@ -3,35 +3,35 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The bodies inside the Laguna Negra in Caracas — A Cuervoz</title>
-  <link rel="stylesheet" href="../style.css" />
+  <title>Do it Monday. — A Cuervoz</title>
+  <link rel="stylesheet" href="../../../style.css" />
 </head>
 <body>
 
   <nav>
     <a href="/">home</a>
     <span class="nav-sep">/</span>
-    <a href="../projects">projects</a>
+    <a href="/projects">projects</a>
     <span class="nav-sep">/</span>
-    <a href="../random">random</a>
+    <a href="/random">random</a>
   </nav>
 
   <div class="divider">- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</div>
 
-  <a class="back-link" href="pananormales">&larr; pananormales</a>
+  <a class="back-link" href="../">&larr; mirror-self</a>
 
   <div class="page-header">
-    <h1 class="page-title">The bodies inside the Laguna Negra in Caracas</h1>
+    <h1 class="page-title">Do it Monday.</h1>
     <div class="page-meta">
-      <span>fiction</span>
-      <span>Pananormales</span>
+      <span>non-fiction</span>
+      <span>Mirror-self</span>
     </div>
   </div>
 
   <div class="page-body" id="md-content">
     <p class="loading-msg">loading<span class="blink">_</span></p>
     <noscript>
-      <p>JavaScript is required to render this page. <a href="the-bodies-inside-the-laguna-negra.md">Read the raw markdown file instead.</a></p>
+      <p>JavaScript is required to render this page. <a href="do-it-monday.md">Read the raw markdown file instead.</a></p>
     </noscript>
   </div>
 
@@ -43,14 +43,14 @@
 
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script>
-    fetch('the-bodies-inside-the-laguna-negra.md')
+    fetch('do-it-monday.md')
       .then(function(r) { return r.text(); })
       .then(function(text) {
         document.getElementById('md-content').innerHTML = marked.parse(text);
       })
       .catch(function() {
         document.getElementById('md-content').innerHTML =
-          '<p>Could not load content. <a href="the-bodies-inside-the-laguna-negra.md">Read the raw file.</a></p>';
+          '<p>Could not load content. <a href="do-it-monday.md">Read the raw file.</a></p>';
       });
   </script>
 

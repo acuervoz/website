@@ -43,13 +43,20 @@ p { color: var(--text-muted); line-height: 1.85; }
 
 /* ── Logo ── */
 .logo {
-  white-space: pre;
-  font-size:   10.5px;
-  line-height: 1.2;
-  color:       var(--accent);
+  display:      block;
+  width:        100%;
+  max-width:    480px;
+  aspect-ratio: 7745 / 1350;
+  background-color: var(--accent);
+  -webkit-mask-image: url('acuervoz-logo.svg');
+          mask-image: url('acuervoz-logo.svg');
+  -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+          mask-size: contain;
+  -webkit-mask-position: left center;
+          mask-position: left center;
   margin-bottom: 0.2rem;
-  letter-spacing: 0;
-  overflow-x: auto;
 }
 
 /* ── Tagline ── */
@@ -302,7 +309,6 @@ footer a { color: var(--text-ghost); }
 /* ── Responsive ── */
 @media (max-width: 600px) {
   body { max-width: 100%; padding: 1.5rem 1.1rem 3rem; }
-  .logo { font-size: 7px; }
   .proj-table th:last-child,
   .proj-table td:last-child { display: none; }
   .page-body { max-width: 100%; margin: 1.5rem 0 0; }

@@ -4,8 +4,19 @@ RewriteEngine On
 RewriteCond %{THE_REQUEST} \s/(.+)\.html[\s?] [NC]
 RewriteRule ^ /%1 [R=301,L]
 
+# Legacy flat story URLs -> new per-project nested structure
+# (projects themselves need no rule here: /projects/<slug> still resolves
+# straight to /projects/<slug>/index.html now that <slug> is a directory)
+RewriteRule ^projects/the-night-of-the-milipede/?$        /projects/unclassified/the-night-of-the-milipede/        [R=301,L]
+RewriteRule ^projects/hells-janitor/?$                     /projects/unclassified/hells-janitor/                     [R=301,L]
+RewriteRule ^projects/do-it-monday/?$                       /projects/mirror-self/do-it-monday/                       [R=301,L]
+RewriteRule ^projects/a-deeply-rooted-curse/?$              /projects/pananormales/a-deeply-rooted-curse/             [R=301,L]
+RewriteRule ^projects/the-bodies-inside-the-laguna-negra/?$ /projects/pananormales/the-bodies-inside-the-laguna-negra/ [R=301,L]
+RewriteRule ^projects/the-machine-gods-manifesto/?$         /projects/futuristic-historical/the-machine-gods-manifesto/ [R=301,L]
+
 # Internally serve the .html file for clean URLs
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME} !-f
+# (checked before !-d so /projects still maps to projects.html
+# even though a projects/ directory also exists for sub-pages)
 RewriteCond %{REQUEST_FILENAME}.html -f
+RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^(.+)$ $1.html [L]

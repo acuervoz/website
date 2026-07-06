@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "PowerShell(Get-ChildItem -Path \"e:\\\\Projects\\\\Project 23\\\\ACuervoz website\" -Recurse -Force | Select-Object -Property FullName, PSIsContainer | Sort-Object FullName | ForEach-Object { if \\($_.PSIsContainer\\) { Write-Host \\(\"DIR:  \" + $_.FullName\\) } else { Write-Host \\(\"FILE: \" + $_.FullName\\) } })"
+      "PowerShell(Get-ChildItem -Path \"e:\\\\Projects\\\\Project 23\\\\ACuervoz website\" -Recurse -Force | Select-Object -Property FullName, PSIsContainer | Sort-Object FullName | ForEach-Object { if \\($_.PSIsContainer\\) { Write-Host \\(\"DIR:  \" + $_.FullName\\) } else { Write-Host \\(\"FILE: \" + $_.FullName\\) } })",
+      "Bash(mkdir -p \"e:/Projects/Project 23/ACuervoz website/organizer\" && echo \"done\")"
+    ],
+    "additionalDirectories": [
+      "e:\\Projects\\Project 23\\ACuervoz website"
     ]
   }
 }
