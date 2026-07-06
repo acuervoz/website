@@ -1,3 +1,4 @@
+<?php /* Expects $lang and $UI (from partials/content.php). */ ?>
   <footer>
-    made by hand &nbsp;&middot;&nbsp; no trackers &nbsp;&middot;&nbsp; no cookies &nbsp;&middot;&nbsp; acuervoz.com
+    <?php echo $UI[$lang]['footer_main']; ?>
   </footer>

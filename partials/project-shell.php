@@ -3,16 +3,29 @@
  * Shared shell for a simple project listing page (a project made of plain
  * story-reader pages, not a custom SPA like futuristic-historical or
  * the-post-within).
- * The including file must set these before requiring this partial:
- *   $pageTitle     <title> text, e.g. "Unclassified — A Cuervoz"
- *   $projectTitle  heading text, e.g. "Unclassified"
- *   $projectType   e.g. "fiction" / "nonfiction"
- *   $countLabel    e.g. "2 stories" / "1 piece"
- *   $introText     one paragraph describing the project
- *   $stories       array of ['href' => ..., 'title' => ..., 'type' => ..., 'desc' => ...]
+ * The including file must set $projectSlug and $project (= $PROJECTS[$projectSlug])
+ * before requiring this partial. The story list is derived from $STORIES,
+ * filtered to this project and to stories available in the current $lang.
  */
+$projectTitle = t($project['title'], $lang);
+$projectType  = t($project['type'], $lang);
+$countLabel   = t($project['count'], $lang);
+$introText    = t($project['desc'], $lang);
+$pageTitle    = $projectTitle . ' — A Cuervoz';
+
+$stories = array();
+foreach (stories_for_lang($lang) as $slug => $s) {
+  if ($s['project'] === $projectSlug) {
+    $stories[] = array(
+      'href'  => $slug,
+      'title' => t($s['title'], $lang),
+      'type'  => t($s['type'], $lang),
+      'desc'  => t($s['desc'], $lang),
+    );
+  }
+}
 ?><!DOCTYPE html>
-<html lang="en">
+<html lang="<?php echo $lang; ?>">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -25,7 +38,7 @@
 
   <div class="divider">- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</div>
 
-  <a class="back-link" href="/projects">&larr; projects</a>
+  <a class="back-link" href="../">&larr; <?php echo $UI[$lang]['back_projects']; ?></a>
 
   <div class="page-header">
     <h1 class="page-title"><?php echo $projectTitle; ?></h1>
@@ -37,14 +50,14 @@
 
   <p class="intro"><?php echo $introText; ?></p>
 
-  <div class="sec-hdr">// stories</div>
+  <div class="sec-hdr"><?php echo $UI[$lang]['sec_stories']; ?></div>
 
   <table class="proj-table">
     <thead>
       <tr>
-        <th style="width:36%">title</th>
-        <th style="width:14%">type</th>
-        <th>description</th>
+        <th style="width:36%"><?php echo $UI[$lang]['col_title']; ?></th>
+        <th style="width:14%"><?php echo $UI[$lang]['col_type']; ?></th>
+        <th><?php echo $UI[$lang]['col_desc']; ?></th>
       </tr>
     </thead>
     <tbody>

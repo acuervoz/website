@@ -2,19 +2,22 @@
 require __DIR__ . '/partials/content.php';
 $activeNav = 'random';
 
-// Every story in the registry is eligible for random — add a story to
-// partials/content.php and it shows up here automatically.
+// Every story available in the current language is eligible for random —
+// add a story (and its translation) to partials/content.php and it shows
+// up here automatically.
 $pieces = array();
-foreach ($STORIES as $slug => $story) {
-  $pieces[] = story_href($slug);
+foreach (stories_for_lang($lang) as $slug => $story) {
+  $pieces[] = story_href($slug, $lang);
 }
+$pageTitle = ($lang === 'es' ? 'Aleatorio' : 'Random') . ' — A Cuervoz';
+$homeHref  = $lang === 'es' ? '/es/' : '/';
 ?><!DOCTYPE html>
-<html lang="en">
+<html lang="<?php echo $lang; ?>">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Random — A Cuervoz</title>
-  <link rel="stylesheet" href="style.css" />
+  <title><?php echo $pageTitle; ?></title>
+  <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
 
@@ -23,11 +26,11 @@ foreach ($STORIES as $slug => $story) {
   <div class="divider">- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</div>
 
   <div class="random-wrap">
-    <div class="sec-hdr">// random</div>
-    <p id="status">picking something for you<span class="blink">_</span></p>
+    <div class="sec-hdr"><?php echo $UI[$lang]['sec_random']; ?></div>
+    <p id="status"><?php echo $UI[$lang]['random_picking']; ?><span class="blink">_</span></p>
     <p id="fallback" style="display:none;">
-      javascript is off — here are all the pieces:
-      <a href="/">go to the full list &rarr;</a>
+      <?php echo $UI[$lang]['random_noscript']; ?>
+      <a href="<?php echo $homeHref; ?>"><?php echo $UI[$lang]['random_full_list']; ?></a>
     </p>
   </div>
 
@@ -36,7 +39,7 @@ foreach ($STORIES as $slug => $story) {
 
     if (pieces.length > 0) {
       var pick = pieces[Math.floor(Math.random() * pieces.length)];
-      document.getElementById("status").textContent = "taking you somewhere...";
+      document.getElementById("status").textContent = <?php echo json_encode($UI[$lang]['random_taking']); ?>;
       setTimeout(function() { window.location.href = pick; }, 700);
     } else {
       document.getElementById("status").style.display = "none";

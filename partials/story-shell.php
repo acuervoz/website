@@ -1,15 +1,19 @@
 <?php
 /*
  * Shared shell for a single-story reader page.
- * The including file must set these before requiring this partial:
- *   $pageTitle    <title> text, e.g. "Hell's janitor — A Cuervoz"
- *   $storyTitle   heading text, e.g. "Hell's janitor"
- *   $storyType    e.g. "fiction" / "non-fiction"
- *   $projectName  parent project display name, e.g. "Unclassified"
- *   $mdFile       markdown filename sitting next to this file, e.g. "hells-janitor.md"
+ * The including file must set $storySlug and $story (= $STORIES[$storySlug])
+ * before requiring this partial. Everything else — title, type, project
+ * name, which .md file to fetch — is derived here from $story, $PROJECTS,
+ * and the current $lang (all from partials/content.php).
  */
+$storyLang   = in_array($lang, $story['langs']) ? $lang : 'en'; // fall back if untranslated
+$storyTitle  = t($story['title'], $lang);
+$storyType   = t($story['type'], $lang);
+$projectName = t($PROJECTS[$story['project']]['title'], $lang);
+$pageTitle   = $storyTitle . ' — A Cuervoz';
+$mdFile      = $storySlug . ($storyLang === 'es' ? '-es.md' : '.md');
 ?><!DOCTYPE html>
-<html lang="en">
+<html lang="<?php echo $lang; ?>">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -33,9 +37,9 @@
   </div>
 
   <div class="page-body" id="md-content">
-    <p class="loading-msg">loading<span class="blink">_</span></p>
+    <p class="loading-msg"><?php echo $UI[$lang]['loading']; ?><span class="blink">_</span></p>
     <noscript>
-      <p>JavaScript is required to render this page. <a href="<?php echo $mdFile; ?>">Read the raw markdown file instead.</a></p>
+      <p><?php echo $UI[$lang]['noscript_required']; ?> <a href="<?php echo $mdFile; ?>"><?php echo $UI[$lang]['read_raw']; ?></a></p>
     </noscript>
   </div>
 
@@ -52,7 +56,7 @@
       })
       .catch(function() {
         document.getElementById('md-content').innerHTML =
-          '<p>Could not load content. <a href="<?php echo $mdFile; ?>">Read the raw file.</a></p>';
+          '<p><?php echo addslashes($UI[$lang]['could_not_load']); ?> <a href="<?php echo $mdFile; ?>"><?php echo addslashes($UI[$lang]['read_raw_file']); ?></a></p>';
       });
   </script>
 

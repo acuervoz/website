@@ -1,10 +1,5 @@
 <?php
 $storySlug = 'the-night-of-the-milipede';
 require __DIR__ . '/../../../partials/content.php';
-$story       = $STORIES[$storySlug];
-$pageTitle   = $story['title'] . ' — A Cuervoz';
-$storyTitle  = $story['title'];
-$storyType   = $story['type'];
-$projectName = $PROJECTS[$story['project']]['title'];
-$mdFile      = $storySlug . '.md';
+$story = $STORIES[$storySlug];
 include __DIR__ . '/../../../partials/story-shell.php';

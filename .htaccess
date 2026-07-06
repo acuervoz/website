@@ -8,6 +8,20 @@ DirectoryIndex index.php index.html
 # clean-URL rewriting below applies to it, or it'll mangle those requests.
 RewriteRule ^organizer/ - [L]
 
+# Spanish mirror: /es and /es/<path> serve the exact same files as <path>.
+# PHP (see partials/content.php) detects the /es prefix from REQUEST_URI,
+# which always reflects the original URL regardless of this internal rewrite.
+RewriteRule ^es/?$ index.php [L]
+
+# /es/<dir> (no trailing slash) needs its own redirect that keeps the /es
+# prefix — otherwise the generic strip-prefix rule below runs first, and
+# Apache's automatic trailing-slash redirect for the (now-stripped) directory
+# request would silently bounce the visitor back to the English URL.
+RewriteCond %{DOCUMENT_ROOT}/$1 -d
+RewriteRule ^es/(.+[^/])$ /es/$1/ [R=301,L]
+
+RewriteRule ^es/(.+)$ $1 [L]
+
 # Redirect .html / .php URLs to clean URLs (301)
 RewriteCond %{THE_REQUEST} \s/(.+)\.(html|php)[\s?] [NC]
 RewriteRule ^ /%1 [R=301,L]
