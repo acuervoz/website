@@ -66,7 +66,18 @@
       "Bash(curl -s -o /dev/null -w \"homepage: %{http_code}\\\\n\" \"http://localhost/\")",
       "Bash(curl -s -o /dev/null -w \"projects: %{http_code}\\\\n\" -L \"http://localhost/projects\")",
       "Bash(curl -s -o /dev/null -w \"a story page: %{http_code}\\\\n\" \"http://localhost/projects/unclassified/hells-janitor/\")",
-      "Bash(curl -s -o /dev/null -w \"legacy story redirect: %{http_code}\\\\n\" -L \"http://localhost/projects/hells-janitor\")"
+      "Bash(curl -s -o /dev/null -w \"legacy story redirect: %{http_code}\\\\n\" -L \"http://localhost/projects/hells-janitor\")",
+      "Bash(curl -s -D - -o /dev/null -L \"http://localhost/organizer\")",
+      "Bash(curl -s -D - -o /dev/null \"http://localhost/organizer/\")",
+      "Bash(curl -s -D - -o /dev/null \"http://localhost/organizer/app.php\")",
+      "Bash(curl -s -D - -o /dev/null \"http://localhost/organizer/index.php\")",
+      "Bash(curl -s -D - -o /dev/null -L \"https://acuervoz.com/organizer\")",
+      "Bash(curl -s -D - -o /dev/null \"https://acuervoz.com/organizer/\")",
+      "Bash(curl -s -D - -o /dev/null \"https://acuervoz.com/organizer/app.php\")",
+      "Bash(curl -s -D - -o /dev/null \"https://acuervoz.com/organizer/api.php?action=list_tasks\")",
+      "Bash(curl -s \"https://acuervoz.com/organizer/api.php?action=list_tasks\")",
+      "Bash(curl -s -X POST \"https://acuervoz.com/organizer/api.php?action=complete_task\" -H \"Content-Type: application/json\" -d '{\"id\":1}')",
+      "Bash(curl -s -D - -o /tmp/resp.json https://acuervoz.com/organizer/api.php -X POST -H 'Content-Type: application/json' -H 'X-CSRF-Token: test' -d '{\"action\":\"complete_task\",\"csrf_token\":\"test\",\"id\":1}')"
     ],
     "additionalDirectories": [
       "C:\\xampp\\apache\\conf"
