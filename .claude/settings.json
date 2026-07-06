@@ -60,7 +60,13 @@
       "Bash(curl -s -o /dev/null -w \"the-post-within: HTTP %{http_code}\\\\n\" \"https://acuervoz.com/projects/the-post-within/\")",
       "Bash(curl -s -o /dev/null -w \"homepage: HTTP %{http_code}\\\\n\" \"https://acuervoz.com/\")",
       "Bash(curl -s -o /dev/null -w \"projects listing: HTTP %{http_code}\\\\n\" \"https://acuervoz.com/projects/\")",
-      "Bash(curl -s -o /dev/null -w \"a story page: HTTP %{http_code}\\\\n\" \"https://acuervoz.com/projects/unclassified/hells-janitor/\")"
+      "Bash(curl -s -o /dev/null -w \"a story page: HTTP %{http_code}\\\\n\" \"https://acuervoz.com/projects/unclassified/hells-janitor/\")",
+      "Bash(curl -s -D - -o /dev/null \"http://localhost/organizer/api.php?action=complete_task\")",
+      "Bash(curl -s -o /dev/null -w \"HTTP: %{http_code}\\\\n\" \"http://localhost/organizer/app.php\")",
+      "Bash(curl -s -o /dev/null -w \"homepage: %{http_code}\\\\n\" \"http://localhost/\")",
+      "Bash(curl -s -o /dev/null -w \"projects: %{http_code}\\\\n\" -L \"http://localhost/projects\")",
+      "Bash(curl -s -o /dev/null -w \"a story page: %{http_code}\\\\n\" \"http://localhost/projects/unclassified/hells-janitor/\")",
+      "Bash(curl -s -o /dev/null -w \"legacy story redirect: %{http_code}\\\\n\" -L \"http://localhost/projects/hells-janitor\")"
     ],
     "additionalDirectories": [
       "C:\\xampp\\apache\\conf"
