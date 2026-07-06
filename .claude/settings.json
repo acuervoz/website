@@ -27,7 +27,8 @@
       "Bash(mv the-post-within-02.md the-post-within/the-post-within-02/the-post-within-02.md)",
       "Bash(mv the-post-within-03.md the-post-within/the-post-within-03/the-post-within-03.md)",
       "Bash(mv the-post-within-04.md the-post-within/the-post-within-04/the-post-within-04.md)",
-      "Bash(git reset *)"
+      "Bash(git reset *)",
+      "Bash(git rm *)"
     ]
   }
 }
