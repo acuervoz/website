@@ -52,7 +52,16 @@ $mdFile      = $storySlug . ($storyLang === 'es' ? '-es.md' : '.md');
     fetch('<?php echo $mdFile; ?>')
       .then(function(r) { return r.text(); })
       .then(function(text) {
-        document.getElementById('md-content').innerHTML = marked.parse(text);
+        var el = document.getElementById('md-content');
+        el.innerHTML = marked.parse(text);
+        // Dialogue convention: a paragraph starting with "R: " is the "reply"
+        // voice and gets right-aligned; the marker itself is stripped.
+        el.querySelectorAll('p').forEach(function(p) {
+          if (/^R:\s*/.test(p.innerHTML)) {
+            p.innerHTML = p.innerHTML.replace(/^R:\s*/, '');
+            p.classList.add('dlg-right');
+          }
+        });
       })
       .catch(function() {
         document.getElementById('md-content').innerHTML =

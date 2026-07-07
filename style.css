@@ -251,6 +251,7 @@ nav a.active     { color: var(--accent); text-decoration: underline; }
 }
 .page-body em  { font-style: italic; }
 .page-body strong { color: var(--text); font-weight: normal; }
+.page-body p.dlg-right { text-align: right; }
 .page-body ul,
 .page-body ol {
   padding-left:  1.5rem;

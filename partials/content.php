@@ -78,7 +78,7 @@ $PROJECTS = array(
       'en' => 'Mostly reflections in life.',
       'es' => 'Mayormente reflexiones sobre la vida.',
     ),
-    'count' => array('en' => '1 piece', 'es' => '1 pieza'),
+    'count' => array('en' => '2 pieces', 'es' => '2 piezas'),
   ),
   'pananormales' => array(
     'title' => array('en' => 'Pananormales', 'es' => 'Pananormales'),
@@ -128,6 +128,16 @@ $STORIES = array(
     'desc'    => array(
       'en' => 'How about you do it now?',
       'es' => '¿Qué tal si lo haces ahora?',
+    ),
+    'langs' => array('en', 'es'),
+  ),
+  'i-didnt-know-what-i-wanted' => array(
+    'project' => 'mirror-self',
+    'title'   => array('en' => "I didn't know what I wanted", 'es' => 'No sabía lo que quería'),
+    'type'    => array('en' => 'non-fiction', 'es' => 'no ficción'),
+    'desc'    => array(
+      'en' => 'A conversation with the part of me that keeps asking why.',
+      'es' => 'Una conversación con la parte de mí que sigue preguntando por qué.',
     ),
     'langs' => array('en', 'es'),
   ),
