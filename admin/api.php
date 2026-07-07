@@ -374,7 +374,30 @@ try {
             $bodyEn  = $body['body_en'] ?? null;
             $bodyEs  = array_key_exists('body_es', $body) ? trim($body['body_es']) : null;
 
-            $dir = projectsRoot() . '/' . $story['project_slug'] . '/' . $story['slug'];
+            // Moving to a different project? Validate + relocate the story's
+            // folder on disk before touching its files, so the .md writes
+            // below land in the right place.
+            $newProjectId = $story['project_id'];
+            $newProjectSlug = $story['project_slug'];
+            if (array_key_exists('project_id', $body) && (int)$body['project_id'] !== (int)$story['project_id']) {
+                $pstmt = $pdo->prepare("SELECT * FROM cms_projects WHERE id = :id");
+                $pstmt->execute([':id' => (int)$body['project_id']]);
+                $newProject = $pstmt->fetch();
+                if (!$newProject) jsonError('Target project not found', 404);
+                if ((int)$newProject['is_custom_spa'] === 1) {
+                    jsonError('That project has its own custom page and does not read from the story list.', 400);
+                }
+                $oldDir = projectsRoot() . '/' . $story['project_slug'] . '/' . $story['slug'];
+                $newParentDir = projectsRoot() . '/' . $newProject['slug'];
+                if (!is_dir($newParentDir)) mkdir($newParentDir, 0755, true);
+                $newDir = $newParentDir . '/' . $story['slug'];
+                if (is_dir($newDir)) jsonError('A story with this slug already exists in the target project', 409);
+                rename($oldDir, $newDir);
+                $newProjectId = $newProject['id'];
+                $newProjectSlug = $newProject['slug'];
+            }
+
+            $dir = projectsRoot() . '/' . $newProjectSlug . '/' . $story['slug'];
             if ($bodyEn !== null) file_put_contents("$dir/{$story['slug']}.md", $bodyEn);
             if ($bodyEs !== null) {
                 $esPath = "$dir/{$story['slug']}-es.md";
@@ -392,12 +415,14 @@ try {
 
             $pdo->prepare(
                 "UPDATE cms_stories SET
+                    project_id = :project_id,
                     title_en = :title_en, title_es = :title_es,
                     type_en = :type_en, type_es = :type_es,
                     desc_en = :desc_en, desc_es = :desc_es,
                     is_favourite = :fav, favourite_sort_order = :favOrder
                  WHERE id = :id"
             )->execute([
+                ':project_id' => $newProjectId,
                 ':title_en' => $titleEn,
                 ':title_es' => $titleEs,
                 ':type_en'  => array_key_exists('type_en', $body) ? (trim($body['type_en']) ?: null) : $story['type_en'],

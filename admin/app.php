@@ -80,6 +80,8 @@ html, body { background: var(--bg); color: var(--text); font-family: 'JetBrains 
 .btn-accent:hover { background: var(--accent); color: var(--bg); }
 .btn-sm { padding: 3px 8px; font-size: 10px; }
 
+.list-toolbar { display: flex; gap: 16px; margin-top: 16px; align-items: flex-end; }
+.list-toolbar .modal-select { width: auto; min-width: 200px; }
 .stories-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 16px; }
 .stories-table th { text-align: left; color: var(--text-muted); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 6px 8px; border-bottom: 1px solid var(--border); font-weight: 400; }
 .stories-table td { padding: 8px; border-bottom: 1px solid var(--bg-raised); vertical-align: middle; }
@@ -106,6 +108,7 @@ html, body { background: var(--bg); color: var(--text); font-family: 'JetBrains 
   transition: border-color 120ms ease;
 }
 .modal-input:focus, .modal-select:focus, .modal-textarea:focus { border-color: var(--accent); }
+.modal-textarea { resize: vertical; max-width: 100%; }
 .modal-checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); }
 .new-project-box { border: 1px solid var(--border); padding: 12px; background: var(--bg-raised); margin-top: 8px; }
 .editor-tabs { display: flex; gap: 2px; margin-bottom: 8px; }
@@ -142,12 +145,38 @@ html, body { background: var(--bg); color: var(--text); font-family: 'JetBrains 
     <div class="empty-state">· no stories yet — click + NEW STORY to add one</div>
   </template>
 
+  <div class="list-toolbar" x-show="stories.length > 0">
+    <div class="modal-field" style="margin-bottom:0">
+      <label class="modal-label">Filter by project</label>
+      <select class="modal-select" x-model="filterProjectId">
+        <option value="">— all projects —</option>
+        <template x-for="p in projects" :key="p.id">
+          <option :value="p.id" x-text="p.title_en"></option>
+        </template>
+      </select>
+    </div>
+    <div class="modal-field" style="margin-bottom:0">
+      <label class="modal-label">Sort by</label>
+      <select class="modal-select" x-model="sortBy">
+        <option value="date_desc">date (newest first)</option>
+        <option value="date_asc">date (oldest first)</option>
+        <option value="title_asc">title (A–Z)</option>
+        <option value="title_desc">title (Z–A)</option>
+        <option value="project_asc">project (A–Z)</option>
+        <option value="project_desc">project (Z–A)</option>
+      </select>
+    </div>
+  </div>
+
   <table class="stories-table" x-show="stories.length > 0">
     <thead>
       <tr><th>Title</th><th>Project</th><th>Langs</th><th></th><th>Date</th><th></th></tr>
     </thead>
     <tbody>
-      <template x-for="s in stories" :key="s.id">
+      <template x-if="filteredStories().length === 0">
+        <tr><td colspan="6" class="empty-state">· no stories match this filter</td></tr>
+      </template>
+      <template x-for="s in filteredStories()" :key="s.id">
         <tr>
           <td class="title-cell" x-text="s.title_en"></td>
           <td class="muted" x-text="s.project_title_en"></td>
@@ -196,8 +225,20 @@ html, body { background: var(--bg); color: var(--text); font-family: 'JetBrains 
               <div class="modal-field"><label class="modal-label">Title (ES)</label><input class="modal-input" x-model="newProject.title_es"></div>
             </div>
             <div class="modal-row">
-              <div class="modal-field"><label class="modal-label">Type (EN)</label><input class="modal-input" x-model="newProject.type_en" placeholder="fiction / non-fiction..."></div>
-              <div class="modal-field"><label class="modal-label">Type (ES)</label><input class="modal-input" x-model="newProject.type_es"></div>
+              <div class="modal-field"><label class="modal-label">Type (EN)</label>
+                <select class="modal-select" x-model="newProject.type_en">
+                  <option value="">— none —</option>
+                  <option value="fiction">fiction</option>
+                  <option value="non-fiction">non-fiction</option>
+                </select>
+              </div>
+              <div class="modal-field"><label class="modal-label">Type (ES)</label>
+                <select class="modal-select" x-model="newProject.type_es">
+                  <option value="">— ninguno —</option>
+                  <option value="ficción">ficción</option>
+                  <option value="no ficción">no ficción</option>
+                </select>
+              </div>
             </div>
             <div class="modal-field"><label class="modal-label">Description (EN)</label><textarea class="modal-textarea" x-model="newProject.desc_en" style="min-height:50px"></textarea></div>
             <div class="modal-field"><label class="modal-label">Description (ES)</label><textarea class="modal-textarea" x-model="newProject.desc_es" style="min-height:50px"></textarea></div>
@@ -222,8 +263,20 @@ html, body { background: var(--bg); color: var(--text); font-family: 'JetBrains 
         <div class="modal-field"><label class="modal-label">Title (ES) — optional</label><input class="modal-input" x-model="form.title_es"></div>
       </div>
       <div class="modal-row">
-        <div class="modal-field"><label class="modal-label">Type (EN)</label><input class="modal-input" x-model="form.type_en" placeholder="fiction / non-fiction..."></div>
-        <div class="modal-field"><label class="modal-label">Type (ES)</label><input class="modal-input" x-model="form.type_es"></div>
+        <div class="modal-field"><label class="modal-label">Type (EN)</label>
+          <select class="modal-select" x-model="form.type_en">
+            <option value="">— none —</option>
+            <option value="fiction">fiction</option>
+            <option value="non-fiction">non-fiction</option>
+          </select>
+        </div>
+        <div class="modal-field"><label class="modal-label">Type (ES)</label>
+          <select class="modal-select" x-model="form.type_es">
+            <option value="">— ninguno —</option>
+            <option value="ficción">ficción</option>
+            <option value="no ficción">no ficción</option>
+          </select>
+        </div>
       </div>
       <div class="modal-row">
         <div class="modal-field"><label class="modal-label">Blurb (EN)</label><textarea class="modal-textarea" x-model="form.desc_en" style="min-height:50px"></textarea></div>
@@ -296,6 +349,8 @@ function app() {
     editingId: null,
     activeTab: 'en',
     showNewProjectInline: false,
+    filterProjectId: '',
+    sortBy: 'date_desc',
     form: { project_id: '', title_en: '', title_es: '', type_en: '', type_es: '', desc_en: '', desc_es: '', is_favourite: false, body_en: '', body_es: '' },
     newProject: { title_en: '', title_es: '', type_en: '', type_es: '', desc_en: '', desc_es: '', noun_singular_en: '', noun_plural_en: '', noun_singular_es: '', noun_plural_es: '' },
     mdeEn: null,
@@ -313,6 +368,26 @@ function app() {
 
     addableProjects() {
       return this.projects.filter(p => !Number(p.is_custom_spa));
+    },
+
+    filteredStories() {
+      let list = this.stories;
+      if (this.filterProjectId) {
+        list = list.filter(s => String(s.project_id) === String(this.filterProjectId));
+      }
+      list = list.slice();
+      list.sort((a, b) => {
+        switch (this.sortBy) {
+          case 'title_asc':   return a.title_en.localeCompare(b.title_en);
+          case 'title_desc':  return b.title_en.localeCompare(a.title_en);
+          case 'date_asc':    return new Date(a.created_at) - new Date(b.created_at);
+          case 'date_desc':   return new Date(b.created_at) - new Date(a.created_at);
+          case 'project_asc': return a.project_title_en.localeCompare(b.project_title_en);
+          case 'project_desc':return b.project_title_en.localeCompare(a.project_title_en);
+          default: return 0;
+        }
+      });
+      return list;
     },
 
     jsonHeaders() {

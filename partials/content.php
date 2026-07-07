@@ -13,7 +13,16 @@
  * an untranslated story just doesn't show up on Spanish listings. The story
  * body text itself still lives on disk as <slug>.md / <slug>-es.md, fetched
  * and rendered client-side by story-shell.php exactly as before.
+ *
+ * Since content now comes from a DB that the admin/ portal writes to at any
+ * time, every page that requires this file must never be served from
+ * Siteground's Dynamic Cache — otherwise edits appear not to take effect
+ * until the cache happens to expire. Siteground (for non-WordPress sites)
+ * honors a plain Cache-Control header for this: see
+ * https://www.siteground.com/kb/siteground-dynamic-caching-configuration/
  */
+
+header('Cache-Control: no-cache');
 
 $lang = preg_match('#^/es(/|$)#', $_SERVER['REQUEST_URI']) ? 'es' : 'en';
 
