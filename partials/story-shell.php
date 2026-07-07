@@ -54,12 +54,15 @@ $mdFile      = $storySlug . ($storyLang === 'es' ? '-es.md' : '.md');
       .then(function(text) {
         var el = document.getElementById('md-content');
         el.innerHTML = marked.parse(text);
-        // Dialogue convention: a paragraph starting with "R: " is the "reply"
-        // voice and gets right-aligned; the marker itself is stripped.
+        // Alignment convention: a paragraph starting with "R: " or "C: " is
+        // right- or center-aligned; the marker itself is stripped.
         el.querySelectorAll('p').forEach(function(p) {
           if (/^R:\s*/.test(p.innerHTML)) {
             p.innerHTML = p.innerHTML.replace(/^R:\s*/, '');
             p.classList.add('dlg-right');
+          } else if (/^C:\s*/.test(p.innerHTML)) {
+            p.innerHTML = p.innerHTML.replace(/^C:\s*/, '');
+            p.classList.add('dlg-center');
           }
         });
       })

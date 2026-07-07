@@ -8,6 +8,9 @@ DirectoryIndex index.php index.html
 # clean-URL rewriting below applies to it, or it'll mangle those requests.
 RewriteRule ^organizer/ - [L]
 
+# admin/ (stories CMS) is the same kind of self-contained app — same reasoning.
+RewriteRule ^admin/ - [L]
+
 # Spanish mirror: /es and /es/<path> serve the exact same files as <path>.
 # PHP (see partials/content.php) detects the /es prefix from REQUEST_URI,
 # which always reflects the original URL regardless of this internal rewrite.

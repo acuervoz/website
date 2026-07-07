@@ -2,17 +2,17 @@
 /*
  * Central content registry + bilingual support.
  *
- * Every project/story has title/type/desc as ['en' => ..., 'es' => ...].
- * A story's 'langs' lists which languages it has a full .md for — Spanish
- * listings filter on this, so an untranslated story just doesn't show up
- * there. Projects don't need 'langs': all 5 have Spanish metadata, even the
- * two custom SPA projects (futuristic-historical, the-post-within) whose own
- * page hasn't been translated yet — their listing entries still work in
- * Spanish, visiting the project itself just lands you back in English.
+ * $PROJECTS / $STORIES / $FAVOURITES are read from the admin CMS's database
+ * (see admin/) rather than hardcoded here — this file just reshapes the flat
+ * DB rows back into the ['en' => ..., 'es' => ...] nested arrays the rest of
+ * the site expects, so index.php / project-shell.php / story-shell.php never
+ * had to change. Adding/editing stories now happens through the admin/
+ * portal instead of hand-editing this file.
  *
- * To add a story: add one entry to $STORIES, write <slug>.md (and
- * <slug>-es.md once translated, adding 'es' to its langs), and create
- * projects/<project>/<slug>/index.php per the pattern in the existing ones.
+ * A story's 'langs' is derived from whether its *_es columns are non-NULL —
+ * an untranslated story just doesn't show up on Spanish listings. The story
+ * body text itself still lives on disk as <slug>.md / <slug>-es.md, fetched
+ * and rendered client-side by story-shell.php exactly as before.
  */
 
 $lang = preg_match('#^/es(/|$)#', $_SERVER['REQUEST_URI']) ? 'es' : 'en';
@@ -53,128 +53,84 @@ function stories_for_lang($lang) {
   return $out;
 }
 
-$PROJECTS = array(
-  'unclassified' => array(
-    'title' => array('en' => 'Unclassified', 'es' => 'Libres'),
-    'type'  => array('en' => 'fiction', 'es' => 'ficción'),
-    'desc'  => array(
-      'en' => 'A compilation of short stories spanning several genres but mostly horror.',
-      'es' => 'Una compilación de cuentos cortos que abarca varios géneros, pero principalmente terror.',
-    ),
-    'count' => array('en' => '2 stories', 'es' => '2 historias'),
-  ),
-  'futuristic-historical' => array(
-    'title' => array('en' => 'Futuristic historical', 'es' => 'Postrecords'),
-    'type'  => array('en' => 'fiction', 'es' => 'ficción'),
-    'desc'  => array(
-      'en' => 'A terminal where you can access postcords (records of events that happened in the future).',
-      'es' => 'Una terminal donde puedes acceder a postrecords (registros de eventos que ocurrirán en el futuro).',
-    ),
-  ),
-  'mirror-self' => array(
-    'title' => array('en' => 'Mirror-self', 'es' => 'Reflejos'),
-    'type'  => array('en' => 'nonfiction', 'es' => 'no ficción'),
-    'desc'  => array(
-      'en' => 'Mostly reflections in life.',
-      'es' => 'Mayormente reflexiones sobre la vida.',
-    ),
-    'count' => array('en' => '2 pieces', 'es' => '2 piezas'),
-  ),
-  'pananormales' => array(
-    'title' => array('en' => 'Pananormales', 'es' => 'Pananormales'),
-    'type'  => array('en' => 'fiction', 'es' => 'ficción'),
-    'desc'  => array(
-      'en' => 'Three Venezuelan journalists report on paranormal events in Venezuela.',
-      'es' => 'Tres periodistas venezolanos reportan eventos paranormales en Venezuela.',
-    ),
-    'count' => array('en' => '2 stories', 'es' => '2 historias'),
-  ),
-  'the-post-within' => array(
-    'title' => array('en' => 'The Post Within', 'es' => 'El mundo interno'),
-    'type'  => array('en' => 'fiction', 'es' => 'ficción'),
-    'desc'  => array(
-      'en' => 'An interactive newspaper front page — something is watching from between the columns.',
-      'es' => 'Una portada de periódico interactiva — algo observa entre las columnas.',
-    ),
-  ),
-);
+function contentDb(): PDO {
+  static $pdo = null;
+  if ($pdo) return $pdo;
+  require_once __DIR__ . '/../admin/config.php';
+  $pdo = new PDO(
+    'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4',
+    DB_USER, DB_PASS,
+    [
+      PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+      PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    ]
+  );
+  return $pdo;
+}
+
+// Optional field: only include the key at all if the English value is set,
+// matching how the original hardcoded arrays simply omitted e.g. 'count' for
+// projects that don't use it.
+function bilingualField(array $row, string $enCol, string $esCol): ?array {
+  if ($row[$enCol] === null) return null;
+  $out = ['en' => $row[$enCol]];
+  if ($row[$esCol] !== null) $out['es'] = $row[$esCol];
+  return $out;
+}
+
+$pdo = contentDb();
+
+// Stories first — project "count" labels need each project's live story
+// count and don't just repeat stale stored text (a project's noun changes
+// between singular/plural as stories are added/removed, e.g. "1 piece" ->
+// "2 pieces", not just a number swapped into fixed text).
+$projectSlugById = array();
+$stmt = $pdo->query("SELECT id, slug FROM cms_projects");
+foreach ($stmt->fetchAll() as $row) $projectSlugById[$row['id']] = $row['slug'];
 
 // Order here is also the default "latest works" order (newest first).
-$STORIES = array(
-  'the-machine-gods-manifesto' => array(
-    'project' => 'futuristic-historical',
-    'title'   => array('en' => "The machine god's manifesto", 'es' => "The machine god's manifesto"),
-    'type'    => array('en' => 'fiction', 'es' => 'ficción'),
-    'desc'    => array(
-      'en' => "Someone's last attempt at saving you from the Machine god's grasp.",
-      'es' => 'El último intento de alguien por salvarte de las garras del dios máquina.',
-    ),
-    'langs' => array('en', 'es'),
-  ),
-  'the-night-of-the-milipede' => array(
-    'project' => 'unclassified',
-    'title'   => array('en' => 'The night of the millipede', 'es' => 'La noche de los milpiés'),
-    'type'    => array('en' => 'fiction', 'es' => 'ficción'),
-    'desc'    => array(
-      'en' => "A thousand feet of deceased Venezuelans, victims of the regime, march during the night towards Caracas' palace to enact justice for their lives.",
-      'es' => 'Mil pies de venezolanos fallecidos, víctimas del régimen, marchan durante la noche hacia el palacio de Caracas para hacer justicia por sus vidas.',
-    ),
-    'langs' => array('en', 'es'),
-  ),
-  'do-it-monday' => array(
-    'project' => 'mirror-self',
-    'title'   => array('en' => 'Do it Monday.', 'es' => 'Hazlo el lunes.'),
-    'type'    => array('en' => 'non-fiction', 'es' => 'no ficción'),
-    'desc'    => array(
-      'en' => 'How about you do it now?',
-      'es' => '¿Qué tal si lo haces ahora?',
-    ),
-    'langs' => array('en', 'es'),
-  ),
-  'i-didnt-know-what-i-wanted' => array(
-    'project' => 'mirror-self',
-    'title'   => array('en' => "I didn't know what I wanted", 'es' => 'No sabía lo que quería'),
-    'type'    => array('en' => 'non-fiction', 'es' => 'no ficción'),
-    'desc'    => array(
-      'en' => 'A conversation with the part of me that keeps asking why.',
-      'es' => 'Una conversación con la parte de mí que sigue preguntando por qué.',
-    ),
-    'langs' => array('en', 'es'),
-  ),
-  'a-deeply-rooted-curse' => array(
-    'project' => 'pananormales',
-    'title'   => array('en' => 'A Deeply Rooted Curse South West of Canaima', 'es' => 'Una maldición arraigada al suroeste de Canaima'),
-    'type'    => array('en' => 'fiction', 'es' => 'ficción'),
-    'desc'    => array(
-      'en' => 'Five tourists from the US travel to Canaima, Venezuela. Only four return after an encounter with an Indigenous population.',
-      'es' => 'Cinco turistas de Estados Unidos viajan a Canaima, Venezuela. Solo cuatro regresan tras un encuentro con una población indígena.',
-    ),
-    'langs' => array('en', 'es'),
-  ),
-  'the-bodies-inside-the-laguna-negra' => array(
-    'project' => 'pananormales',
-    'title'   => array('en' => 'The bodies inside the Laguna Negra in Caracas', 'es' => 'Los cuerpos dentro de la laguna negra de Caracas'),
-    'type'    => array('en' => 'fiction', 'es' => 'ficción'),
-    'desc'    => array(
-      'en' => 'A young man tells us how he lost his 2 friends to the black lake near his house and why he keeps coming back.',
-      'es' => 'Un joven nos cuenta cómo perdió a sus 2 amigos en el lago negro cerca de su casa y por qué sigue regresando.',
-    ),
-    'langs' => array('en', 'es'),
-  ),
-  'hells-janitor' => array(
-    'project' => 'unclassified',
-    'title'   => array('en' => "Hell's janitor", 'es' => 'El conserje del infierno'),
-    'type'    => array('en' => 'fiction', 'es' => 'ficción'),
-    'desc'    => array(
-      'en' => 'A janitor from hell confesses his daily routine.',
-      'es' => 'Un conserje del infierno confiesa su rutina diaria.',
-    ),
-    'langs' => array('en', 'es'),
-  ),
-);
+$STORIES = array();
+$favouritesOrdered = array();
+$stmt = $pdo->query("SELECT * FROM cms_stories ORDER BY created_at DESC");
+foreach ($stmt->fetchAll() as $row) {
+  $langs = array('en');
+  if ($row['title_es'] !== null) $langs[] = 'es';
+  $STORIES[$row['slug']] = array(
+    'project' => $projectSlugById[$row['project_id']],
+    'title'   => bilingualField($row, 'title_en', 'title_es'),
+    'type'    => bilingualField($row, 'type_en', 'type_es'),
+    'desc'    => bilingualField($row, 'desc_en', 'desc_es'),
+    'langs'   => $langs,
+  );
+  if ($row['is_favourite']) {
+    $favouritesOrdered[(int)$row['favourite_sort_order']] = $row['slug'];
+  }
+}
+ksort($favouritesOrdered);
+$FAVOURITES = array_values($favouritesOrdered);
 
-// Hand-picked subset shown in the homepage's "my favourites" table, in order.
-$FAVOURITES = array('the-night-of-the-milipede', 'the-machine-gods-manifesto', 'do-it-monday');
+$storyCountByProject = array_count_values(array_column($STORIES, 'project'));
+
+$PROJECTS = array();
+$stmt = $pdo->query("SELECT * FROM cms_projects ORDER BY sort_order ASC");
+foreach ($stmt->fetchAll() as $row) {
+  $entry = array(
+    'title' => bilingualField($row, 'title_en', 'title_es'),
+    'type'  => bilingualField($row, 'type_en', 'type_es'),
+    'desc'  => bilingualField($row, 'desc_en', 'desc_es'),
+  );
+  if ($row['noun_plural_en'] !== null) {
+    $n = $storyCountByProject[$row['slug']] ?? 0;
+    $nounEn = ($n === 1 && $row['noun_singular_en'] !== null) ? $row['noun_singular_en'] : $row['noun_plural_en'];
+    $count = array('en' => "$n $nounEn");
+    if ($row['noun_plural_es'] !== null) {
+      $nounEs = ($n === 1 && $row['noun_singular_es'] !== null) ? $row['noun_singular_es'] : $row['noun_plural_es'];
+      $count['es'] = "$n $nounEs";
+    }
+    $entry['count'] = $count;
+  }
+  $PROJECTS[$row['slug']] = $entry;
+}
 
 // Site-wide UI strings.
 $UI = array(
