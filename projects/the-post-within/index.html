@@ -78,6 +78,10 @@
   .post-nav a { text-decoration: none; cursor: pointer; }
   .post-nav a:hover { color: var(--accent); }
   .post-nav .sep { color: var(--text-ghost); }
+  .nav-front-btn,
+  .nav-front-sep { display: none; }
+  .nav-front-btn.visible,
+  .nav-front-sep.visible { display: inline; }
 
   /* ── Lead (top) story ── */
   .lead-teaser {
@@ -190,6 +194,21 @@
   }
   .back-link:hover { color: var(--accent); }
 
+  /* ── Language-not-available notice ── */
+  .lang-notice {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.8;
+    text-align: center;
+    max-width: 480px;
+    margin: 3rem auto;
+  }
+  .lang-notice a {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+  .lang-notice a:hover { color: #ffa0a9; }
+
   .section-title {
     font-size: 1.6rem;
     font-weight: normal;
@@ -280,9 +299,13 @@
 
   <hr class="rule">
   <nav class="post-nav">
-    <a href="/">Home</a>
+    <a href="/">Return to A. Cuervoz site</a>
     <span class="sep">&middot;</span>
     <a id="nav-deeper">Deeper within</a>
+    <span class="sep nav-front-sep">&middot;</span>
+    <a id="nav-front" class="nav-front-btn">Back to front page</a>
+    <span class="sep">&middot;</span>
+    <a id="nav-lang"></a>
   </nav>
   <hr class="rule-thin">
   <div style="margin-bottom: 2.2rem;"></div>
@@ -320,6 +343,11 @@
     <div class="story-body" id="story-body"></div>
   </section>
 
+  <!-- ── Not translated (Spanish) ── -->
+  <section id="view-not-translated" class="view">
+    <p class="lang-notice" id="lang-notice"></p>
+  </section>
+
   <footer>made by hand &middot; no trackers &middot; no cookies &middot; acuervoz.com</footer>
 
   <noscript>
@@ -349,6 +377,32 @@
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
+  // ── Language state ───────────────────────────────────
+  var path = window.location.pathname;
+  var isEs = /^\/es(\/|$)/.test(path);
+  var strippedPath = path.replace(/^\/es(?=\/|$)/, '') || '/';
+
+  var navLangLink = document.getElementById('nav-lang');
+  if (isEs) {
+    navLangLink.href = strippedPath;
+    navLangLink.textContent = 'EN';
+  } else {
+    navLangLink.href = '/es' + path;
+    navLangLink.textContent = 'ES';
+  }
+
+  if (isEs) {
+    // This project has no Spanish content yet — show a clear notice with a
+    // link to the English version instead of silently rendering the English
+    // newspaper under a URL that implies it's translated.
+    document.getElementById('nav-deeper').style.display = 'none';
+    document.getElementById('lang-notice').innerHTML =
+      'Página no disponible en español. <a href="' + strippedPath + '">Haz clic aquí</a> para leer la versión en inglés.';
+    document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
+    document.getElementById('view-not-translated').classList.add('active');
+    document.getElementById('eye-wrap').style.display = 'none';
+  } else {
+
   /*
    * PLACEHOLDER CONTENT — replace title/date/blurb/file for each story below,
    * and replace the text inside the-post-within-0X.md with the real pieces.
@@ -418,16 +472,26 @@
   };
   var lastView = 'front';
 
+  var navFrontBtn = document.getElementById('nav-front');
+  var navFrontSep = document.querySelector('.nav-front-sep');
+
   function showView(name) {
     Object.keys(views).forEach(function(k) {
       views[k].classList.toggle('active', k === name);
     });
+    navFrontBtn.classList.toggle('visible', name !== 'front');
+    navFrontSep.classList.toggle('visible', name !== 'front');
   }
 
   document.getElementById('nav-deeper').addEventListener('click', function(e) {
     e.preventDefault();
     lastView = 'archive';
     showView('archive');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  navFrontBtn.addEventListener('click', function() {
+    lastView = 'front';
+    showView('front');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
   document.getElementById('archive-back').addEventListener('click', function() {
@@ -551,6 +615,8 @@
   }
   placeEye();
   (mql.addEventListener ? mql.addEventListener.bind(mql) : mql.addListener.bind(mql))('change', placeEye);
+
+  } // end else (!isEs)
 </script>
 
 </body>

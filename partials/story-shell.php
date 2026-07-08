@@ -6,12 +6,13 @@
  * name, which .md file to fetch — is derived here from $story, $PROJECTS,
  * and the current $lang (all from partials/content.php).
  */
-$storyLang   = in_array($lang, $story['langs']) ? $lang : 'en'; // fall back if untranslated
-$storyTitle  = t($story['title'], $lang);
-$storyType   = t($story['type'], $lang);
-$projectName = t($PROJECTS[$story['project']]['title'], $lang);
-$pageTitle   = $storyTitle . ' — A Cuervoz';
-$mdFile      = $storySlug . ($storyLang === 'es' ? '-es.md' : '.md');
+$translated    = in_array($lang, $story['langs']);
+$availableLang = $translated ? $lang : $story['langs'][0]; // e.g. falls back to 'en'
+$storyTitle    = t($story['title'], $lang);
+$storyType     = t($story['type'], $lang);
+$projectName   = t($PROJECTS[$story['project']]['title'], $lang);
+$pageTitle     = $storyTitle . ' — A Cuervoz';
+$mdFile        = $storySlug . ($availableLang === 'es' ? '-es.md' : '.md');
 ?><!DOCTYPE html>
 <html lang="<?php echo $lang; ?>">
 <head>
@@ -37,16 +38,21 @@ $mdFile      = $storySlug . ($storyLang === 'es' ? '-es.md' : '.md');
   </div>
 
   <div class="page-body" id="md-content">
+<?php if ($translated): ?>
     <p class="loading-msg"><?php echo $UI[$lang]['loading']; ?><span class="blink">_</span></p>
     <noscript>
       <p><?php echo $UI[$lang]['noscript_required']; ?> <a href="<?php echo $mdFile; ?>"><?php echo $UI[$lang]['read_raw']; ?></a></p>
     </noscript>
+<?php else: ?>
+    <?php echo lang_notice_html($lang, $availableLang, story_href($storySlug, $availableLang)); ?>
+<?php endif; ?>
   </div>
 
   <div class="divider" style="margin-top:2.5rem;">- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</div>
 
 <?php include __DIR__ . '/footer.php'; ?>
 
+<?php if ($translated): ?>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script>
     fetch('<?php echo $mdFile; ?>')
@@ -71,6 +77,7 @@ $mdFile      = $storySlug . ($storyLang === 'es' ? '-es.md' : '.md');
           '<p><?php echo addslashes($UI[$lang]['could_not_load']); ?> <a href="<?php echo $mdFile; ?>"><?php echo addslashes($UI[$lang]['read_raw_file']); ?></a></p>';
       });
   </script>
+<?php endif; ?>
 
 </body>
 </html>

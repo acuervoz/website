@@ -48,7 +48,7 @@ the homepage's "my favourites" table, add its slug to `$FAVOURITES` in
 Add one entry to `$PROJECTS` in `partials/content.php` — `title`, `type`,
 `desc`, and `count` (the story-count label, e.g. `'2 stories'`/`'2 historias'`)
 each as `array('en' => ..., 'es' => ...)`. If it's a plain story-listing
-project (not a custom SPA like `futuristic-historical` or `the-post-within`),
+project (not a custom SPA like `postcords-archive` or `the-post-within`),
 create `projects/<project-slug>/index.php` following the pattern of the
 existing ones (`unclassified`, `mirror-self`, `pananormales`):
 
@@ -69,11 +69,15 @@ rewritten internally (see `.htaccess`) to serve the exact same PHP file as
 localized strings from each registry entry's `'es'` key and the `$UI` array
 in `partials/content.php` (nav labels, section headers, footer text, etc.).
 
-This means the two custom SPA pages (`futuristic-historical`,
-`the-post-within`) are reachable at their `/es/...` URL too, but their own
-internal content/UI hasn't been translated — only their *listing* entries
-(title/type/desc shown on the homepage and projects page) are bilingual.
-Translating what's inside those two pages would be a separate, larger job.
+This means the two custom SPA pages (`postcords-archive`, `the-post-within`)
+are reachable at their `/es/...` URL too, but each handles that itself in its
+own inline `<script>` rather than through `partials/content.php` — they read
+`isEs` off `window.location.pathname` and swap their own UI strings/content.
+`postcords-archive`'s terminal is fully bilingual (own translation table,
+falls back to a "not available in this language" notice per-story if a
+translation is missing). `the-post-within` has no Spanish content at all yet,
+so its `/es/...` URL shows a "not available" notice instead of pretending to
+be translated.
 
 *To test locally:* a real Apache + PHP + mod_rewrite setup is installed via
 XAMPP (see project notes/conversation history for setup), with `DocumentRoot`

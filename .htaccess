@@ -11,6 +11,12 @@ RewriteRule ^organizer/ - [L]
 # admin/ (stories CMS) is the same kind of self-contained app — same reasoning.
 RewriteRule ^admin/ - [L]
 
+# futuristic-historical was renamed to postcords-archive (folder + DB slug).
+# These run before the /es prefix is stripped below so old bookmarked /es
+# links redirect to the /es version of the new URL, not the English one.
+RewriteRule ^projects/futuristic-historical(/.*)?$    /projects/postcords-archive$1    [R=301,L]
+RewriteRule ^es/projects/futuristic-historical(/.*)?$ /es/projects/postcords-archive$1 [R=301,L]
+
 # Spanish mirror: /es and /es/<path> serve the exact same files as <path>.
 # PHP (see partials/content.php) detects the /es prefix from REQUEST_URI,
 # which always reflects the original URL regardless of this internal rewrite.
@@ -37,7 +43,7 @@ RewriteRule ^projects/hells-janitor/?$                     /projects/unclassifie
 RewriteRule ^projects/do-it-monday/?$                       /projects/mirror-self/do-it-monday/                       [R=301,L]
 RewriteRule ^projects/a-deeply-rooted-curse/?$              /projects/pananormales/a-deeply-rooted-curse/             [R=301,L]
 RewriteRule ^projects/the-bodies-inside-the-laguna-negra/?$ /projects/pananormales/the-bodies-inside-the-laguna-negra/ [R=301,L]
-RewriteRule ^projects/the-machine-gods-manifesto/?$         /projects/futuristic-historical/the-machine-gods-manifesto/ [R=301,L]
+RewriteRule ^projects/the-machine-gods-manifesto/?$         /projects/postcords-archive/the-machine-gods-manifesto/     [R=301,L]
 
 # Internally serve the .php file for clean URLs, else fall back to .html
 # (checked before !-d so /projects still maps to projects.html

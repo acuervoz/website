@@ -1,17 +1,19 @@
 <?php
 /*
  * Shared shell for a simple project listing page (a project made of plain
- * story-reader pages, not a custom SPA like futuristic-historical or
+ * story-reader pages, not a custom SPA like postcords-archive or
  * the-post-within).
  * The including file must set $projectSlug and $project (= $PROJECTS[$projectSlug])
  * before requiring this partial. The story list is derived from $STORIES,
  * filtered to this project and to stories available in the current $lang.
  */
-$projectTitle = t($project['title'], $lang);
-$projectType  = t($project['type'], $lang);
-$countLabel   = t($project['count'], $lang);
-$introText    = t($project['desc'], $lang);
-$pageTitle    = $projectTitle . ' — A Cuervoz';
+$translated    = array_key_exists($lang, $project['title']);
+$availableLang = $translated ? $lang : 'en';
+$projectTitle  = t($project['title'], $lang);
+$projectType   = t($project['type'], $lang);
+$countLabel    = t($project['count'], $lang);
+$introText     = t($project['desc'], $lang);
+$pageTitle     = $projectTitle . ' — A Cuervoz';
 
 $stories = array();
 foreach (stories_for_lang($lang) as $slug => $s) {
@@ -50,6 +52,7 @@ foreach (stories_for_lang($lang) as $slug => $s) {
 
   <p class="intro"><?php echo $introText; ?></p>
 
+<?php if ($translated): ?>
   <div class="sec-hdr"><?php echo $UI[$lang]['sec_stories']; ?></div>
 
   <table class="proj-table">
@@ -70,6 +73,9 @@ foreach (stories_for_lang($lang) as $slug => $s) {
 <?php endforeach; ?>
     </tbody>
   </table>
+<?php else: ?>
+  <?php echo lang_notice_html($lang, $availableLang, project_href($projectSlug, $availableLang)); ?>
+<?php endif; ?>
 
   <div class="divider" style="margin-top:2.5rem;">- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</div>
 

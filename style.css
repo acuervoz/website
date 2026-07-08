@@ -273,6 +273,20 @@ nav a.active     { color: var(--accent); text-decoration: underline; }
   color:     var(--text-ghost);
 }
 
+/* ── Language-not-available notice ── */
+.lang-notice {
+  font-size:   13px;
+  color:       var(--text-muted);
+  line-height: 1.8;
+  max-width:   40vw;
+  margin:      1.5rem auto 0;
+}
+.lang-notice a { color: var(--accent); }
+.lang-notice a:hover { color: #ffa0a9; }
+@media (max-width: 600px) {
+  .lang-notice { max-width: 100%; }
+}
+
 /* ── Back link ── */
 .back-link {
   font-size:  11px;

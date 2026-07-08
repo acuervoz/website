@@ -125,8 +125,8 @@ $PROJECTS_SEED = [
         'noun' => ['singular_en' => 'story', 'plural_en' => 'stories', 'singular_es' => 'historia', 'plural_es' => 'historias'],
         'is_custom_spa' => 0,
     ],
-    'futuristic-historical' => [
-        'title' => ['en' => 'Futuristic historical', 'es' => 'Postrecords'],
+    'postcords-archive' => [
+        'title' => ['en' => 'Postcords archive', 'es' => 'Postcords archive'],
         'type'  => ['en' => 'fiction', 'es' => 'ficción'],
         'desc'  => [
             'en' => 'A terminal where you can access postcords (records of events that happened in the future).',
@@ -166,12 +166,12 @@ $PROJECTS_SEED = [
 ];
 
 // Order here = default homepage "projects" table order.
-$PROJECT_ORDER = ['unclassified', 'futuristic-historical', 'mirror-self', 'pananormales', 'the-post-within'];
+$PROJECT_ORDER = ['unclassified', 'postcords-archive', 'mirror-self', 'pananormales', 'the-post-within'];
 
 // Order here = "latest works" order, newest first (matches current array order).
 $STORIES_SEED = [
     'the-machine-gods-manifesto' => [
-        'project' => 'futuristic-historical',
+        'project' => 'postcords-archive',
         'title'   => ['en' => "The machine god's manifesto", 'es' => "The machine god's manifesto"],
         'type'    => ['en' => 'fiction', 'es' => 'ficción'],
         'desc'    => [

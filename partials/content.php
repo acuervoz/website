@@ -62,6 +62,35 @@ function stories_for_lang($lang) {
   return $out;
 }
 
+// A language's own name, written in $displayLang — e.g. lang_name('es', 'en') => 'Spanish'.
+function lang_name($code, $displayLang) {
+  $names = array(
+    'en' => array('en' => 'English', 'es' => 'inglés'),
+    'es' => array('en' => 'Spanish', 'es' => 'español'),
+  );
+  return $names[$code][$displayLang];
+}
+
+// "Not available in this language" notice — used wherever a piece of content
+// (a story, a project) hasn't been translated into the current $lang yet.
+// $availableLang is the language the content DOES exist in (its href points
+// there). The notice itself is written in $lang, since that's what the
+// visitor is currently reading the rest of the page in.
+function lang_notice_html($lang, $availableLang, $availableHref) {
+  $missingName   = lang_name($lang, $lang);
+  $availableName = lang_name($availableLang, $lang);
+  if ($lang === 'es') {
+    $text = 'Página no disponible en ' . $missingName . '. '
+      . '<a href="' . htmlspecialchars($availableHref) . '">Haz clic aquí</a> '
+      . 'para leer la versión en ' . $availableName . '.';
+  } else {
+    $text = 'Page not available in ' . $missingName . ' language. '
+      . '<a href="' . htmlspecialchars($availableHref) . '">Click here</a> '
+      . 'to read the ' . $availableName . ' version.';
+  }
+  return '<p class="lang-notice">' . $text . '</p>';
+}
+
 function contentDb(): PDO {
   static $pdo = null;
   if ($pdo) return $pdo;
