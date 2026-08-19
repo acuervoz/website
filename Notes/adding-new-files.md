@@ -74,12 +74,15 @@ looks exactly as it always did. Because a story belongs to exactly one
 project, adding a story to a project from that tab *moves* it — its folder
 moves on disk and it drops out of any series it was in.
 
-> Two projects (`postcords-archive`, `the-post-within`) used to be hand-built
-> single-page apps with their own `index.html` — a terminal and an interactive
-> newspaper front page. They were replaced by standard project pages, so
-> stories and series can now be filed under them like anywhere else. The old
-> markup is in git history if it's ever wanted back. `cms_projects.is_custom_spa`
-> is the retired flag from that arrangement; nothing reads it any more.
+> A project can still render its own page instead of `project-shell.php` —
+> `postcords-archive` is the terminal, and its `index.php` draws its story
+> list from the same registry as everything else, in the order the PROJECTS
+> tab sets. That's the pattern to copy for any future custom page: keep the
+> markup, build the data from `project_stories()`, never hardcode a list.
+> `the-post-within` was a placeholder newspaper front page and now uses the
+> standard project page; its old markup is in git history.
+> `cms_projects.is_custom_spa` is a retired flag — nothing reads it any more,
+> and a custom page no longer stops stories or series being filed there.
 
 ## Series
 
