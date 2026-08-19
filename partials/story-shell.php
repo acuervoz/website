@@ -96,6 +96,30 @@ if ($seriesSlug !== null && $translated) {
   <script>
     marked.setOptions({ breaks: true });
 
+  // ── Line alignment ───────────────────────────────────
+  // A line starting "R: " or "C: " is right- or centre-aligned and the marker
+  // is stripped. Alignment is per LINE, not per paragraph: with breaks:true a
+  // paragraph holds several <br>-separated lines, and each can align on its
+  // own. Paragraphs with no marker are left exactly as marked.js built them.
+  function applyAlignment(root) {
+    root.querySelectorAll('p').forEach(function(p) {
+      if (!/(^|<br\s*\/?>)\s*[RC]:/i.test(p.innerHTML)) return;
+      var frag = document.createDocumentFragment();
+      p.innerHTML.split(/<br\s*\/?>/i).forEach(function(line) {
+        var div = document.createElement('div');
+        var m = /^\s*([RC]):\s*/i.exec(line);
+        if (m) {
+          div.className = m[1].toUpperCase() === 'R' ? 'dlg-right' : 'dlg-center';
+          line = line.slice(m[0].length);
+        }
+        div.innerHTML = line;
+        frag.appendChild(div);
+      });
+      p.innerHTML = '';
+      p.appendChild(frag);
+    });
+  }
+
   // ── Inline markup the editor can insert ──────────────
   // [[text]] renders as a fake button (see .fake-btn). Done over text nodes
   // rather than the markdown source so a stray [[ inside a code block or a
@@ -159,17 +183,7 @@ if ($seriesSlug !== null && $translated) {
         var el = document.getElementById('md-content');
         el.innerHTML = marked.parse(text);
         decorateButtons(el);
-        // Alignment convention: a paragraph starting with "R: " or "C: " is
-        // right- or center-aligned; the marker itself is stripped.
-        el.querySelectorAll('p').forEach(function(p) {
-          if (/^R:\s*/.test(p.innerHTML)) {
-            p.innerHTML = p.innerHTML.replace(/^R:\s*/, '');
-            p.classList.add('dlg-right');
-          } else if (/^C:\s*/.test(p.innerHTML)) {
-            p.innerHTML = p.innerHTML.replace(/^C:\s*/, '');
-            p.classList.add('dlg-center');
-          }
-        });
+        applyAlignment(el);
 <?php if ($redact): ?>
         glitchRedactions(el);
 <?php endif; ?>

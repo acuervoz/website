@@ -112,7 +112,10 @@ hand.
 ## Writing conventions inside a story's markdown
 
 - A line starting `R: ` or `C: ` is right- or centre-aligned; the marker is
-  stripped. Toolbar buttons in the admin editor insert these.
+  stripped. Toolbar buttons in the admin editor insert these. Alignment is per
+  *line*, not per paragraph — with `breaks: true` a paragraph holds several
+  `<br>`-separated lines and each can align on its own, so the class lands on a
+  div inside the `<p>` rather than on the `<p>`.
 - `[[text]]` renders as a red fake button — it looks like a button and
   deliberately isn't one. The editor's toolbar wraps the selection for you.
   Inside backticks it stays literal.

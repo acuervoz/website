@@ -507,6 +507,8 @@ $seriesJson  = json_encode($terminalSeries, $jsonFlags);
     .story-body ul,
     .story-body ol          { padding-left: 1.5rem; margin-bottom: 1rem; }
     .story-body li          { margin-bottom: 0.2rem; }
+    .story-body .dlg-right  { text-align: right; }
+    .story-body .dlg-center { text-align: center; }
     /* [[text]] from the editor — looks like a button, deliberately isn't one */
     .story-body .fake-btn {
       display: inline-block;
@@ -864,6 +866,30 @@ $seriesJson  = json_encode($terminalSeries, $jsonFlags);
   // preview shows.
   marked.setOptions({ breaks: true });
 
+  // ── Line alignment ───────────────────────────────────
+  // A line starting "R: " or "C: " is right- or centre-aligned and the marker
+  // is stripped. Alignment is per LINE, not per paragraph: with breaks:true a
+  // paragraph holds several <br>-separated lines, and each can align on its
+  // own. Paragraphs with no marker are left exactly as marked.js built them.
+  function applyAlignment(root) {
+    root.querySelectorAll('p').forEach(function(p) {
+      if (!/(^|<br\s*\/?>)\s*[RC]:/i.test(p.innerHTML)) return;
+      var frag = document.createDocumentFragment();
+      p.innerHTML.split(/<br\s*\/?>/i).forEach(function(line) {
+        var div = document.createElement('div');
+        var m = /^\s*([RC]):\s*/i.exec(line);
+        if (m) {
+          div.className = m[1].toUpperCase() === 'R' ? 'dlg-right' : 'dlg-center';
+          line = line.slice(m[0].length);
+        }
+        div.innerHTML = line;
+        frag.appendChild(div);
+      });
+      p.innerHTML = '';
+      p.appendChild(frag);
+    });
+  }
+
   // ── Inline markup the editor can insert ──────────────
   // [[text]] renders as a fake button (see .fake-btn). Done over text nodes
   // rather than the markdown source so a stray [[ inside a code block or a
@@ -1130,6 +1156,7 @@ $seriesJson  = json_encode($terminalSeries, $jsonFlags);
       .then(function(r) { return r.text(); })
       .then(function(t) {
         bodyContent.innerHTML = marked.parse(t);
+        applyAlignment(bodyContent);
         decorateButtons(bodyContent);
       })
       .catch(function()  {
