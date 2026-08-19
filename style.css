@@ -189,6 +189,13 @@ nav a.active     { color: var(--accent); text-decoration: underline; }
   color:        var(--accent);
 }
 
+/* ── Part number cell (series page) ── */
+.part-cell {
+  font-size:      10px;
+  color:          var(--text-dim);
+  letter-spacing: 0.1em;
+}
+
 /* ── Description cell ── */
 .d-cell {
   font-size: 11px;
@@ -214,6 +221,45 @@ nav a.active     { color: var(--accent); text-decoration: underline; }
 .page-meta span + span::before {
   content: ' · ';
 }
+
+/* ── Series context on a story page ── */
+.series-line {
+  margin-top: 0.35rem;
+  font-size:  11px;
+  display:    flex;
+  gap:        0.6rem;
+  flex-wrap:  wrap;
+  align-items: baseline;
+}
+.series-link {
+  color:           var(--accent);
+  text-decoration: none;
+  border-bottom:   1px dotted var(--accent-faint);
+  letter-spacing:  0.05em;
+}
+.series-link:hover { color: #ffa0a9; border-bottom-color: #ffa0a9; }
+.series-part { color: var(--text-ghost); letter-spacing: 0.05em; }
+
+/* ── Previous / next part buttons at the end of a story ── */
+.series-nav {
+  display:         flex;
+  gap:             0.75rem;
+  flex-wrap:       wrap;
+  justify-content: space-between;
+  max-width:       40vw;
+  margin:          2.5rem auto 0;
+}
+.series-nav-btn {
+  font-size:       11px;
+  letter-spacing:  0.06em;
+  color:           var(--text-muted);
+  text-decoration: none;
+  border:          1px solid var(--border);
+  padding:         0.35rem 0.75rem;
+}
+.series-nav-btn:hover { color: var(--accent); border-color: var(--accent); }
+/* A lone "next" still sits on the right, as if the missing "previous" were there. */
+.series-nav-btn.next:only-child { margin-left: auto; }
 
 .page-body {
   max-width:   40vw;
@@ -356,4 +402,5 @@ footer a { color: var(--text-ghost); }
   .proj-table th:last-child,
   .proj-table td:last-child { display: none; }
   .page-body { max-width: 100%; margin: 1.5rem 0 0; }
+  .series-nav { max-width: 100%; margin: 2.5rem 0 0; }
 }

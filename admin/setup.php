@@ -19,7 +19,7 @@ $existing = [];
 $rows = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
 foreach ($rows as $t) $existing[$t] = true;
 
-$tables = ['admin_keys', 'admin_sessions', 'login_nonces', 'cms_projects', 'cms_stories'];
+$tables = ['admin_keys', 'admin_sessions', 'login_nonces', 'cms_projects', 'cms_stories', 'cms_series'];
 $alreadyExist = array_filter($tables, fn($t) => isset($existing[$t]));
 
 if ($alreadyExist) {
@@ -70,10 +70,25 @@ $sqls = [
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
 
+    'cms_series' => "CREATE TABLE cms_series (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        slug VARCHAR(150) NOT NULL UNIQUE,
+        project_id INT NOT NULL,
+        title_en VARCHAR(200) NOT NULL,
+        title_es VARCHAR(200) DEFAULT NULL,
+        desc_en TEXT DEFAULT NULL,
+        desc_es TEXT DEFAULT NULL,
+        sort_order INT NOT NULL DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (project_id) REFERENCES cms_projects(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+
     'cms_stories' => "CREATE TABLE cms_stories (
         id INT AUTO_INCREMENT PRIMARY KEY,
         slug VARCHAR(150) NOT NULL UNIQUE,
         project_id INT NOT NULL,
+        series_id INT DEFAULT NULL,
+        series_part INT DEFAULT NULL,
         title_en VARCHAR(200) NOT NULL,
         title_es VARCHAR(200) DEFAULT NULL,
         type_en VARCHAR(50) DEFAULT NULL,
@@ -84,7 +99,8 @@ $sqls = [
         is_favourite TINYINT(1) DEFAULT 0,
         favourite_sort_order INT DEFAULT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (project_id) REFERENCES cms_projects(id) ON DELETE CASCADE
+        FOREIGN KEY (project_id) REFERENCES cms_projects(id) ON DELETE CASCADE,
+        FOREIGN KEY (series_id) REFERENCES cms_series(id) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
 ];
 

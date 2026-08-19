@@ -14,6 +14,25 @@ $projectName   = t($PROJECTS[$story['project']]['title'], $lang);
 $pageTitle     = $storyTitle . ' — A Cuervoz';
 $mdFile        = $storySlug . ($availableLang === 'es' ? '-es.md' : '.md');
 $redact        = !empty($story['redact']);
+
+// Series context: the link back to the series' own page, and the previous /
+// next part buttons. Position is taken from the parts readable in the
+// current language, so an untranslated part never becomes a dead end — and
+// a story that isn't itself readable here has no position at all.
+$seriesSlug  = $story['series'] ?? null;
+$seriesTitle = $seriesSlug !== null ? t($SERIES[$seriesSlug]['title'], $lang) : null;
+$prevPart    = null;
+$nextPart    = null;
+$partLabel   = null;
+if ($seriesSlug !== null && $translated) {
+  $parts = series_stories($seriesSlug, $lang);
+  $i = array_search($storySlug, $parts, true);
+  if ($i !== false) {
+    $partLabel = sprintf($UI[$lang]['part_n_of'], $i + 1, count($parts));
+    if ($i > 0)                  $prevPart = $parts[$i - 1];
+    if ($i < count($parts) - 1)  $nextPart = $parts[$i + 1];
+  }
+}
 ?><!DOCTYPE html>
 <html lang="<?php echo $lang; ?>">
 <head>
@@ -36,6 +55,14 @@ $redact        = !empty($story['redact']);
       <span><?php echo $storyType; ?></span>
       <span><?php echo $projectName; ?></span>
     </div>
+<?php if ($seriesSlug !== null): ?>
+    <div class="series-line">
+      <a class="series-link" href="<?php echo series_href($seriesSlug, $lang); ?>"><?php echo $UI[$lang]['series_label']; ?>: <?php echo $seriesTitle; ?></a>
+<?php if ($partLabel !== null): ?>
+      <span class="series-part"><?php echo $partLabel; ?></span>
+<?php endif; ?>
+    </div>
+<?php endif; ?>
   </div>
 
   <div class="page-body" id="md-content">
@@ -48,6 +75,17 @@ $redact        = !empty($story['redact']);
     <?php echo lang_notice_html($lang, $availableLang, story_href($storySlug, $availableLang)); ?>
 <?php endif; ?>
   </div>
+
+<?php if ($prevPart !== null || $nextPart !== null): ?>
+  <div class="series-nav">
+<?php if ($prevPart !== null): ?>
+    <a class="series-nav-btn" href="<?php echo story_href($prevPart, $lang); ?>">&larr; <?php echo $UI[$lang]['prev_part']; ?></a>
+<?php endif; ?>
+<?php if ($nextPart !== null): ?>
+    <a class="series-nav-btn next" href="<?php echo story_href($nextPart, $lang); ?>"><?php echo $UI[$lang]['next_part']; ?> &rarr;</a>
+<?php endif; ?>
+  </div>
+<?php endif; ?>
 
   <div class="divider" style="margin-top:2.5rem;">- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</div>
 

@@ -26,6 +26,21 @@ foreach (stories_for_lang($lang) as $slug => $s) {
     );
   }
 }
+
+// Series inside this project — the "// series" block is simply skipped when
+// the project has none (or none with a part readable in this language).
+$series = array();
+foreach (series_for_project($projectSlug, $lang) as $slug => $ser) {
+  $n = count(series_stories($slug, $lang));
+  $series[] = array(
+    'href'  => 'series/' . $slug . '/',
+    'title' => t($ser['title'], $lang),
+    'count' => $n . ' ' . ($lang === 'es'
+      ? ($n === 1 ? 'parte' : 'partes')
+      : ($n === 1 ? 'part'  : 'parts')),
+    'desc'  => $ser['desc'] ? t($ser['desc'], $lang) : '',
+  );
+}
 ?><!DOCTYPE html>
 <html lang="<?php echo $lang; ?>">
 <head>
@@ -53,6 +68,29 @@ foreach (stories_for_lang($lang) as $slug => $s) {
   <p class="intro"><?php echo $introText; ?></p>
 
 <?php if ($translated): ?>
+<?php if ($series): ?>
+  <div class="sec-hdr"><?php echo $UI[$lang]['sec_series']; ?></div>
+
+  <table class="proj-table">
+    <thead>
+      <tr>
+        <th style="width:36%"><?php echo $UI[$lang]['col_title']; ?></th>
+        <th style="width:14%"><?php echo $UI[$lang]['col_parts']; ?></th>
+        <th><?php echo $UI[$lang]['col_desc']; ?></th>
+      </tr>
+    </thead>
+    <tbody>
+<?php foreach ($series as $ser): ?>
+      <tr>
+        <td class="t-cell"><a href="<?php echo $ser['href']; ?>"><?php echo $ser['title']; ?></a></td>
+        <td class="d-cell"><?php echo $ser['count']; ?></td>
+        <td class="d-cell"><?php echo $ser['desc']; ?></td>
+      </tr>
+<?php endforeach; ?>
+    </tbody>
+  </table>
+<?php endif; ?>
+
   <div class="sec-hdr"><?php echo $UI[$lang]['sec_stories']; ?></div>
 
   <table class="proj-table">

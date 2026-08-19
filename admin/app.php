@@ -43,7 +43,7 @@ $csrfToken = $_SESSION['csrf_token'];
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Admin — Stories</title>
+<title>Admin — Content</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -67,8 +67,16 @@ html, body { background: var(--bg); color: var(--text); font-family: 'JetBrains 
 }
 .nav-brand { color: var(--accent); font-weight: 700; letter-spacing: 0.15em; font-size: 12px; text-transform: uppercase; }
 .nav-right { display: flex; gap: 8px; }
+.nav-tabs { display: flex; gap: 2px; }
+.nav-tab {
+  background: none; border: 1px solid transparent; color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em;
+  padding: 5px 14px; cursor: pointer;
+}
+.nav-tab:hover { color: var(--text); }
+.nav-tab.active { color: var(--accent); border-color: var(--border); background: var(--bg-surface); }
 
-#main { padding: 24px 20px; max-width: 900px; margin: 0 auto; }
+.pane { display: block; padding: 24px 20px; max-width: 900px; margin: 0 auto; }
 
 .btn {
   background: none; border: 1px solid var(--border); color: var(--text-muted);
@@ -113,6 +121,20 @@ html, body { background: var(--bg); color: var(--text); font-family: 'JetBrains 
 .modal-textarea { resize: vertical; max-width: 100%; }
 .modal-checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); }
 .new-project-box { border: 1px solid var(--border); padding: 12px; background: var(--bg-raised); margin-top: 8px; }
+.field-hint { color: var(--text-dim); font-size: 10px; margin-top: 5px; }
+.part-tag { color: var(--text-dim); font-size: 10px; }
+
+/* Series editor: the ordered list of parts */
+.parts-list { border: 1px solid var(--border); background: var(--bg-raised); }
+.part-row { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-bottom: 1px solid var(--bg-surface); }
+.part-row:last-child { border-bottom: none; }
+.part-num { color: var(--accent); font-size: 10px; letter-spacing: 0.1em; }
+.part-title { flex: 1; font-size: 12px; }
+.part-btns { display: flex; gap: 4px; }
+.part-btns .btn[disabled] { opacity: 0.3; cursor: default; }
+.part-btns .btn[disabled]:hover { border-color: var(--border); color: var(--text-muted); }
+.add-part-row { display: flex; gap: 6px; align-items: center; margin-top: 8px; }
+.add-part-row .modal-select { flex: 1; }
 .editor-tabs { display: flex; gap: 2px; margin-bottom: 8px; }
 .editor-tab { background: none; border: 1px solid var(--border); color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; padding: 5px 12px; cursor: pointer; }
 .editor-tab.active { color: var(--accent); border-color: var(--accent); }
@@ -135,14 +157,19 @@ html, body { background: var(--bg); color: var(--text); font-family: 'JetBrains 
 <body x-data="app()" x-init="init()">
 
 <nav id="nav">
-  <span class="nav-brand">░░ STORIES ADMIN</span>
+  <span class="nav-brand">░░ CONTENT ADMIN</span>
+  <div class="nav-tabs">
+    <button class="nav-tab" :class="{active: tab==='stories'}" @click="tab='stories'">STORIES</button>
+    <button class="nav-tab" :class="{active: tab==='series'}" @click="tab='series'">SERIES</button>
+  </div>
   <div class="nav-right">
-    <button class="btn btn-accent" @click="openNewStory()">+ NEW STORY</button>
+    <button class="btn btn-accent" x-show="tab==='stories'" @click="openNewStory()">+ NEW STORY</button>
+    <button class="btn btn-accent" x-show="tab==='series'" @click="openNewSeries()">+ NEW SERIES</button>
     <button class="btn" @click="logout()">LOGOUT</button>
   </div>
 </nav>
 
-<main id="main">
+<main class="pane" x-show="tab==='stories'">
   <template x-if="stories.length === 0">
     <div class="empty-state">· no stories yet — click + NEW STORY to add one</div>
   </template>
@@ -172,16 +199,25 @@ html, body { background: var(--bg); color: var(--text); font-family: 'JetBrains 
 
   <table class="stories-table" x-show="stories.length > 0">
     <thead>
-      <tr><th>Title</th><th>Project</th><th>Langs</th><th></th><th>Date</th><th></th></tr>
+      <tr><th>Title</th><th>Project</th><th>Series</th><th>Langs</th><th></th><th>Date</th><th></th></tr>
     </thead>
     <tbody>
       <template x-if="filteredStories().length === 0">
-        <tr><td colspan="6" class="empty-state">· no stories match this filter</td></tr>
+        <tr><td colspan="7" class="empty-state">· no stories match this filter</td></tr>
       </template>
       <template x-for="s in filteredStories()" :key="s.id">
         <tr>
           <td class="title-cell" x-text="s.title_en"></td>
           <td class="muted" x-text="s.project_title_en"></td>
+          <td class="muted">
+            <template x-if="s.series_title_en">
+              <span>
+                <span x-text="s.series_title_en"></span>
+                <span class="part-tag" x-show="s.series_part" x-text="'· pt ' + s.series_part"></span>
+              </span>
+            </template>
+            <template x-if="!s.series_title_en"><span class="muted">—</span></template>
+          </td>
           <td>
             <span class="lang-badge">EN</span>
             <template x-if="s.title_es"><span class="lang-badge">ES</span></template>
@@ -201,6 +237,107 @@ html, body { background: var(--bg); color: var(--text); font-family: 'JetBrains 
   </table>
 </main>
 
+<main class="pane" x-show="tab==='series'" x-cloak>
+  <template x-if="series.length === 0">
+    <div class="empty-state">· no series yet — click + NEW SERIES to group some stories into one</div>
+  </template>
+
+  <table class="stories-table" x-show="series.length > 0">
+    <thead>
+      <tr><th>Series</th><th>Project</th><th>Parts</th><th>Langs</th><th></th></tr>
+    </thead>
+    <tbody>
+      <template x-for="se in series" :key="se.id">
+        <tr>
+          <td class="title-cell" x-text="se.title_en"></td>
+          <td class="muted" x-text="se.project_title_en"></td>
+          <td class="muted" x-text="se.story_count"></td>
+          <td>
+            <span class="lang-badge">EN</span>
+            <template x-if="se.title_es"><span class="lang-badge">ES</span></template>
+          </td>
+          <td class="row-actions">
+            <button class="btn btn-sm" @click="openEditSeries(se)">EDIT</button>
+            <button class="btn btn-sm" style="color:var(--accent);border-color:var(--accent)" @click="deleteSeries(se.id)">DELETE</button>
+          </td>
+        </tr>
+      </template>
+    </tbody>
+  </table>
+</main>
+
+<!-- Add/Edit series modal -->
+<div class="modal-backdrop" x-show="modal==='series'" x-cloak @click.self="closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <span x-text="seriesForm.id ? '─ EDIT SERIES ────────────────' : '─ NEW SERIES ─────────────────'"></span>
+      <button class="btn btn-sm" @click="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="modal-field">
+        <label class="modal-label">Project:</label>
+        <select class="modal-select" x-model="seriesForm.project_id" @change="seriesForm.stories = []">
+          <option value="" disabled>choose a project...</option>
+          <template x-for="p in addableProjects()" :key="p.id">
+            <option :value="p.id" x-text="p.title_en"></option>
+          </template>
+        </select>
+        <div class="field-hint" x-show="seriesForm.id && seriesForm.stories.length">
+          · a series can't be moved to another project while it still has parts
+        </div>
+      </div>
+
+      <div class="modal-row">
+        <div class="modal-field"><label class="modal-label">Title (EN)</label><input class="modal-input" x-model="seriesForm.title_en"></div>
+        <div class="modal-field"><label class="modal-label">Title (ES) — optional</label><input class="modal-input" x-model="seriesForm.title_es"></div>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Description (EN) — shown on the series page</label>
+        <textarea class="modal-textarea" x-model="seriesForm.desc_en" style="min-height:70px"></textarea>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Description (ES)</label>
+        <textarea class="modal-textarea" x-model="seriesForm.desc_es" style="min-height:70px"></textarea>
+      </div>
+
+      <div class="modal-field">
+        <label class="modal-label">Parts — in reading order</label>
+        <div class="parts-list">
+          <template x-if="seriesForm.stories.length === 0">
+            <div class="empty-state" style="padding:8px">· nothing in this series yet</div>
+          </template>
+          <template x-for="(s, i) in seriesForm.stories" :key="s.id">
+            <div class="part-row">
+              <span class="part-num" x-text="String(i + 1).padStart(2, '0')"></span>
+              <span class="part-title" x-text="s.title_en"></span>
+              <span class="part-btns">
+                <button class="btn btn-sm" @click="movePart(i, -1)" :disabled="i === 0">↑</button>
+                <button class="btn btn-sm" @click="movePart(i, 1)" :disabled="i === seriesForm.stories.length - 1">↓</button>
+                <button class="btn btn-sm" @click="seriesForm.stories.splice(i, 1)" title="remove from series">✕</button>
+              </span>
+            </div>
+          </template>
+        </div>
+        <div class="add-part-row" x-show="seriesForm.project_id">
+          <select class="modal-select" x-model="addPartId">
+            <option value="">— add a story to this series —</option>
+            <template x-for="s in addableToSeries()" :key="s.id">
+              <option :value="s.id" x-text="s.title_en"></option>
+            </template>
+          </select>
+          <button class="btn btn-sm" @click="addPart()">ADD</button>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn" @click="closeModal()">CANCEL</button>
+      <button class="btn btn-accent" @click="saveSeries()">SAVE</button>
+    </div>
+  </div>
+</div>
+
 <!-- Add/Edit story modal -->
 <div class="modal-backdrop" x-show="modal==='story'" x-cloak @click.self="closeModal()">
   <div class="modal">
@@ -214,7 +351,8 @@ html, body { background: var(--bg); color: var(--text); font-family: 'JetBrains 
         <label class="modal-label">Project:</label>
         <template x-if="!showNewProjectInline">
           <div>
-            <select class="modal-select" x-model="form.project_id" style="margin-bottom:6px">
+            <select class="modal-select" x-model="form.project_id" style="margin-bottom:6px"
+                    @change="form.series_id = ''; form.series_part = ''">
               <option value="" disabled>choose a project...</option>
               <template x-for="p in addableProjects()" :key="p.id">
                 <option :value="p.id" x-text="p.title_en"></option>
@@ -258,6 +396,43 @@ html, body { background: var(--bg); color: var(--text); font-family: 'JetBrains 
             <div style="display:flex;gap:6px">
               <button class="btn btn-sm" @click="showNewProjectInline=false">CANCEL</button>
               <button class="btn btn-accent btn-sm" @click="createProjectInline()">CREATE + SELECT</button>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <div class="modal-field" x-show="form.project_id">
+        <label class="modal-label">Series:</label>
+        <template x-if="!showNewSeriesInline">
+          <div>
+            <div class="modal-row">
+              <div class="modal-field" style="margin-bottom:6px">
+                <select class="modal-select" x-model="form.series_id">
+                  <option value="">— none —</option>
+                  <template x-for="se in seriesForProject()" :key="se.id">
+                    <option :value="se.id" x-text="se.title_en"></option>
+                  </template>
+                </select>
+              </div>
+              <div class="modal-field" style="margin-bottom:6px">
+                <input class="modal-input" type="number" min="1" placeholder="part # — blank = by upload date"
+                       x-model="form.series_part" :disabled="!form.series_id">
+              </div>
+            </div>
+            <button class="btn btn-sm" @click="showNewSeriesInline = true">+ NEW SERIES</button>
+          </div>
+        </template>
+        <template x-if="showNewSeriesInline">
+          <div class="new-project-box">
+            <div class="modal-row">
+              <div class="modal-field"><label class="modal-label">Title (EN)</label><input class="modal-input" x-model="newSeries.title_en"></div>
+              <div class="modal-field"><label class="modal-label">Title (ES)</label><input class="modal-input" x-model="newSeries.title_es"></div>
+            </div>
+            <div class="modal-field"><label class="modal-label">Description (EN)</label><textarea class="modal-textarea" x-model="newSeries.desc_en" style="min-height:50px"></textarea></div>
+            <div class="modal-field"><label class="modal-label">Description (ES)</label><textarea class="modal-textarea" x-model="newSeries.desc_es" style="min-height:50px"></textarea></div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-sm" @click="showNewSeriesInline=false">CANCEL</button>
+              <button class="btn btn-accent btn-sm" @click="createSeriesInline()">CREATE + SELECT</button>
             </div>
           </div>
         </template>
@@ -352,16 +527,22 @@ function makeEditor(elId, initialValue) {
 function app() {
   return {
     csrfToken: '',
+    tab: 'stories',
     projects: [],
     stories: [],
+    series: [],
     modal: null,
     editingId: null,
     activeTab: 'en',
     showNewProjectInline: false,
+    showNewSeriesInline: false,
     filterProjectId: '',
     sortBy: 'date_desc',
-    form: { project_id: '', title_en: '', title_es: '', type_en: '', type_es: '', desc_en: '', desc_es: '', has_redacted: false, is_favourite: false, body_en: '', body_es: '' },
+    addPartId: '',
+    form: { project_id: '', series_id: '', series_part: '', title_en: '', title_es: '', type_en: '', type_es: '', desc_en: '', desc_es: '', has_redacted: false, is_favourite: false, body_en: '', body_es: '' },
     newProject: { title_en: '', title_es: '', type_en: '', type_es: '', desc_en: '', desc_es: '', noun_singular_en: '', noun_plural_en: '', noun_singular_es: '', noun_plural_es: '' },
+    newSeries: { title_en: '', title_es: '', desc_en: '', desc_es: '' },
+    seriesForm: { id: null, project_id: '', title_en: '', title_es: '', desc_en: '', desc_es: '', stories: [] },
     mdeEn: null,
     mdeEs: null,
 
@@ -373,10 +554,28 @@ function app() {
     async loadAll() {
       this.projects = await fetch('api.php?action=list_projects').then(r => r.json());
       this.stories  = await fetch('api.php?action=list_stories').then(r => r.json());
+      this.series   = await fetch('api.php?action=list_series').then(r => r.json());
     },
 
     addableProjects() {
       return this.projects.filter(p => !Number(p.is_custom_spa));
+    },
+
+    // Series never span projects, so only the current project's ones are offered.
+    seriesForProject() {
+      return this.series.filter(se => String(se.project_id) === String(this.form.project_id));
+    },
+
+    // Stories of the series' project that aren't spoken for: unassigned, or
+    // already part of this series. Stealing one out of another series has to
+    // be done from that series' own editor, so it's never a silent side effect.
+    addableToSeries() {
+      const taken = this.seriesForm.stories.map(s => String(s.id));
+      return this.stories.filter(s =>
+        String(s.project_id) === String(this.seriesForm.project_id) &&
+        (!s.series_id || String(s.series_id) === String(this.seriesForm.id)) &&
+        !taken.includes(String(s.id))
+      );
     },
 
     filteredStories() {
@@ -407,7 +606,8 @@ function app() {
       this.editingId = null;
       this.activeTab = 'en';
       this.showNewProjectInline = false;
-      this.form = { project_id: '', title_en: '', title_es: '', type_en: '', type_es: '', desc_en: '', desc_es: '', has_redacted: false, is_favourite: false, body_en: '', body_es: '' };
+      this.showNewSeriesInline = false;
+      this.form = { project_id: '', series_id: '', series_part: '', title_en: '', title_es: '', type_en: '', type_es: '', desc_en: '', desc_es: '', has_redacted: false, is_favourite: false, body_en: '', body_es: '' };
       this.modal = 'story';
       this.$nextTick(() => this.initEditors());
     },
@@ -417,8 +617,11 @@ function app() {
       this.editingId = story.id;
       this.activeTab = 'en';
       this.showNewProjectInline = false;
+      this.showNewSeriesInline = false;
       this.form = {
         project_id: story.project_id,
+        series_id: full.series_id || '',
+        series_part: full.series_part || '',
         title_en: full.title_en, title_es: full.title_es || '',
         type_en: full.type_en || '', type_es: full.type_es || '',
         desc_en: full.desc_en || '', desc_es: full.desc_es || '',
@@ -457,6 +660,95 @@ function app() {
         editor.value(text);
       };
       input.click();
+    },
+
+    // ── Series ────────────────────────────────────────────────────────────
+
+    openNewSeries() {
+      this.seriesForm = { id: null, project_id: '', title_en: '', title_es: '', desc_en: '', desc_es: '', stories: [] };
+      this.addPartId = '';
+      this.modal = 'series';
+    },
+
+    async openEditSeries(se) {
+      const full = await fetch('api.php?action=get_series&id=' + se.id).then(r => r.json());
+      this.seriesForm = {
+        id: full.id,
+        project_id: full.project_id,
+        title_en: full.title_en, title_es: full.title_es || '',
+        desc_en: full.desc_en || '', desc_es: full.desc_es || '',
+        stories: full.stories.map(s => ({ id: s.id, title_en: s.title_en })),
+      };
+      this.addPartId = '';
+      this.modal = 'series';
+    },
+
+    movePart(i, delta) {
+      const list = this.seriesForm.stories;
+      const j = i + delta;
+      if (j < 0 || j >= list.length) return;
+      [list[i], list[j]] = [list[j], list[i]];
+    },
+
+    addPart() {
+      if (!this.addPartId) return;
+      const story = this.stories.find(s => String(s.id) === String(this.addPartId));
+      if (story) this.seriesForm.stories.push({ id: story.id, title_en: story.title_en });
+      this.addPartId = '';
+    },
+
+    async saveSeries() {
+      if (!this.seriesForm.project_id) { alert('choose a project first'); return; }
+      if (!this.seriesForm.title_en.trim()) { alert('title (EN) is required'); return; }
+
+      // A new series is created first, then handed its parts through the same
+      // ordering call the editor uses for an existing one.
+      let id = this.seriesForm.id;
+      if (!id) {
+        const res = await fetch('api.php?action=create_series', {
+          method: 'POST', headers: this.jsonHeaders(),
+          body: JSON.stringify({ ...this.seriesForm, csrf_token: this.csrfToken }),
+        });
+        const result = await res.json();
+        if (!res.ok) { alert(result.error || 'failed to create series'); return; }
+        id = result.id;
+      }
+
+      const res = await fetch('api.php?action=update_series', {
+        method: 'POST', headers: this.jsonHeaders(),
+        body: JSON.stringify({
+          ...this.seriesForm, id,
+          story_ids: this.seriesForm.stories.map(s => s.id),
+          csrf_token: this.csrfToken,
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok) { alert(result.error || 'save failed'); return; }
+      this.closeModal();
+      await this.loadAll();
+    },
+
+    async deleteSeries(id) {
+      if (!confirm('Delete this series? Its stories are kept — they just stop being part of it.')) return;
+      const res = await fetch('api.php?action=delete_series', {
+        method: 'POST', headers: this.jsonHeaders(), body: JSON.stringify({ id, csrf_token: this.csrfToken }),
+      });
+      if (res.ok) await this.loadAll();
+      else { const r = await res.json(); alert(r.error || 'delete failed'); }
+    },
+
+    async createSeriesInline() {
+      if (!this.newSeries.title_en.trim()) { alert('the series needs an English title'); return; }
+      const res = await fetch('api.php?action=create_series', {
+        method: 'POST', headers: this.jsonHeaders(),
+        body: JSON.stringify({ ...this.newSeries, project_id: this.form.project_id, csrf_token: this.csrfToken }),
+      });
+      const result = await res.json();
+      if (!res.ok) { alert(result.error || 'failed to create series'); return; }
+      await this.loadAll();
+      this.form.series_id = result.id;
+      this.newSeries = { title_en: '', title_es: '', desc_en: '', desc_es: '' };
+      this.showNewSeriesInline = false;
     },
 
     async createProjectInline() {

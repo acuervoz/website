@@ -60,6 +60,36 @@ $project = $PROJECTS[$projectSlug];
 include __DIR__ . '/../../partials/project-shell.php';
 ```
 
+## Series
+
+A **series** is a reading order inside one project — a project can hold
+several series, a series never spans projects, and a series never contains a
+project. They're managed entirely from the admin portal's `SERIES` tab (and
+from the `Series:` picker in the story editor); nothing here needs editing by
+hand.
+
+- A series lives at `/projects/<project>/series/<series-slug>/`, backed by
+  `projects/<project>/series/<series-slug>/index.php` — written by the CMS
+  when the series is created, same as a story's `index.php`. The `series/`
+  path segment is why no story may be slugged `series`.
+- Its page shows the series description and every part in reading order.
+- Order comes from the part number the admin assigns each story; stories left
+  without one follow the numbered ones in upload order (oldest first).
+  Dragging the list around in the series editor just rewrites those numbers.
+- A project page grows a `// series` block above `// stories` as soon as one
+  of its series has a part readable in the current language, and a story
+  that's part of one gets a link to the series under its title plus
+  previous/next-part buttons at the end of the text.
+- Untranslated parts are skipped in the Spanish reading order rather than
+  dead-ending the reader, exactly like the other listings.
+
+## Redacted text
+
+Each story has a **redact** toggle in the admin editor. With it on, every
+literal `[REDACTED]` in that story's markdown renders glitched — blurred,
+struck through, italic (see `.redacted` in `style.css`). Off by default, and
+the marker is plain text everywhere else.
+
 ## How the Spanish site works
 
 There's no separate set of Spanish files or pages — `/es/<anything>` is

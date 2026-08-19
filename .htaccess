@@ -17,6 +17,10 @@ RewriteRule ^admin/ - [L]
 RewriteRule ^projects/futuristic-historical(/.*)?$    /projects/postcords-archive$1    [R=301,L]
 RewriteRule ^es/projects/futuristic-historical(/.*)?$ /es/projects/postcords-archive$1 [R=301,L]
 
+# projects/<project>/series/ is only a container for the individual series
+# pages — nobody should land on the bare folder, so send them to the project.
+RewriteRule ^(es/)?projects/([^/]+)/series/?$ /$1projects/$2/ [R=301,L]
+
 # Spanish mirror: /es and /es/<path> serve the exact same files as <path>.
 # PHP (see partials/content.php) detects the /es prefix from REQUEST_URI,
 # which always reflects the original URL regardless of this internal rewrite.

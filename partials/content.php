@@ -40,6 +40,13 @@ function story_href($storySlug, $lang) {
   return ($lang === 'es' ? '/es' : '') . '/projects/' . $STORIES[$storySlug]['project'] . '/' . $storySlug . '/';
 }
 
+// Series live under their project, in a /series/ segment so a series slug can
+// never collide with a story slug: /projects/<project>/series/<series>/
+function series_href($seriesSlug, $lang) {
+  global $SERIES;
+  return ($lang === 'es' ? '/es' : '') . '/projects/' . $SERIES[$seriesSlug]['project'] . '/series/' . $seriesSlug . '/';
+}
+
 // Same page, other language — used by the nav's language switcher.
 function lang_switch_href($lang) {
   $uri = $_SERVER['REQUEST_URI'];
@@ -58,6 +65,31 @@ function stories_for_lang($lang) {
     if (in_array($lang, $story['langs'])) {
       $out[$slug] = $story;
     }
+  }
+  return $out;
+}
+
+// The stories of a series, in reading order, limited to those available in
+// $lang — an untranslated part is skipped rather than dead-ending a reader
+// (same rule the project and homepage listings already follow).
+function series_stories($seriesSlug, $lang) {
+  global $SERIES, $STORIES;
+  $out = array();
+  foreach ($SERIES[$seriesSlug]['stories'] as $slug) {
+    if (isset($STORIES[$slug]) && in_array($lang, $STORIES[$slug]['langs'])) $out[] = $slug;
+  }
+  return $out;
+}
+
+// Series belonging to a project, in admin order, skipping any that have no
+// story to show in $lang yet.
+function series_for_project($projectSlug, $lang) {
+  global $SERIES;
+  $out = array();
+  foreach ($SERIES as $slug => $series) {
+    if ($series['project'] !== $projectSlug) continue;
+    if (!series_stories($slug, $lang)) continue;
+    $out[$slug] = $series;
   }
   return $out;
 }
@@ -126,27 +158,63 @@ $projectSlugById = array();
 $stmt = $pdo->query("SELECT id, slug FROM cms_projects");
 foreach ($stmt->fetchAll() as $row) $projectSlugById[$row['id']] = $row['slug'];
 
+$SERIES = array();
+$seriesSlugById = array();
+$stmt = $pdo->query("SELECT * FROM cms_series ORDER BY sort_order ASC, id ASC");
+foreach ($stmt->fetchAll() as $row) {
+  $seriesSlugById[$row['id']] = $row['slug'];
+  $SERIES[$row['slug']] = array(
+    'project' => $projectSlugById[$row['project_id']],
+    'title'   => bilingualField($row, 'title_en', 'title_es'),
+    'desc'    => bilingualField($row, 'desc_en', 'desc_es'),
+    'stories' => array(), // filled below, in reading order
+  );
+}
+
 // Order here is also the default "latest works" order (newest first).
 $STORIES = array();
 $favouritesOrdered = array();
+$seriesMembers = array();
 $stmt = $pdo->query("SELECT * FROM cms_stories ORDER BY created_at DESC");
 foreach ($stmt->fetchAll() as $row) {
   $langs = array('en');
   if ($row['title_es'] !== null) $langs[] = 'es';
+  $seriesSlug = $row['series_id'] !== null ? ($seriesSlugById[$row['series_id']] ?? null) : null;
   $STORIES[$row['slug']] = array(
-    'project' => $projectSlugById[$row['project_id']],
-    'title'   => bilingualField($row, 'title_en', 'title_es'),
-    'type'    => bilingualField($row, 'type_en', 'type_es'),
-    'desc'    => bilingualField($row, 'desc_en', 'desc_es'),
-    'langs'   => $langs,
-    'redact'  => (bool)$row['has_redacted'],
+    'project'     => $projectSlugById[$row['project_id']],
+    'title'       => bilingualField($row, 'title_en', 'title_es'),
+    'type'        => bilingualField($row, 'type_en', 'type_es'),
+    'desc'        => bilingualField($row, 'desc_en', 'desc_es'),
+    'langs'       => $langs,
+    'redact'      => (bool)$row['has_redacted'],
+    'series'      => $seriesSlug,
+    'series_part' => $row['series_part'] !== null ? (int)$row['series_part'] : null,
   );
+  if ($seriesSlug !== null) {
+    $seriesMembers[$seriesSlug][] = array(
+      'slug'    => $row['slug'],
+      'part'    => $row['series_part'] !== null ? (int)$row['series_part'] : null,
+      'created' => $row['created_at'],
+    );
+  }
   if ($row['is_favourite']) {
     $favouritesOrdered[(int)$row['favourite_sort_order']] = $row['slug'];
   }
 }
 ksort($favouritesOrdered);
 $FAVOURITES = array_values($favouritesOrdered);
+
+// Reading order inside a series: stories the admin gave an explicit part
+// number come first in that order; anything left unassigned follows in
+// upload order (oldest first).
+foreach ($seriesMembers as $seriesSlug => $members) {
+  usort($members, function ($a, $b) {
+    if (($a['part'] === null) !== ($b['part'] === null)) return $a['part'] === null ? 1 : -1;
+    if ($a['part'] !== null && $a['part'] !== $b['part']) return $a['part'] <=> $b['part'];
+    return strcmp($a['created'], $b['created']);
+  });
+  $SERIES[$seriesSlug]['stories'] = array_column($members, 'slug');
+}
 
 $storyCountByProject = array_count_values(array_column($STORIES, 'project'));
 
@@ -178,8 +246,14 @@ $UI = array(
     'sec_intro' => '// intro', 'sec_favourites' => '// my favourites',
     'sec_projects' => '// projects', 'sec_latest' => '// latest works',
     'sec_stories' => '// stories', 'sec_random' => '// random',
+    'sec_series' => '// series',
     'col_title' => 'title', 'col_type' => 'type', 'col_project' => 'project', 'col_desc' => 'description',
+    'col_part' => 'part', 'col_parts' => 'parts',
     'back_projects' => 'projects',
+    'series_label' => 'series',
+    'part_n_of' => 'part %d of %d',
+    'prev_part' => 'previous part',
+    'next_part' => 'next part',
     'tagline_home' => 'storyteller &nbsp;&middot;&nbsp; writer &nbsp;&middot;&nbsp; web-raised',
     'tagline_projects' => 'acuervoz.com &nbsp;&middot;&nbsp; writer. builder.',
     'intro_p1' => "Welcome, wherever you're coming from. This is my archive of stories both fiction and non-fiction, projects and other small creativity outputs that my <s>computer</s> brain needs to release.",
@@ -202,8 +276,14 @@ $UI = array(
     'sec_intro' => '// introducción', 'sec_favourites' => '// mis favoritos',
     'sec_projects' => '// proyectos', 'sec_latest' => '// últimos trabajos',
     'sec_stories' => '// historias', 'sec_random' => '// aleatorio',
+    'sec_series' => '// series',
     'col_title' => 'título', 'col_type' => 'tipo', 'col_project' => 'proyecto', 'col_desc' => 'descripción',
+    'col_part' => 'parte', 'col_parts' => 'partes',
     'back_projects' => 'proyectos',
+    'series_label' => 'serie',
+    'part_n_of' => 'parte %d de %d',
+    'prev_part' => 'parte anterior',
+    'next_part' => 'parte siguiente',
     'tagline_home' => 'narrador &nbsp;&middot;&nbsp; escritor &nbsp;&middot;&nbsp; criado en la web',
     'tagline_projects' => 'acuervoz.com &nbsp;&middot;&nbsp; escritor. constructor.',
     'intro_p1' => 'Bienvenido, vengas de donde vengas. Este es mi archivo de historias, tanto ficción como no ficción, proyectos y otras pequeñas salidas creativas que mi <s>computadora</s> cerebro necesita liberar.',
