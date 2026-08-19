@@ -194,16 +194,43 @@ $seriesJson  = json_encode($terminalSeries, $jsonFlags);
     #view-list { display: flex; }
     #view-story { display: none; }
 
+    /* Intro block. It's long enough to crowd the listing on a short window,
+       so it's allowed to shrink and scroll on its own rather than pushing the
+       archive off the bottom — the shell is the retro scrollbar's anchor. */
+    .prompt-shell {
+      position: relative;
+      flex: 0 1 auto;
+      min-height: 0;
+      max-height: 44%;
+      display: flex;
+    }
     .term-prompt {
       font-size: 11px;
       color: var(--dim);
       line-height: 1.65;
+      overflow-y: auto;
+      padding-right: 14px;
+      flex: 1;
+      max-width: 82ch;
+      scrollbar-width: none;
+    }
+    .term-prompt::-webkit-scrollbar { display: none; }
+    .prompt-row {
+      display: flex;
+      align-items: baseline;
+    }
+    /* A blank line is pure spacing — no ">" to squash out of shape. */
+    .prompt-row.is-spacer { height: 0.7em; }
+    /* The call to action stays put while the letter above it scrolls. */
+    .prompt-fixed {
+      flex: 0 0 auto;   /* overrides .term-prompt's flex:1 — it must not grow */
+      overflow: visible;
       margin-bottom: 0.55rem;
-      flex-shrink: 0;
     }
     .term-prompt .cursor-prefix {
       color: var(--text);
       margin-right: 0.4em;
+      flex-shrink: 0;
     }
 
     /* Two-column area */
@@ -545,9 +572,11 @@ $seriesJson  = json_encode($terminalSeries, $jsonFlags);
   <!-- ── LIST VIEW ── -->
   <div class="term-view" id="view-list">
 
-    <div class="term-prompt" id="term-prompt">
-      <span class="cursor-prefix">&gt;</span><span id="prompt-line1">POSTCORDS ARCHIVE — EVENTS THAT HAPPENED IN THE FUTURE.</span><br>
-      <span class="cursor-prefix">&gt;</span><span id="prompt-line2">SELECT A POSTCORD TO RETRIEVE.</span>
+    <div class="prompt-shell">
+      <div class="term-prompt" id="term-prompt"></div>
+    </div>
+    <div class="term-prompt prompt-fixed">
+      <div class="prompt-row"><span class="cursor-prefix">&gt;</span><span id="prompt-select"></span></div>
     </div>
 
     <hr class="term-rule">
@@ -621,8 +650,17 @@ $seriesJson  = json_encode($terminalSeries, $jsonFlags);
     en: {
       docTitle:    'POSTCORDS ARCHIVE',
       barTitle:    'POSTCORDS ARCHIVE',
-      promptLine1: 'POSTCORDS ARCHIVE — EVENTS THAT HAPPENED IN THE FUTURE.',
-      promptLine2: 'SELECT A POSTCORD TO RETRIEVE.',
+      promptLines: [
+        "POSTCORDS ARCHIVE — EVENTS THAT HAPPENED IN THE FUTURE.",
+        "",
+        "Hi, I’m 4RCH1V3R. I’ve made this archive from a collection of files that tend to appear in a computer I found dumped near where I live. It holds records that seem like they will have happened in the future, hence the name. I’m not entirely sure where they’re coming from yet since this operating system looks like it was custom-made. It’s taking me a while to fully understand it.",
+        "",
+        "Postcords tend to appear every now and then with interesting stories. You can read more about what they are or how I come about them in article 1, otherwise feel free to read any of the accounts I’ve found so far.",
+        "",
+        "Enjoy!",
+        "4RCH1V3R"
+      ],
+      promptSelect: "SELECT A POSTCORD TO RETRIEVE.",
       descLabel:   '// record info',
       hintNav:     '↑ ↓  NAVIGATE',
       hintOpen:    'ENTER  OPEN',
@@ -644,8 +682,17 @@ $seriesJson  = json_encode($terminalSeries, $jsonFlags);
     es: {
       docTitle:    'POSTCORDS ARCHIVE',
       barTitle:    'POSTCORDS ARCHIVE',
-      promptLine1: 'ARCHIVO DE POSTCORDS — SUCESOS QUE OCURRIERON EN EL FUTURO.',
-      promptLine2: 'SELECCIONA UN POSTCORD PARA RECUPERARLO.',
+      promptLines: [
+        "ARCHIVO DE POSTCORDS — SUCESOS QUE OCURRIERON EN EL FUTURO.",
+        "",
+        "Hola, soy 4RCH1V3R. He creado este archivo a partir de una colección de ficheros que suelen aparecer en una computadora que encontré tirada cerca de donde vivo. Contiene registros que parecen haber ocurrido en el futuro, de ahí el nombre. Todavía no sé con certeza de dónde vienen, ya que este sistema operativo parece hecho a medida. Me está costando entenderlo del todo.",
+        "",
+        "Los postcords aparecen de vez en cuando con historias interesantes. Puedes leer más sobre qué son o cómo doy con ellos en el artículo 1; si no, siéntete libre de leer cualquiera de los relatos que he encontrado hasta ahora.",
+        "",
+        "¡Que lo disfrutes!",
+        "4RCH1V3R"
+      ],
+      promptSelect: "SELECCIONA UN POSTCORD PARA RECUPERARLO.",
       descLabel:   '// info del registro',
       hintNav:     '↑ ↓  NAVEGAR',
       hintOpen:    'ENTER  ABRIR',
@@ -670,8 +717,26 @@ $seriesJson  = json_encode($terminalSeries, $jsonFlags);
   document.title = L.docTitle;
   document.documentElement.lang = isEs ? 'es' : 'en';
   document.getElementById('bar-title').textContent      = L.barTitle;
-  document.getElementById('prompt-line1').textContent   = L.promptLine1;
-  document.getElementById('prompt-line2').textContent   = L.promptLine2;
+  // Intro block: every line gets the "> " prompt prefix; an empty string is a
+  // blank prompt line, which is how the paragraph breaks are written.
+  var promptEl = document.getElementById('term-prompt');
+  L.promptLines.forEach(function(line) {
+    var row = document.createElement('div');
+    if (line === '') {
+      row.className = 'prompt-row is-spacer';
+    } else {
+      row.className = 'prompt-row';
+      var pre = document.createElement('span');
+      pre.className = 'cursor-prefix';
+      pre.textContent = '>';
+      var txt = document.createElement('span');
+      txt.textContent = line;
+      row.appendChild(pre);
+      row.appendChild(txt);
+    }
+    promptEl.appendChild(row);
+  });
+  document.getElementById('prompt-select').textContent = L.promptSelect;
   document.getElementById('desc-label').textContent     = L.descLabel;
   document.getElementById('hint-nav').innerHTML          = L.hintNav;
   document.getElementById('hint-open').innerHTML         = L.hintOpen;
@@ -752,6 +817,7 @@ $seriesJson  = json_encode($terminalSeries, $jsonFlags);
   mountRetroScrollbar(document.getElementById('term-list'), document.querySelector('.list-col-shell'));
   mountRetroScrollbar(document.getElementById('desc-col'),  document.querySelector('.desc-col-shell'));
   mountRetroScrollbar(document.getElementById('story-body'), document.querySelector('.story-body-shell'));
+  mountRetroScrollbar(document.getElementById('term-prompt'), document.querySelector('.prompt-shell'));
 
   // ── Story registry ────────────────────────────────────
   // Emitted by the PHP at the top of this file, straight from the CMS, in
