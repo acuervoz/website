@@ -13,6 +13,12 @@ $storyType     = t($story['type'], $lang);
 $projectName   = t($PROJECTS[$story['project']]['title'], $lang);
 $pageTitle     = $storyTitle . ' — A Cuervoz';
 $mdFile        = $storySlug . ($availableLang === 'es' ? '-es.md' : '.md');
+// Cache-bust by the file's own modification time: editing a story in the admin
+// rewrites the .md, which changes this, which makes it a URL no cache has seen.
+// The .htaccess no-cache header covers new requests; this covers whatever a
+// cache is already holding.
+$mdPath        = dirname(__DIR__) . '/projects/' . $story['project'] . '/' . $storySlug . '/' . $mdFile;
+$mdSrc         = $mdFile . (is_file($mdPath) ? '?v=' . filemtime($mdPath) : '');
 $redact        = !empty($story['redact']);
 
 // Series context: the link back to the series' own page, and the previous /
@@ -177,7 +183,7 @@ if ($seriesSlug !== null && $translated) {
       });
     }
 <?php endif; ?>
-    fetch('<?php echo $mdFile; ?>')
+    fetch('<?php echo $mdSrc; ?>')
       .then(function(r) { return r.text(); })
       .then(function(text) {
         var el = document.getElementById('md-content');

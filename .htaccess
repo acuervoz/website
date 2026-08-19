@@ -3,6 +3,17 @@ RewriteEngine On
 # Prefer PHP index files over static HTML for directory requests
 DirectoryIndex index.php index.html
 
+# A story's body is a plain .md file fetched by JS, so it never passes through
+# the PHP that sends Cache-Control on every other page. Left alone, Siteground's
+# Dynamic Cache and the browser both hold on to it and an edit made in the admin
+# doesn't show up until that expires. (The pages themselves are handled in
+# partials/content.php.)
+<IfModule mod_headers.c>
+  <FilesMatch "\.md$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+</IfModule>
+
 # organizer/ is a self-contained app that's called via direct .php URLs with
 # query strings / POST bodies (e.g. api.php?action=...) — none of the
 # clean-URL rewriting below applies to it, or it'll mangle those requests.

@@ -13,6 +13,14 @@
 $projectSlug = 'postcords-archive';
 require __DIR__ . '/../../partials/content.php';
 
+// Story bodies are fetched as plain files, so they're versioned by mtime —
+// editing a story in the admin changes it, and the cached copy is bypassed.
+function mdSrc(string $storySlug, string $file): string {
+  $rel  = $storySlug . '/' . $file;
+  $path = __DIR__ . '/' . $rel;
+  return is_file($path) ? $rel . '?v=' . filemtime($path) : $rel;
+}
+
 $terminalStories = array();
 // 'oldest' so a newly added postcord joins the end of the archive rather
 // than jumping to the top of the listing.
@@ -23,7 +31,7 @@ foreach (project_stories($projectSlug, 'en', 'oldest') as $slug => $s) {
     'en' => array(
       'title' => $s['title']['en'],
       'desc'  => $s['desc']['en'] ?? '',
-      'file'  => $slug . '/' . $slug . '.md',
+      'file'  => mdSrc($slug, $slug . '.md'),
     ),
   );
   // A story with no Spanish block shows the terminal's own "not available in
@@ -32,7 +40,7 @@ foreach (project_stories($projectSlug, 'en', 'oldest') as $slug => $s) {
     $entry['es'] = array(
       'title' => $s['title']['es'] ?? $s['title']['en'],
       'desc'  => $s['desc']['es'] ?? '',
-      'file'  => $slug . '/' . $slug . '-es.md',
+      'file'  => mdSrc($slug, $slug . '-es.md'),
     );
   }
   $terminalStories[] = $entry;
