@@ -60,6 +60,27 @@ $project = $PROJECTS[$projectSlug];
 include __DIR__ . '/../../partials/project-shell.php';
 ```
 
+## Projects
+
+Every project renders through `partials/project-shell.php`: a description, a
+`// series` block (when it has series), and a `// stories` table. The admin
+portal's `PROJECTS` tab edits all of it — title/type, the description that
+heads the page, the singular/plural nouns behind the "N stories" label, and
+the order the stories appear in.
+
+Story order works like series parts: ones you place by hand come first in that
+order, everything else stays newest-first, so a project nobody has touched
+looks exactly as it always did. Because a story belongs to exactly one
+project, adding a story to a project from that tab *moves* it — its folder
+moves on disk and it drops out of any series it was in.
+
+> Two projects (`postcords-archive`, `the-post-within`) used to be hand-built
+> single-page apps with their own `index.html` — a terminal and an interactive
+> newspaper front page. They were replaced by standard project pages, so
+> stories and series can now be filed under them like anywhere else. The old
+> markup is in git history if it's ever wanted back. `cms_projects.is_custom_spa`
+> is the retired flag from that arrangement; nothing reads it any more.
+
 ## Series
 
 A **series** is a reading order inside one project — a project can hold

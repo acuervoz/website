@@ -127,18 +127,28 @@ function writeProjectIndexPhp(string $projectSlug): string {
     return "<?php\n\$projectSlug = '{$projectSlug}';\nrequire __DIR__ . '/../../partials/content.php';\n\$project = \$PROJECTS[\$projectSlug];\ninclude __DIR__ . '/../../partials/project-shell.php';\n";
 }
 
-// A project that can actually hold stories/series — custom-SPA projects
-// (postcords-archive, the-post-within) render their own page and never read
-// the story list, so nothing may be filed under them.
-function fetchAddableProject(PDO $pdo, int $projectId): array {
+// Every project now renders through partials/project-shell.php and reads the
+// story list, so anything can be filed anywhere. (cms_projects.is_custom_spa
+// is a retired leftover from when two projects had hand-built pages — nothing
+// reads it any more.)
+function fetchProject(PDO $pdo, int $projectId): array {
     $stmt = $pdo->prepare("SELECT * FROM cms_projects WHERE id = :id");
     $stmt->execute([':id' => $projectId]);
     $project = $stmt->fetch();
     if (!$project) jsonError('Project not found', 404);
-    if ((int)$project['is_custom_spa'] === 1) {
-        jsonError('This project has its own custom page and does not read from the story list — pick a different project.', 400);
-    }
     return $project;
+}
+
+// Display order of a project's stories, matching partials/content.php:
+// hand-placed ones first, then everything else newest-first.
+function projectStoriesInOrder(PDO $pdo, int $projectId): array {
+    $stmt = $pdo->prepare(
+        "SELECT id, slug, title_en, title_es, project_sort_order, created_at
+         FROM cms_stories WHERE project_id = :pid
+         ORDER BY (project_sort_order IS NULL) ASC, project_sort_order ASC, created_at DESC"
+    );
+    $stmt->execute([':pid' => $projectId]);
+    return $stmt->fetchAll();
 }
 
 // Reading order of a series, matching partials/content.php: parts the admin
@@ -285,10 +295,10 @@ try {
         case 'list_projects':
             requireAuth();
             $rows = $pdo->query(
-                "SELECT p.*, COUNT(s.id) AS story_count
+                "SELECT p.*,
+                        (SELECT COUNT(*) FROM cms_stories s WHERE s.project_id = p.id) AS story_count,
+                        (SELECT COUNT(*) FROM cms_series se WHERE se.project_id = p.id) AS series_count
                  FROM cms_projects p
-                 LEFT JOIN cms_stories s ON s.project_id = p.id
-                 GROUP BY p.id
                  ORDER BY p.sort_order ASC"
             )->fetchAll();
             jsonOut($rows);
@@ -331,6 +341,97 @@ try {
 
             jsonOut(['ok' => true, 'slug' => $slug]);
 
+        case 'get_project':
+            requireAuth();
+            $id = (int)($_GET['id'] ?? 0);
+            if (!$id) jsonError('id required');
+            $stmt = $pdo->prepare("SELECT * FROM cms_projects WHERE id = :id");
+            $stmt->execute([':id' => $id]);
+            $project = $stmt->fetch();
+            if (!$project) jsonError('Not found', 404);
+            $project['stories'] = projectStoriesInOrder($pdo, $id);
+            $sstmt = $pdo->prepare("SELECT id, slug, title_en FROM cms_series WHERE project_id = :id ORDER BY sort_order ASC, id ASC");
+            $sstmt->execute([':id' => $id]);
+            $project['series'] = $sstmt->fetchAll();
+            jsonOut($project);
+
+        case 'update_project':
+            requireAuth();
+            requireCsrf();
+            $body = postAll();
+            $id = (int)($body['id'] ?? 0);
+            if (!$id) jsonError('id required');
+
+            $stmt = $pdo->prepare("SELECT * FROM cms_projects WHERE id = :id");
+            $stmt->execute([':id' => $id]);
+            $project = $stmt->fetch();
+            if (!$project) jsonError('Not found', 404);
+
+            $titleEn = trim($body['title_en'] ?? $project['title_en']);
+            if ($titleEn === '') jsonError('title_en required');
+
+            $pdo->prepare(
+                "UPDATE cms_projects SET
+                    title_en = :title_en, title_es = :title_es,
+                    type_en = :type_en, type_es = :type_es,
+                    desc_en = :desc_en, desc_es = :desc_es,
+                    noun_singular_en = :sing_en, noun_plural_en = :plur_en,
+                    noun_singular_es = :sing_es, noun_plural_es = :plur_es
+                 WHERE id = :id"
+            )->execute([
+                ':title_en' => $titleEn,
+                ':title_es' => array_key_exists('title_es', $body) ? (trim($body['title_es']) ?: null) : $project['title_es'],
+                ':type_en'  => array_key_exists('type_en', $body) ? (trim($body['type_en']) ?: null) : $project['type_en'],
+                ':type_es'  => array_key_exists('type_es', $body) ? (trim($body['type_es']) ?: null) : $project['type_es'],
+                ':desc_en'  => array_key_exists('desc_en', $body) ? (trim($body['desc_en']) ?: null) : $project['desc_en'],
+                ':desc_es'  => array_key_exists('desc_es', $body) ? (trim($body['desc_es']) ?: null) : $project['desc_es'],
+                ':sing_en'  => array_key_exists('noun_singular_en', $body) ? (trim($body['noun_singular_en']) ?: null) : $project['noun_singular_en'],
+                ':plur_en'  => array_key_exists('noun_plural_en', $body) ? (trim($body['noun_plural_en']) ?: null) : $project['noun_plural_en'],
+                ':sing_es'  => array_key_exists('noun_singular_es', $body) ? (trim($body['noun_singular_es']) ?: null) : $project['noun_singular_es'],
+                ':plur_es'  => array_key_exists('noun_plural_es', $body) ? (trim($body['noun_plural_es']) ?: null) : $project['noun_plural_es'],
+                ':id'       => $id,
+            ]);
+
+            // The editor sends the project's stories back in display order.
+            // A story always belongs to exactly one project, so an id that
+            // currently sits elsewhere is MOVED here — folder and all — and
+            // loses the series it had under its old project.
+            if (array_key_exists('story_ids', $body) && is_array($body['story_ids'])) {
+                $ids = array_values(array_filter(array_unique(array_map('intval', $body['story_ids']))));
+                foreach ($ids as $i => $storyId) {
+                    $sstmt = $pdo->prepare(
+                        "SELECT s.*, p.slug AS project_slug FROM cms_stories s
+                         JOIN cms_projects p ON p.id = s.project_id WHERE s.id = :id"
+                    );
+                    $sstmt->execute([':id' => $storyId]);
+                    $story = $sstmt->fetch();
+                    if (!$story) continue;
+
+                    if ((int)$story['project_id'] !== $id) {
+                        $oldDir = projectsRoot() . '/' . $story['project_slug'] . '/' . $story['slug'];
+                        $newParent = projectsRoot() . '/' . $project['slug'];
+                        if (!is_dir($newParent)) mkdir($newParent, 0755, true);
+                        $newDir = $newParent . '/' . $story['slug'];
+                        if (is_dir($newDir)) jsonError('A story named "' . $story['slug'] . '" already exists in this project', 409);
+                        if (is_dir($oldDir)) rename($oldDir, $newDir);
+                        $pdo->prepare(
+                            "UPDATE cms_stories SET project_id = :pid, series_id = NULL, series_part = NULL,
+                                                    project_sort_order = :ord WHERE id = :id"
+                        )->execute([':pid' => $id, ':ord' => $i + 1, ':id' => $storyId]);
+                    } else {
+                        $pdo->prepare("UPDATE cms_stories SET project_sort_order = :ord WHERE id = :id")
+                            ->execute([':ord' => $i + 1, ':id' => $storyId]);
+                    }
+                }
+                // Anything in this project the editor didn't list goes back to
+                // "unplaced" — it keeps its home, just not a hand-set position.
+                $clear = "UPDATE cms_stories SET project_sort_order = NULL WHERE project_id = :pid";
+                if ($ids) $clear .= " AND id NOT IN (" . implode(',', $ids) . ")";
+                $pdo->prepare($clear)->execute([':pid' => $id]);
+            }
+
+            jsonOut(['ok' => true]);
+
         // ── SERIES ────────────────────────────────────────────────────────────
 
         case 'list_series':
@@ -366,7 +467,7 @@ try {
             $titleEn   = trim($body['title_en'] ?? '');
             if (!$projectId || !$titleEn) jsonError('project_id and title_en are required');
 
-            $project = fetchAddableProject($pdo, $projectId);
+            $project = fetchProject($pdo, $projectId);
             $slug = uniqueSlug($pdo, 'cms_series', slugify($body['slug'] ?? $titleEn));
             $maxSort = (int)$pdo->query("SELECT COALESCE(MAX(sort_order),-1) FROM cms_series")->fetchColumn();
 
@@ -416,7 +517,7 @@ try {
                 if ((int)$cnt->fetchColumn() > 0) {
                     jsonError('Remove its stories before moving this series to another project.', 400);
                 }
-                $newProject = fetchAddableProject($pdo, (int)$body['project_id']);
+                $newProject = fetchProject($pdo, (int)$body['project_id']);
                 $oldDir = seriesDir($series['project_slug'], $series['slug']);
                 $newDir = seriesDir($newProject['slug'], $series['slug']);
                 if (is_dir($newDir)) jsonError('A series with this slug already exists in the target project', 409);
@@ -537,7 +638,7 @@ try {
                 jsonError('project_id, title_en and body_en are required');
             }
 
-            $project = fetchAddableProject($pdo, $projectId);
+            $project = fetchProject($pdo, $projectId);
             $seriesId   = seriesIdForProject($pdo, $body['series_id'] ?? null, $projectId);
             $seriesPart = normalisePart($body['series_part'] ?? null, $seriesId);
 
@@ -607,7 +708,7 @@ try {
             $newProjectId = (int)$story['project_id'];
             $newProjectSlug = $story['project_slug'];
             if (array_key_exists('project_id', $body) && (int)$body['project_id'] !== (int)$story['project_id']) {
-                $newProject = fetchAddableProject($pdo, (int)$body['project_id']);
+                $newProject = fetchProject($pdo, (int)$body['project_id']);
                 $oldDir = projectsRoot() . '/' . $story['project_slug'] . '/' . $story['slug'];
                 $newParentDir = projectsRoot() . '/' . $newProject['slug'];
                 if (!is_dir($newParentDir)) mkdir($newParentDir, 0755, true);

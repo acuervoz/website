@@ -81,6 +81,23 @@ function series_stories($seriesSlug, $lang) {
   return $out;
 }
 
+// A project's stories in display order, limited to $lang. Stories the admin
+// placed by hand come first in that order; everything else keeps the original
+// newest-first behaviour, so an un-ordered project looks unchanged.
+function project_stories($projectSlug, $lang) {
+  global $STORIES;
+  $out = array();
+  foreach (stories_for_lang($lang) as $slug => $story) {
+    if ($story['project'] === $projectSlug) $out[$slug] = $story;
+  }
+  uasort($out, function ($a, $b) {
+    if (($a['order'] === null) !== ($b['order'] === null)) return $a['order'] === null ? 1 : -1;
+    if ($a['order'] !== null && $a['order'] !== $b['order']) return $a['order'] <=> $b['order'];
+    return strcmp($b['created'], $a['created']); // newest first
+  });
+  return $out;
+}
+
 // Series belonging to a project, in admin order, skipping any that have no
 // story to show in $lang yet.
 function series_for_project($projectSlug, $lang) {
@@ -187,6 +204,8 @@ foreach ($stmt->fetchAll() as $row) {
     'desc'        => bilingualField($row, 'desc_en', 'desc_es'),
     'langs'       => $langs,
     'redact'      => (bool)$row['has_redacted'],
+    'order'       => $row['project_sort_order'] !== null ? (int)$row['project_sort_order'] : null,
+    'created'     => $row['created_at'],
     'series'      => $seriesSlug,
     'series_part' => $row['series_part'] !== null ? (int)$row['series_part'] : null,
   );

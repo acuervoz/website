@@ -20,6 +20,13 @@ function ensureContentSchema(PDO $pdo): void {
         $pdo->exec("ALTER TABLE cms_stories ADD COLUMN has_redacted TINYINT(1) NOT NULL DEFAULT 0 AFTER desc_es");
     }
 
+    // ── Stories: manual order within their project ───────────────────────
+    // NULL means "unplaced" — those keep falling in newest-first, so a
+    // project nobody has hand-ordered looks exactly as it always did.
+    if (!columnExists($pdo, 'cms_stories', 'project_sort_order')) {
+        $pdo->exec("ALTER TABLE cms_stories ADD COLUMN project_sort_order INT DEFAULT NULL AFTER project_id");
+    }
+
     // ── Series ───────────────────────────────────────────────────────────
     // A series is a reading order *within* one project (a project can hold
     // several series; a series never spans projects and never contains a

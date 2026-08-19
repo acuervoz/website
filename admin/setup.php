@@ -65,7 +65,7 @@ $sqls = [
         noun_plural_en VARCHAR(30) DEFAULT NULL,
         noun_singular_es VARCHAR(30) DEFAULT NULL,
         noun_plural_es VARCHAR(30) DEFAULT NULL,
-        is_custom_spa TINYINT(1) DEFAULT 0,
+        is_custom_spa TINYINT(1) DEFAULT 0, -- retired: every project now uses the standard page
         sort_order INT DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
@@ -87,6 +87,7 @@ $sqls = [
         id INT AUTO_INCREMENT PRIMARY KEY,
         slug VARCHAR(150) NOT NULL UNIQUE,
         project_id INT NOT NULL,
+        project_sort_order INT DEFAULT NULL,
         series_id INT DEFAULT NULL,
         series_part INT DEFAULT NULL,
         title_en VARCHAR(200) NOT NULL,

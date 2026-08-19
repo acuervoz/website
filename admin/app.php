@@ -161,6 +161,7 @@ html, body { background: var(--bg); color: var(--text); font-family: 'JetBrains 
   <div class="nav-tabs">
     <button class="nav-tab" :class="{active: tab==='stories'}" @click="tab='stories'">STORIES</button>
     <button class="nav-tab" :class="{active: tab==='series'}" @click="tab='series'">SERIES</button>
+    <button class="nav-tab" :class="{active: tab==='projects'}" @click="tab='projects'">PROJECTS</button>
   </div>
   <div class="nav-right">
     <button class="btn btn-accent" x-show="tab==='stories'" @click="openNewStory()">+ NEW STORY</button>
@@ -265,6 +266,130 @@ html, body { background: var(--bg); color: var(--text); font-family: 'JetBrains 
     </tbody>
   </table>
 </main>
+
+<main class="pane" x-show="tab==='projects'" x-cloak>
+  <table class="stories-table">
+    <thead>
+      <tr><th>Project</th><th>Type</th><th>Stories</th><th>Series</th><th>Langs</th><th></th></tr>
+    </thead>
+    <tbody>
+      <template x-for="p in projects" :key="p.id">
+        <tr>
+          <td class="title-cell" x-text="p.title_en"></td>
+          <td class="muted" x-text="p.type_en || '—'"></td>
+          <td class="muted" x-text="p.story_count"></td>
+          <td class="muted" x-text="p.series_count"></td>
+          <td>
+            <span class="lang-badge">EN</span>
+            <template x-if="p.title_es"><span class="lang-badge">ES</span></template>
+          </td>
+          <td class="row-actions">
+            <button class="btn btn-sm" @click="openEditProject(p)">EDIT</button>
+          </td>
+        </tr>
+      </template>
+    </tbody>
+  </table>
+</main>
+
+<!-- Edit project modal -->
+<div class="modal-backdrop" x-show="modal==='project'" x-cloak @click.self="closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <span>─ EDIT PROJECT ───────────────</span>
+      <button class="btn btn-sm" @click="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="modal-row">
+        <div class="modal-field"><label class="modal-label">Title (EN)</label><input class="modal-input" x-model="projectForm.title_en"></div>
+        <div class="modal-field"><label class="modal-label">Title (ES) — optional</label><input class="modal-input" x-model="projectForm.title_es"></div>
+      </div>
+      <div class="modal-row">
+        <div class="modal-field"><label class="modal-label">Type (EN)</label>
+          <select class="modal-select" x-model="projectForm.type_en">
+            <option value="">— none —</option>
+            <option value="fiction">fiction</option>
+            <option value="non-fiction">non-fiction</option>
+          </select>
+        </div>
+        <div class="modal-field"><label class="modal-label">Type (ES)</label>
+          <select class="modal-select" x-model="projectForm.type_es">
+            <option value="">— ninguno —</option>
+            <option value="ficción">ficción</option>
+            <option value="no ficción">no ficción</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Description (EN) — shown on the project page</label>
+        <textarea class="modal-textarea" x-model="projectForm.desc_en" style="min-height:70px"></textarea>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Description (ES)</label>
+        <textarea class="modal-textarea" x-model="projectForm.desc_es" style="min-height:70px"></textarea>
+      </div>
+      <div class="modal-row">
+        <div class="modal-field"><label class="modal-label">Noun singular (EN)</label><input class="modal-input" x-model="projectForm.noun_singular_en" placeholder="story"></div>
+        <div class="modal-field"><label class="modal-label">Noun plural (EN)</label><input class="modal-input" x-model="projectForm.noun_plural_en" placeholder="stories"></div>
+      </div>
+      <div class="modal-row">
+        <div class="modal-field"><label class="modal-label">Noun singular (ES)</label><input class="modal-input" x-model="projectForm.noun_singular_es" placeholder="historia"></div>
+        <div class="modal-field"><label class="modal-label">Noun plural (ES)</label><input class="modal-input" x-model="projectForm.noun_plural_es" placeholder="historias"></div>
+      </div>
+
+      <div class="modal-field">
+        <label class="modal-label">Stories — in the order they appear on the page</label>
+        <div class="parts-list">
+          <template x-if="projectForm.stories.length === 0">
+            <div class="empty-state" style="padding:8px">· nothing filed under this project yet</div>
+          </template>
+          <template x-for="(s, i) in projectForm.stories" :key="s.id">
+            <div class="part-row">
+              <span class="part-num" x-text="String(i + 1).padStart(2, '0')"></span>
+              <span class="part-title" x-text="s.title_en"></span>
+              <span class="part-btns">
+                <button class="btn btn-sm" @click="moveProjectStory(i, -1)" :disabled="i === 0">↑</button>
+                <button class="btn btn-sm" @click="moveProjectStory(i, 1)" :disabled="i === projectForm.stories.length - 1">↓</button>
+              </span>
+            </div>
+          </template>
+        </div>
+        <div class="add-part-row">
+          <select class="modal-select" x-model="addProjectStoryId">
+            <option value="">— move a story here from another project —</option>
+            <template x-for="s in storiesElsewhere()" :key="s.id">
+              <option :value="s.id" x-text="s.title_en + '  (' + s.project_title_en + ')'"></option>
+            </template>
+          </select>
+          <button class="btn btn-sm" @click="addProjectStory()">ADD</button>
+        </div>
+        <div class="field-hint">
+          · every story lives in exactly one project, so adding one here moves it —
+          its folder moves on disk and it leaves any series it was part of
+        </div>
+      </div>
+
+      <div class="modal-field" x-show="projectForm.series.length">
+        <label class="modal-label">Series in this project</label>
+        <div class="parts-list">
+          <template x-for="se in projectForm.series" :key="se.id">
+            <div class="part-row">
+              <span class="part-title" x-text="se.title_en"></span>
+              <span class="part-btns"><button class="btn btn-sm" @click="closeModal(); tab='series'">OPEN SERIES TAB</button></span>
+            </div>
+          </template>
+        </div>
+        <div class="field-hint">· the order of a series' own parts is edited in the SERIES tab</div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn" @click="closeModal()">CANCEL</button>
+      <button class="btn btn-accent" @click="saveProject()">SAVE</button>
+    </div>
+  </div>
+</div>
 
 <!-- Add/Edit series modal -->
 <div class="modal-backdrop" x-show="modal==='series'" x-cloak @click.self="closeModal()">
@@ -539,10 +664,14 @@ function app() {
     filterProjectId: '',
     sortBy: 'date_desc',
     addPartId: '',
+    addProjectStoryId: '',
     form: { project_id: '', series_id: '', series_part: '', title_en: '', title_es: '', type_en: '', type_es: '', desc_en: '', desc_es: '', has_redacted: false, is_favourite: false, body_en: '', body_es: '' },
     newProject: { title_en: '', title_es: '', type_en: '', type_es: '', desc_en: '', desc_es: '', noun_singular_en: '', noun_plural_en: '', noun_singular_es: '', noun_plural_es: '' },
     newSeries: { title_en: '', title_es: '', desc_en: '', desc_es: '' },
     seriesForm: { id: null, project_id: '', title_en: '', title_es: '', desc_en: '', desc_es: '', stories: [] },
+    projectForm: { id: null, title_en: '', title_es: '', type_en: '', type_es: '', desc_en: '', desc_es: '',
+                   noun_singular_en: '', noun_plural_en: '', noun_singular_es: '', noun_plural_es: '',
+                   stories: [], series: [] },
     mdeEn: null,
     mdeEs: null,
 
@@ -558,7 +687,7 @@ function app() {
     },
 
     addableProjects() {
-      return this.projects.filter(p => !Number(p.is_custom_spa));
+      return this.projects;
     },
 
     // Series never span projects, so only the current project's ones are offered.
@@ -660,6 +789,62 @@ function app() {
         editor.value(text);
       };
       input.click();
+    },
+
+    // ── Projects ──────────────────────────────────────────────────────────
+
+    async openEditProject(p) {
+      const full = await fetch('api.php?action=get_project&id=' + p.id).then(r => r.json());
+      this.projectForm = {
+        id: full.id,
+        title_en: full.title_en, title_es: full.title_es || '',
+        type_en: full.type_en || '', type_es: full.type_es || '',
+        desc_en: full.desc_en || '', desc_es: full.desc_es || '',
+        noun_singular_en: full.noun_singular_en || '', noun_plural_en: full.noun_plural_en || '',
+        noun_singular_es: full.noun_singular_es || '', noun_plural_es: full.noun_plural_es || '',
+        stories: full.stories.map(s => ({ id: s.id, title_en: s.title_en })),
+        series: full.series || [],
+      };
+      this.addProjectStoryId = '';
+      this.modal = 'project';
+    },
+
+    storiesElsewhere() {
+      const here = this.projectForm.stories.map(s => String(s.id));
+      return this.stories.filter(s => !here.includes(String(s.id)));
+    },
+
+    moveProjectStory(i, delta) {
+      const list = this.projectForm.stories;
+      const j = i + delta;
+      if (j < 0 || j >= list.length) return;
+      [list[i], list[j]] = [list[j], list[i]];
+    },
+
+    addProjectStory() {
+      if (!this.addProjectStoryId) return;
+      const story = this.stories.find(s => String(s.id) === String(this.addProjectStoryId));
+      if (story) {
+        if (!confirm('Move "' + story.title_en + '" out of ' + story.project_title_en + ' and into this project?')) return;
+        this.projectForm.stories.push({ id: story.id, title_en: story.title_en });
+      }
+      this.addProjectStoryId = '';
+    },
+
+    async saveProject() {
+      if (!this.projectForm.title_en.trim()) { alert('title (EN) is required'); return; }
+      const res = await fetch('api.php?action=update_project', {
+        method: 'POST', headers: this.jsonHeaders(),
+        body: JSON.stringify({
+          ...this.projectForm,
+          story_ids: this.projectForm.stories.map(s => s.id),
+          csrf_token: this.csrfToken,
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok) { alert(result.error || 'save failed'); return; }
+      this.closeModal();
+      await this.loadAll();
     },
 
     // ── Series ────────────────────────────────────────────────────────────

@@ -11,20 +11,25 @@ $translated    = array_key_exists($lang, $project['title']);
 $availableLang = $translated ? $lang : 'en';
 $projectTitle  = t($project['title'], $lang);
 $projectType   = t($project['type'], $lang);
-$countLabel    = t($project['count'], $lang);
+// 'count' is optional — a project with no noun labels set just shows the
+// bare number rather than blowing up on a missing key.
+$storyTotal    = count(project_stories($projectSlug, $lang));
+$countLabel    = isset($project['count'])
+  ? t($project['count'], $lang)
+  : $storyTotal . ' ' . ($lang === 'es'
+      ? ($storyTotal === 1 ? 'historia' : 'historias')
+      : ($storyTotal === 1 ? 'story'    : 'stories'));
 $introText     = t($project['desc'], $lang);
 $pageTitle     = $projectTitle . ' — A Cuervoz';
 
 $stories = array();
-foreach (stories_for_lang($lang) as $slug => $s) {
-  if ($s['project'] === $projectSlug) {
-    $stories[] = array(
-      'href'  => $slug,
-      'title' => t($s['title'], $lang),
-      'type'  => t($s['type'], $lang),
-      'desc'  => t($s['desc'], $lang),
-    );
-  }
+foreach (project_stories($projectSlug, $lang) as $slug => $s) {
+  $stories[] = array(
+    'href'  => $slug,
+    'title' => t($s['title'], $lang),
+    'type'  => t($s['type'], $lang),
+    'desc'  => t($s['desc'], $lang),
+  );
 }
 
 // Series inside this project — the "// series" block is simply skipped when
