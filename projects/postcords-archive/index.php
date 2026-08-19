@@ -330,7 +330,16 @@ $seriesJson  = json_encode($terminalSeries, $jsonFlags);
       padding: 0 4px;
       flex-shrink: 0;
     }
-    /* "back out of this series" row — same muted treatment as home/lang */
+    /* The SERIES menu row sits with home/lang but keeps the accent tint. */
+    .term-entry.is-series-menu .e-title {
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      opacity: 0.75;
+    }
+    .term-entry.is-series-menu.focused .e-title { opacity: 1; }
+
+    /* "back" row — same muted treatment as home/lang */
     .term-entry.is-back .e-title {
       font-size: 10px;
       letter-spacing: 0.1em;
@@ -401,6 +410,15 @@ $seriesJson  = json_encode($terminalSeries, $jsonFlags);
       transition: color 120ms;
     }
     .desc-col.active .desc-text { color: var(--dim); }
+    /* Series provenance under the blurb — same accent as the row tag. */
+    .desc-series {
+      font-size: 10px;
+      color: var(--accent);
+      letter-spacing: 0.06em;
+      line-height: 1.6;
+      margin-top: 0.5rem;
+    }
+    .desc-series:empty { display: none; }
 
     /* Hint bar */
     .term-hints {
@@ -589,6 +607,7 @@ $seriesJson  = json_encode($terminalSeries, $jsonFlags);
         <div class="desc-col" id="desc-col">
           <div class="desc-label" id="desc-label">// record info</div>
           <div class="desc-text" id="desc-text">—</div>
+          <div class="desc-series" id="desc-series"></div>
         </div>
       </div>
     </div>
@@ -669,6 +688,8 @@ $seriesJson  = json_encode($terminalSeries, $jsonFlags);
       storyHint:   'ESC — BACK TO ARCHIVE',
       storyHintSeries: 'ESC — BACK TO ARCHIVE     ← → — PREVIOUS / NEXT PART',
       seriesTag:   'SERIES',
+      partsWord:   'PARTS',
+      ptWord:      'PT',
       partWord:    'PART',
       partOf:      function(n, total) { return 'PART ' + n + ' OF ' + total; },
       retrieving:  '> RETRIEVING RECORD…',
@@ -700,6 +721,8 @@ $seriesJson  = json_encode($terminalSeries, $jsonFlags);
       storyBack:   'VOLVER AL ARCHIVO',
       storyHintSeries: 'ESC — VOLVER AL ARCHIVO     ← → — PARTE ANTERIOR / SIGUIENTE',
       seriesTag:   'SERIE',
+      partsWord:   'PARTES',
+      ptWord:      'PT',
       partWord:    'PARTE',
       partOf:      function(n, total) { return 'PARTE ' + n + ' DE ' + total; },
       storyHint:   'ESC — VOLVER AL ARCHIVO',
@@ -845,15 +868,23 @@ $seriesJson  = json_encode($terminalSeries, $jsonFlags);
     en: { title: 'read in spanish', desc: 'Switch this terminal to Spanish.' },
     es: { title: 'leer en inglés',  desc: 'Cambiar esta terminal a inglés.' }
   };
+  var SERIES_MENU = {
+    isSeriesMenu: true,
+    en: { title: 'series', desc: 'Records that run in sequence.' },
+    es: { title: 'series', desc: 'Registros que van en secuencia.' }
+  };
   var BACK_UP = {
     isBack: true,
-    en: { title: 'back to archive root', desc: 'Leave this series.' },
-    es: { title: 'volver a la raíz', desc: 'Salir de esta serie.' }
+    en: { title: 'back', desc: 'Go back.' },
+    es: { title: 'volver', desc: 'Volver atrás.' }
   };
 
-  // Root listing mirrors the site's project page: series first, then every
-  // story (parts included — nothing is reachable only by drilling in).
-  var ROOT = SERIES.concat(STORIES).concat([LANG_TOGGLE, HOME]);
+  // Root lists the stories only; series live behind the SERIES menu item,
+  // which sits between the language toggle and home and is dropped entirely
+  // when this project has no series.
+  var ROOT = STORIES.concat(
+    SERIES.length ? [LANG_TOGGLE, SERIES_MENU, HOME] : [LANG_TOGGLE, HOME]
+  );
   var ALL  = ROOT;
 
   function loc(item) { return item[isEs ? 'es' : 'en']; }
@@ -867,6 +898,7 @@ $seriesJson  = json_encode($terminalSeries, $jsonFlags);
   var listEl  = document.getElementById('term-list');
   var descCol = document.getElementById('desc-col');
   var descTxt = document.getElementById('desc-text');
+  var descSeries = document.getElementById('desc-series');
 
   // ── Build rows ────────────────────────────────────────
   // Called again whenever the listing changes (drilling into a series and
@@ -879,18 +911,28 @@ $seriesJson  = json_encode($terminalSeries, $jsonFlags);
 
     items.forEach(function(item, i) {
       var el = document.createElement('div');
-      var utility = item.isHome || item.isLang || item.isBack;
+      var utility = item.isHome || item.isLang || item.isBack || item.isSeriesMenu;
       el.className = 'term-entry'
         + (item.isHome   ? ' is-home'   : '')
         + (item.isLang   ? ' is-lang'   : '')
         + (item.isBack   ? ' is-back'   : '')
-        + (item.isSeries ? ' is-series' : '');
+        + (item.isSeries ? ' is-series' : '')
+        + (item.isSeriesMenu ? ' is-series-menu' : '');
 
       var num = utility ? '[--]' : '[' + String(++n).padStart(2, '0') + ']';
       var title = loc(item).title.toUpperCase();
-      var tag = item.isSeries
-        ? '<span class="e-tag">' + L.seriesTag + ' · ' + item.parts.length + '</span>'
-        : '';
+
+      // A series row shows its length; a story that belongs to one is
+      // flagged with its part number. Both ride the same accent tag.
+      var tag = '';
+      if (item.isSeries) {
+        tag = '<span class="e-tag">' + L.seriesTag + ' - ' + item.parts.length + ' ' + L.partsWord + '</span>';
+      } else if (item.series && SERIES_BY_SLUG[item.series]) {
+        var partNo = SERIES_BY_SLUG[item.series].parts.indexOf(item.slug) + 1;
+        if (partNo > 0) {
+          tag = '<span class="e-tag">' + L.seriesTag + ' - ' + L.ptWord + ' ' + partNo + '</span>';
+        }
+      }
 
       el.innerHTML =
         '<span class="e-arrow">▶</span>' +
@@ -905,10 +947,28 @@ $seriesJson  = json_encode($terminalSeries, $jsonFlags);
     });
   }
 
+  // Where BACK goes from the list currently on screen.
+  var backTo = null;
+
+  function openSeriesMenu() {
+    backTo = showRoot;
+    buildRows(SERIES.concat([BACK_UP]));
+    setFocus(0);
+    listEl.scrollTop = 0;
+  }
+
   function openSeries(se) {
+    backTo = openSeriesMenu;
     var parts = se.parts.map(function(slug) { return BY_SLUG[slug]; })
                         .filter(Boolean);
     buildRows(parts.concat([BACK_UP]));
+    setFocus(0);
+    listEl.scrollTop = 0;
+  }
+
+  function showRoot() {
+    backTo = null;
+    buildRows(ROOT);
     setFocus(0);
     listEl.scrollTop = 0;
   }
@@ -919,7 +979,19 @@ $seriesJson  = json_encode($terminalSeries, $jsonFlags);
     rows.forEach(function(el, i) {
       el.classList.toggle('focused', i === idx);
     });
-    descTxt.textContent = loc(ALL[idx]).desc || '—';
+    var item = ALL[idx];
+    descTxt.textContent = loc(item).desc || '—';
+
+    // Series provenance, called out under the blurb in the accent colour.
+    var se = item.series ? SERIES_BY_SLUG[item.series] : null;
+    if (se) {
+      var i = se.parts.indexOf(item.slug);
+      descSeries.textContent = loc(se).title.toUpperCase() + ' — ' + L.partOf(i + 1, se.parts.length);
+    } else if (item.isSeries) {
+      descSeries.textContent = L.seriesTag + ' — ' + item.parts.length + ' ' + L.partsWord;
+    } else {
+      descSeries.textContent = '';
+    }
     descCol.classList.add('active');
   }
 
@@ -933,11 +1005,12 @@ $seriesJson  = json_encode($terminalSeries, $jsonFlags);
         window.location.href = isEs ? '/es/' : '/';
       } else if (item.isLang) {
         window.location.href = otherLangHref;
+      } else if (item.isSeriesMenu) {
+        openSeriesMenu();
       } else if (item.isSeries) {
         openSeries(item);
       } else if (item.isBack) {
-        buildRows(ROOT);
-        setFocus(0);
+        (backTo || showRoot)();
       } else {
         openStory(item);
       }
@@ -1043,12 +1116,13 @@ $seriesJson  = json_encode($terminalSeries, $jsonFlags);
     } else if (e.key === 'Enter') {
       activate(curIdx);
     } else if (e.key === 'Escape') {
-      window.location.href = isEs ? '/es/' : '/';
+      // Nested one level in? Back out rather than leaving the archive.
+      if (backTo) (backTo)();
+      else window.location.href = isEs ? '/es/' : '/';
     }
   });
 
-  buildRows(ROOT);
-  setFocus(0);
+  showRoot();
 </script>
 
 </body>
