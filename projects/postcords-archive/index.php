@@ -132,7 +132,7 @@ $seriesJson  = json_encode($terminalSeries, $jsonFlags);
     /* ── Terminal window ── */
     .terminal {
       width:   min(880px, 96vw);
-      height:  min(580px, 92vh);
+      height:  min(760px, 92vh);
       background: var(--bg);
       border: 1px solid var(--border);
       display: flex;
