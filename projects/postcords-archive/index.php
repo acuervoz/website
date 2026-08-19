@@ -15,11 +15,15 @@ require __DIR__ . '/../../partials/content.php';
 
 $terminalStories = array();
 foreach (project_stories($projectSlug, 'en') as $slug => $s) {
-  $entry = array('en' => array(
-    'title' => $s['title']['en'],
-    'desc'  => $s['desc']['en'] ?? '',
-    'file'  => $slug . '/' . $slug . '.md',
-  ));
+  $entry = array(
+    'slug'   => $slug,
+    'series' => $s['series'],          // null, or the slug of the series it belongs to
+    'en' => array(
+      'title' => $s['title']['en'],
+      'desc'  => $s['desc']['en'] ?? '',
+      'file'  => $slug . '/' . $slug . '.md',
+    ),
+  );
   // A story with no Spanish block shows the terminal's own "not available in
   // this language" notice instead of fetching a file that isn't there.
   if (in_array('es', $s['langs'])) {
@@ -31,10 +35,31 @@ foreach (project_stories($projectSlug, 'en') as $slug => $s) {
   }
   $terminalStories[] = $entry;
 }
-$storiesJson = json_encode(
-  $terminalStories,
-  JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
-);
+
+// Series in this project, each carrying its parts in reading order. Unlike a
+// story, a series is only a label, so an untranslated one falls back to its
+// English text rather than showing a "not available" notice — there's nothing
+// to fail to fetch. Parts are listed in every language; a part that isn't
+// translated shows that notice itself when opened, as it always has.
+$terminalSeries = array();
+foreach (series_for_project($projectSlug, 'en') as $sslug => $ser) {
+  $terminalSeries[] = array(
+    'slug'  => $sslug,
+    'en'    => array(
+      'title' => $ser['title']['en'],
+      'desc'  => $ser['desc']['en'] ?? '',
+    ),
+    'es'    => array(
+      'title' => $ser['title']['es'] ?? $ser['title']['en'],
+      'desc'  => $ser['desc']['es'] ?? ($ser['desc']['en'] ?? ''),
+    ),
+    'parts' => array_values(series_stories($sslug, 'en')),
+  );
+}
+
+$jsonFlags   = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
+$storiesJson = json_encode($terminalStories, $jsonFlags);
+$seriesJson  = json_encode($terminalSeries, $jsonFlags);
 ?><!DOCTYPE html>
 <html lang="en">
 <head>
@@ -266,6 +291,57 @@ $storiesJson = json_encode(
     }
     .term-entry.is-home.focused .e-title,
     .term-entry.is-lang.focused .e-title { color: var(--dim); }
+
+    /* Series rows read as directories: accented, with a part-count tag */
+    .term-entry.is-series .e-title { color: var(--dim); }
+    .term-entry.is-series.focused .e-title { color: var(--text); }
+    .e-tag {
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      border: 1px solid var(--sel-border);
+      padding: 0 4px;
+      flex-shrink: 0;
+    }
+    /* "back out of this series" row — same muted treatment as home/lang */
+    .term-entry.is-back .e-title {
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--ghost);
+    }
+    .term-entry.is-back.focused .e-title { color: var(--dim); }
+
+    /* Previous / next part bar inside a story */
+    .story-nav {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+    .story-nav-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--dim);
+      font-family: var(--font);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.3rem 0.7rem;
+      cursor: pointer;
+      transition: border-color 80ms, color 80ms;
+    }
+    .story-nav-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .story-nav-mid {
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      color: var(--ghost);
+      user-select: none;
+    }
 
     /* Description panel (right) */
     .desc-col-shell {
@@ -516,6 +592,12 @@ $storiesJson = json_encode(
       </div>
     </div>
 
+    <div class="story-nav" id="story-nav">
+      <button type="button" class="story-nav-btn" id="story-prev"></button>
+      <span class="story-nav-mid" id="story-part-label"></span>
+      <button type="button" class="story-nav-btn" id="story-next"></button>
+    </div>
+
     <hr class="term-rule">
     <div class="story-hint"><span id="story-hint-label">ESC — BACK TO ARCHIVE</span></div>
 
@@ -547,6 +629,10 @@ $storiesJson = json_encode(
       hintBack:    'ESC  BACK',
       storyBack:   'BACK TO ARCHIVE',
       storyHint:   'ESC — BACK TO ARCHIVE',
+      storyHintSeries: 'ESC — BACK TO ARCHIVE     ← → — PREVIOUS / NEXT PART',
+      seriesTag:   'SERIES',
+      partWord:    'PART',
+      partOf:      function(n, total) { return 'PART ' + n + ' OF ' + total; },
       retrieving:  '> RETRIEVING RECORD…',
       notFound:    '> ERROR: RECORD NOT FOUND.',
       noTranslation: function(href) {
@@ -565,6 +651,10 @@ $storiesJson = json_encode(
       hintOpen:    'ENTER  ABRIR',
       hintBack:    'ESC  VOLVER',
       storyBack:   'VOLVER AL ARCHIVO',
+      storyHintSeries: 'ESC — VOLVER AL ARCHIVO     ← → — PARTE ANTERIOR / SIGUIENTE',
+      seriesTag:   'SERIE',
+      partWord:    'PARTE',
+      partOf:      function(n, total) { return 'PARTE ' + n + ' DE ' + total; },
       storyHint:   'ESC — VOLVER AL ARCHIVO',
       retrieving:  '> RECUPERANDO REGISTRO…',
       notFound:    '> ERROR: REGISTRO NO ENCONTRADO.',
@@ -670,6 +760,15 @@ $storiesJson = json_encode(
   // "not available" notice instead of a broken fetch.
   var STORIES = <?php echo $storiesJson; ?>;
 
+  // Series are directories in this archive: opening one swaps the list for
+  // its parts. Each carries 'parts' as an ordered array of story slugs.
+  var SERIES = <?php echo $seriesJson; ?>;
+
+  var BY_SLUG = {};
+  STORIES.forEach(function(s) { BY_SLUG[s.slug] = s; });
+  var SERIES_BY_SLUG = {};
+  SERIES.forEach(function(se) { se.isSeries = true; SERIES_BY_SLUG[se.slug] = se; });
+
   var HOME = {
     isHome: true,
     en: { title: 'home', desc: 'Return to the main site.' },
@@ -680,36 +779,73 @@ $storiesJson = json_encode(
     en: { title: 'read in spanish', desc: 'Switch this terminal to Spanish.' },
     es: { title: 'leer en inglés',  desc: 'Cambiar esta terminal a inglés.' }
   };
-  var ALL = STORIES.concat([LANG_TOGGLE, HOME]);
+  var BACK_UP = {
+    isBack: true,
+    en: { title: 'back to archive root', desc: 'Leave this series.' },
+    es: { title: 'volver a la raíz', desc: 'Salir de esta serie.' }
+  };
+
+  // Root listing mirrors the site's project page: series first, then every
+  // story (parts included — nothing is reachable only by drilling in).
+  var ROOT = SERIES.concat(STORIES).concat([LANG_TOGGLE, HOME]);
+  var ALL  = ROOT;
 
   function loc(item) { return item[isEs ? 'es' : 'en']; }
 
   var curIdx  = 0;
   var inStory = false;
   var rows    = [];
+  var curPrev = null;  // neighbouring parts of the story on screen, or null
+  var curNext = null;
 
   var listEl  = document.getElementById('term-list');
   var descCol = document.getElementById('desc-col');
   var descTxt = document.getElementById('desc-text');
 
   // ── Build rows ────────────────────────────────────────
-  ALL.forEach(function(item, i) {
-    var el = document.createElement('div');
-    el.className = 'term-entry' + (item.isHome ? ' is-home' : '') + (item.isLang ? ' is-lang' : '');
+  // Called again whenever the listing changes (drilling into a series and
+  // back out), so it clears whatever was there first.
+  function buildRows(items) {
+    ALL = items;
+    listEl.innerHTML = '';
+    rows = [];
+    var n = 0;
 
-    var num = (item.isHome || item.isLang) ? '[--]' : '[' + String(i + 1).padStart(2, '0') + ']';
+    items.forEach(function(item, i) {
+      var el = document.createElement('div');
+      var utility = item.isHome || item.isLang || item.isBack;
+      el.className = 'term-entry'
+        + (item.isHome   ? ' is-home'   : '')
+        + (item.isLang   ? ' is-lang'   : '')
+        + (item.isBack   ? ' is-back'   : '')
+        + (item.isSeries ? ' is-series' : '');
 
-    el.innerHTML =
-      '<span class="e-arrow">▶</span>' +
-      '<span class="e-num">'   + num + '</span>' +
-      '<span class="e-title">' + loc(item).title.toUpperCase() + '</span>';
+      var num = utility ? '[--]' : '[' + String(++n).padStart(2, '0') + ']';
+      var title = loc(item).title.toUpperCase();
+      var tag = item.isSeries
+        ? '<span class="e-tag">' + L.seriesTag + ' · ' + item.parts.length + '</span>'
+        : '';
 
-    el.addEventListener('mouseenter', function() { setFocus(i); });
-    el.addEventListener('click',      function() { activate(i); });
+      el.innerHTML =
+        '<span class="e-arrow">▶</span>' +
+        '<span class="e-num">'   + num + '</span>' +
+        '<span class="e-title">' + title + '</span>' + tag;
 
-    listEl.appendChild(el);
-    rows.push(el);
-  });
+      el.addEventListener('mouseenter', function() { setFocus(i); });
+      el.addEventListener('click',      function() { activate(i); });
+
+      listEl.appendChild(el);
+      rows.push(el);
+    });
+  }
+
+  function openSeries(se) {
+    var parts = se.parts.map(function(slug) { return BY_SLUG[slug]; })
+                        .filter(Boolean);
+    buildRows(parts.concat([BACK_UP]));
+    setFocus(0);
+    listEl.scrollTop = 0;
+  }
 
   // ── Focus ─────────────────────────────────────────────
   function setFocus(idx) {
@@ -731,6 +867,11 @@ $storiesJson = json_encode(
         window.location.href = isEs ? '/es/' : '/';
       } else if (item.isLang) {
         window.location.href = otherLangHref;
+      } else if (item.isSeries) {
+        openSeries(item);
+      } else if (item.isBack) {
+        buildRows(ROOT);
+        setFocus(0);
       } else {
         openStory(item);
       }
@@ -744,7 +885,35 @@ $storiesJson = json_encode(
     document.getElementById('view-story').style.display = 'flex';
 
     document.getElementById('story-title').textContent = loc(item).title.toUpperCase();
-    document.getElementById('story-info').textContent  = L.projectInfo;
+
+    // Series context — taken from the story itself, not from how it was
+    // reached, so a part opened straight off the root list still gets its
+    // neighbours.
+    var se  = item.series ? SERIES_BY_SLUG[item.series] : null;
+    var idx = se ? se.parts.indexOf(item.slug) : -1;
+    curPrev = (se && idx > 0) ? BY_SLUG[se.parts[idx - 1]] : null;
+    curNext = (se && idx > -1 && idx < se.parts.length - 1) ? BY_SLUG[se.parts[idx + 1]] : null;
+
+    var navEl   = document.getElementById('story-nav');
+    var prevBtn = document.getElementById('story-prev');
+    var nextBtn = document.getElementById('story-next');
+
+    if (se && idx > -1) {
+      document.getElementById('story-info').textContent =
+        loc(se).title.toUpperCase() + ' · ' + L.partOf(idx + 1, se.parts.length);
+      document.getElementById('story-part-label').textContent = L.partOf(idx + 1, se.parts.length);
+      // A missing neighbour hides its button rather than showing a dead one.
+      prevBtn.textContent   = curPrev ? '← ' + L.partWord + ' ' + String(idx).padStart(2, '0') : '';
+      nextBtn.textContent   = curNext ? L.partWord + ' ' + String(idx + 2).padStart(2, '0') + ' →' : '';
+      prevBtn.style.visibility = curPrev ? 'visible' : 'hidden';
+      nextBtn.style.visibility = curNext ? 'visible' : 'hidden';
+      navEl.style.display = 'flex';
+      document.getElementById('story-hint-label').textContent = L.storyHintSeries;
+    } else {
+      document.getElementById('story-info').textContent = L.projectInfo;
+      navEl.style.display = 'none';
+      document.getElementById('story-hint-label').textContent = L.storyHint;
+    }
 
     // story-body scrolls; story-body-content is the node whose innerHTML
     // gets replaced below — keeping them separate means the retro
@@ -775,6 +944,13 @@ $storiesJson = json_encode(
       });
   }
 
+  document.getElementById('story-prev').addEventListener('click', function() {
+    if (curPrev) openStory(curPrev);
+  });
+  document.getElementById('story-next').addEventListener('click', function() {
+    if (curNext) openStory(curNext);
+  });
+
   function closeStory() {
     inStory = false;
     document.getElementById('view-story').style.display = 'none';
@@ -788,6 +964,8 @@ $storiesJson = json_encode(
   document.addEventListener('keydown', function(e) {
     if (inStory) {
       if (e.key === 'Escape') closeStory();
+      else if (e.key === 'ArrowLeft'  && curPrev) { e.preventDefault(); openStory(curPrev); }
+      else if (e.key === 'ArrowRight' && curNext) { e.preventDefault(); openStory(curNext); }
       return;
     }
     if (e.key === 'ArrowDown') {
@@ -803,6 +981,7 @@ $storiesJson = json_encode(
     }
   });
 
+  buildRows(ROOT);
   setFocus(0);
 </script>
 
