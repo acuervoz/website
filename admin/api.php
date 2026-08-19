@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/crypto.php';
+require_once __DIR__ . '/schema.php';
 
 session_start();
 
@@ -134,6 +135,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 try {
     $pdo = getDb();
+    ensureContentSchema($pdo);
 
     switch ($action) {
 
@@ -337,8 +339,10 @@ try {
 
             $pdo->prepare(
                 "INSERT INTO cms_stories
-                    (slug, project_id, title_en, title_es, type_en, type_es, desc_en, desc_es, is_favourite, favourite_sort_order, created_at)
-                 VALUES (:slug, :pid, :title_en, :title_es, :type_en, :type_es, :desc_en, :desc_es, :fav, :favOrder, NOW())"
+                    (slug, project_id, title_en, title_es, type_en, type_es, desc_en, desc_es,
+                     has_redacted, is_favourite, favourite_sort_order, created_at)
+                 VALUES (:slug, :pid, :title_en, :title_es, :type_en, :type_es, :desc_en, :desc_es,
+                     :redacted, :fav, :favOrder, NOW())"
             )->execute([
                 ':slug'     => $slug,
                 ':pid'      => $projectId,
@@ -348,6 +352,7 @@ try {
                 ':type_es'  => trim($body['type_es'] ?? '') ?: null,
                 ':desc_en'  => trim($body['desc_en'] ?? '') ?: null,
                 ':desc_es'  => trim($body['desc_es'] ?? '') ?: null,
+                ':redacted' => !empty($body['has_redacted']) ? 1 : 0,
                 ':fav'      => $isFav ? 1 : 0,
                 ':favOrder' => $favOrder,
             ]);
@@ -419,6 +424,7 @@ try {
                     title_en = :title_en, title_es = :title_es,
                     type_en = :type_en, type_es = :type_es,
                     desc_en = :desc_en, desc_es = :desc_es,
+                    has_redacted = :redacted,
                     is_favourite = :fav, favourite_sort_order = :favOrder
                  WHERE id = :id"
             )->execute([
@@ -429,6 +435,7 @@ try {
                 ':type_es'  => array_key_exists('type_es', $body) ? (trim($body['type_es']) ?: null) : $story['type_es'],
                 ':desc_en'  => array_key_exists('desc_en', $body) ? (trim($body['desc_en']) ?: null) : $story['desc_en'],
                 ':desc_es'  => array_key_exists('desc_es', $body) ? (trim($body['desc_es']) ?: null) : $story['desc_es'],
+                ':redacted' => (array_key_exists('has_redacted', $body) ? !empty($body['has_redacted']) : (bool)$story['has_redacted']) ? 1 : 0,
                 ':fav'      => $isFav ? 1 : 0,
                 ':favOrder' => $favOrder,
                 ':id'       => $id,

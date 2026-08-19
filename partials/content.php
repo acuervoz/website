@@ -139,6 +139,7 @@ foreach ($stmt->fetchAll() as $row) {
     'type'    => bilingualField($row, 'type_en', 'type_es'),
     'desc'    => bilingualField($row, 'desc_en', 'desc_es'),
     'langs'   => $langs,
+    'redact'  => (bool)$row['has_redacted'],
   );
   if ($row['is_favourite']) {
     $favouritesOrdered[(int)$row['favourite_sort_order']] = $row['slug'];

@@ -88,6 +88,8 @@ html, body { background: var(--bg); color: var(--text); font-family: 'JetBrains 
 .stories-table .title-cell { color: var(--text); }
 .stories-table .muted { color: var(--text-dim); font-size: 11px; }
 .fav-star { color: var(--accent); }
+.redact-flag { color: var(--text-muted); letter-spacing: -1px; }
+.modal-checkbox-row code { font-family: inherit; color: var(--text); font-size: 11px; }
 .lang-badge { display:inline-block; padding:1px 5px; border:1px solid var(--border); font-size:9px; letter-spacing:0.05em; margin-right:3px; color:var(--text-muted); }
 .row-actions { display: flex; gap: 4px; }
 
@@ -184,7 +186,10 @@ html, body { background: var(--bg); color: var(--text); font-family: 'JetBrains 
             <span class="lang-badge">EN</span>
             <template x-if="s.title_es"><span class="lang-badge">ES</span></template>
           </td>
-          <td><span class="fav-star" x-show="Number(s.is_favourite)">★</span></td>
+          <td>
+            <span class="fav-star" x-show="Number(s.is_favourite)">★</span>
+            <span class="redact-flag" x-show="Number(s.has_redacted)" title="[REDACTED] text is glitched">▓</span>
+          </td>
           <td class="muted" x-text="s.created_at ? s.created_at.substring(0,10) : ''"></td>
           <td class="row-actions">
             <button class="btn btn-sm" @click="openEditStory(s)">EDIT</button>
@@ -286,6 +291,10 @@ html, body { background: var(--bg); color: var(--text); font-family: 'JetBrains 
         <input type="checkbox" id="fav-check" x-model="form.is_favourite">
         <label for="fav-check">Show in homepage "Favourites"</label>
       </div>
+      <div class="modal-field modal-checkbox-row">
+        <input type="checkbox" id="redact-check" x-model="form.has_redacted">
+        <label for="redact-check">Redact — render every <code>[REDACTED]</code> in the text glitched</label>
+      </div>
 
       <div class="modal-field">
         <div class="editor-tabs">
@@ -351,7 +360,7 @@ function app() {
     showNewProjectInline: false,
     filterProjectId: '',
     sortBy: 'date_desc',
-    form: { project_id: '', title_en: '', title_es: '', type_en: '', type_es: '', desc_en: '', desc_es: '', is_favourite: false, body_en: '', body_es: '' },
+    form: { project_id: '', title_en: '', title_es: '', type_en: '', type_es: '', desc_en: '', desc_es: '', has_redacted: false, is_favourite: false, body_en: '', body_es: '' },
     newProject: { title_en: '', title_es: '', type_en: '', type_es: '', desc_en: '', desc_es: '', noun_singular_en: '', noun_plural_en: '', noun_singular_es: '', noun_plural_es: '' },
     mdeEn: null,
     mdeEs: null,
@@ -398,7 +407,7 @@ function app() {
       this.editingId = null;
       this.activeTab = 'en';
       this.showNewProjectInline = false;
-      this.form = { project_id: '', title_en: '', title_es: '', type_en: '', type_es: '', desc_en: '', desc_es: '', is_favourite: false, body_en: '', body_es: '' };
+      this.form = { project_id: '', title_en: '', title_es: '', type_en: '', type_es: '', desc_en: '', desc_es: '', has_redacted: false, is_favourite: false, body_en: '', body_es: '' };
       this.modal = 'story';
       this.$nextTick(() => this.initEditors());
     },
@@ -413,6 +422,7 @@ function app() {
         title_en: full.title_en, title_es: full.title_es || '',
         type_en: full.type_en || '', type_es: full.type_es || '',
         desc_en: full.desc_en || '', desc_es: full.desc_es || '',
+        has_redacted: !!Number(full.has_redacted),
         is_favourite: !!Number(full.is_favourite),
         body_en: full.body_en || '', body_es: full.body_es || '',
       };

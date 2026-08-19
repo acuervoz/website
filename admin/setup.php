@@ -80,6 +80,7 @@ $sqls = [
         type_es VARCHAR(50) DEFAULT NULL,
         desc_en TEXT DEFAULT NULL,
         desc_es TEXT DEFAULT NULL,
+        has_redacted TINYINT(1) NOT NULL DEFAULT 0,
         is_favourite TINYINT(1) DEFAULT 0,
         favourite_sort_order INT DEFAULT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,

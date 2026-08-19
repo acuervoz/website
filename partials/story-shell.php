@@ -13,6 +13,7 @@ $storyType     = t($story['type'], $lang);
 $projectName   = t($PROJECTS[$story['project']]['title'], $lang);
 $pageTitle     = $storyTitle . ' — A Cuervoz';
 $mdFile        = $storySlug . ($availableLang === 'es' ? '-es.md' : '.md');
+$redact        = !empty($story['redact']);
 ?><!DOCTYPE html>
 <html lang="<?php echo $lang; ?>">
 <head>
@@ -55,6 +56,35 @@ $mdFile        = $storySlug . ($availableLang === 'es' ? '-es.md' : '.md');
 <?php if ($translated): ?>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script>
+<?php if ($redact): ?>
+    // "Redact" is a per-story toggle in the admin CMS: with it on, every
+    // literal [REDACTED] in the markdown is swapped for a styled span (see
+    // .redacted in style.css). Done over text nodes rather than innerHTML so
+    // a marker that lands inside a link or an <em> can't break its markup.
+    function glitchRedactions(root) {
+      var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+      var nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+      nodes.forEach(function(node) {
+        var parts = node.nodeValue.split(/(\[redacted\])/gi);
+        if (parts.length < 2) return;
+        var frag = document.createDocumentFragment();
+        parts.forEach(function(part) {
+          if (part === '') return;
+          if (/^\[redacted\]$/i.test(part)) {
+            var span = document.createElement('span');
+            span.className = 'redacted';
+            span.setAttribute('aria-label', 'redacted');
+            span.textContent = part;
+            frag.appendChild(span);
+          } else {
+            frag.appendChild(document.createTextNode(part));
+          }
+        });
+        node.parentNode.replaceChild(frag, node);
+      });
+    }
+<?php endif; ?>
     fetch('<?php echo $mdFile; ?>')
       .then(function(r) { return r.text(); })
       .then(function(text) {
@@ -71,6 +101,9 @@ $mdFile        = $storySlug . ($availableLang === 'es' ? '-es.md' : '.md');
             p.classList.add('dlg-center');
           }
         });
+<?php if ($redact): ?>
+        glitchRedactions(el);
+<?php endif; ?>
       })
       .catch(function() {
         document.getElementById('md-content').innerHTML =

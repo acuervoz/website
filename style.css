@@ -268,6 +268,34 @@ nav a.active     { color: var(--accent); text-decoration: underline; }
   color:        var(--text-dim);
 }
 
+/* ── Redacted text ──
+   Stories with the admin CMS's "redact" toggle on get every literal
+   [REDACTED] wrapped in this span (see partials/story-shell.php): blurred,
+   struck through, italic, and never quite holding still. */
+.page-body .redacted {
+  position:        relative;
+  display:         inline-block;
+  font-style:      italic;
+  text-decoration: line-through;
+  color:           var(--text-dim);
+  background:      rgba(255, 106, 119, 0.06);
+  padding:         0 2px;
+  letter-spacing:  0.06em;
+  filter:          blur(1.4px);
+  user-select:     none;
+  cursor:          not-allowed;
+  animation:       redact-glitch 3.4s infinite steps(1);
+}
+@keyframes redact-glitch {
+  0%, 84%   { transform: none;                 text-shadow: 0 0 4px rgba(255,106,119,0.35); opacity: 0.85; }
+  86%       { transform: translateX(-1.5px) skewX(-6deg); text-shadow: 1.5px 0 var(--accent), -1.5px 0 var(--text-muted); opacity: 1; }
+  88%       { transform: translateX(1.5px)  skewX(5deg);  text-shadow: -1.5px 0 var(--accent), 1.5px 0 var(--text-muted); opacity: 0.6; }
+  90%, 100% { transform: none;                 text-shadow: 0 0 4px rgba(255,106,119,0.35); opacity: 0.85; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-body .redacted { animation: none; }
+}
+
 .loading-msg {
   font-size: 11px;
   color:     var(--text-ghost);
