@@ -14,7 +14,9 @@ $projectSlug = 'postcords-archive';
 require __DIR__ . '/../../partials/content.php';
 
 $terminalStories = array();
-foreach (project_stories($projectSlug, 'en') as $slug => $s) {
+// 'oldest' so a newly added postcord joins the end of the archive rather
+// than jumping to the top of the listing.
+foreach (project_stories($projectSlug, 'en', 'oldest') as $slug => $s) {
   $entry = array(
     'slug'   => $slug,
     'series' => $s['series'],          // null, or the slug of the series it belongs to
@@ -505,6 +507,21 @@ $seriesJson  = json_encode($terminalSeries, $jsonFlags);
     .story-body ul,
     .story-body ol          { padding-left: 1.5rem; margin-bottom: 1rem; }
     .story-body li          { margin-bottom: 0.2rem; }
+    /* [[text]] from the editor — looks like a button, deliberately isn't one */
+    .story-body .fake-btn {
+      display: inline-block;
+      font-family: var(--font);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      background: rgba(255, 106, 119, 0.12);
+      padding: 0.15rem 0.6rem;
+      margin: 0.1rem 0.1rem;
+      line-height: 1.6;
+      user-select: none;
+    }
 
     .story-hint {
       flex-shrink: 0;
@@ -842,6 +859,40 @@ $seriesJson  = json_encode($terminalSeries, $jsonFlags);
   mountRetroScrollbar(document.getElementById('story-body'), document.querySelector('.story-body-shell'));
   mountRetroScrollbar(document.getElementById('term-prompt'), document.querySelector('.prompt-shell'));
 
+  // Honour the line breaks the author actually typed: plain markdown folds a
+  // single newline into the previous line, which isn't what the editor's own
+  // preview shows.
+  marked.setOptions({ breaks: true });
+
+  // ── Inline markup the editor can insert ──────────────
+  // [[text]] renders as a fake button (see .fake-btn). Done over text nodes
+  // rather than the markdown source so a stray [[ inside a code block or a
+  // link can't rewrite someone else's markup.
+  function decorateButtons(root) {
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+    var nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(function(node) {
+      if (node.parentNode && node.parentNode.nodeName === 'CODE') return;
+      var parts = node.nodeValue.split(/(\[\[[^\]]+\]\])/g);
+      if (parts.length < 2) return;
+      var frag = document.createDocumentFragment();
+      parts.forEach(function(part) {
+        if (part === '') return;
+        var m = /^\[\[([^\]]+)\]\]$/.exec(part);
+        if (m) {
+          var b = document.createElement('span');
+          b.className = 'fake-btn';
+          b.textContent = m[1];
+          frag.appendChild(b);
+        } else {
+          frag.appendChild(document.createTextNode(part));
+        }
+      });
+      node.parentNode.replaceChild(frag, node);
+    });
+  }
+
   // ── Story registry ────────────────────────────────────
   // Emitted by the PHP at the top of this file, straight from the CMS, in
   // the project's admin-set order. A story whose 'es' block is omitted has
@@ -1077,7 +1128,10 @@ $seriesJson  = json_encode($terminalSeries, $jsonFlags);
 
     fetch(loc(item).file)
       .then(function(r) { return r.text(); })
-      .then(function(t) { bodyContent.innerHTML = marked.parse(t); })
+      .then(function(t) {
+        bodyContent.innerHTML = marked.parse(t);
+        decorateButtons(bodyContent);
+      })
       .catch(function()  {
         bodyContent.innerHTML = '<p class="sys-msg">&gt; ' + L.notFound.replace(/^>\s*/, '') + '</p>';
       });

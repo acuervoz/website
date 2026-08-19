@@ -631,6 +631,21 @@ function wrapLine(editor, marker) {
   cm.focus();
 }
 
+// Wrap the selection (or drop an empty pair at the cursor) in an inline
+// marker — used for [[fake buttons]].
+function wrapSelection(editor, before, after) {
+  const cm = editor.codemirror;
+  const sel = cm.getSelection();
+  if (sel) {
+    cm.replaceSelection(before + sel + after);
+  } else {
+    const cur = cm.getCursor();
+    cm.replaceRange(before + after, cur);
+    cm.setCursor({ line: cur.line, ch: cur.ch + before.length });
+  }
+  cm.focus();
+}
+
 function makeEditor(elId, initialValue) {
   const el = document.getElementById(elId);
   el.value = initialValue || '';
@@ -644,8 +659,13 @@ function makeEditor(elId, initialValue) {
       { name: 'align-center', action: (ed) => wrapLine(ed, 'C:'), className: 'fa fa-align-center', title: 'Center this line' },
       { name: 'align-right',  action: (ed) => wrapLine(ed, 'R:'), className: 'fa fa-align-right',  title: 'Right-align this line' },
       { name: 'align-left',   action: (ed) => wrapLine(ed, null), className: 'fa fa-align-left',   title: 'Back to left align' },
+      '|',
+      { name: 'fake-button', action: (ed) => wrapSelection(ed, '[[', ']]'), className: 'fa fa-square', title: 'Render the selected text as a red button' },
       '|', 'link', 'preview', 'guide',
     ],
+    // Match how the site renders: a single newline is a line break, not a
+    // continuation of the previous line.
+    renderingConfig: { singleLineBreaks: true },
   });
 }
 

@@ -82,18 +82,22 @@ function series_stories($seriesSlug, $lang) {
 }
 
 // A project's stories in display order, limited to $lang. Stories the admin
-// placed by hand come first in that order; everything else keeps the original
-// newest-first behaviour, so an un-ordered project looks unchanged.
-function project_stories($projectSlug, $lang) {
+// placed by hand come first in that order; everything else falls back to
+// upload date — newest first by default, matching the rest of the site.
+// $unplaced = 'oldest' flips that fallback so new stories land at the end,
+// which is what an archive that's read front-to-back wants.
+function project_stories($projectSlug, $lang, $unplaced = 'newest') {
   global $STORIES;
   $out = array();
   foreach (stories_for_lang($lang) as $slug => $story) {
     if ($story['project'] === $projectSlug) $out[$slug] = $story;
   }
-  uasort($out, function ($a, $b) {
+  uasort($out, function ($a, $b) use ($unplaced) {
     if (($a['order'] === null) !== ($b['order'] === null)) return $a['order'] === null ? 1 : -1;
     if ($a['order'] !== null && $a['order'] !== $b['order']) return $a['order'] <=> $b['order'];
-    return strcmp($b['created'], $a['created']); // newest first
+    return $unplaced === 'oldest'
+      ? strcmp($a['created'], $b['created'])
+      : strcmp($b['created'], $a['created']);
   });
   return $out;
 }

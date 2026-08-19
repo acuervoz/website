@@ -314,6 +314,24 @@ nav a.active     { color: var(--accent); text-decoration: underline; }
   color:        var(--text-dim);
 }
 
+/* ── Fake button ──
+   [[text]] in a story's markdown, inserted by the admin editor's toolbar.
+   Looks like a button; deliberately isn't one. */
+.page-body .fake-btn {
+  display:         inline-block;
+  font-family:     var(--font);
+  font-size:       11px;
+  letter-spacing:  0.08em;
+  text-transform:  uppercase;
+  color:           var(--accent);
+  border:          1px solid var(--accent);
+  background:      var(--accent-faint);
+  padding:         0.15rem 0.6rem;
+  margin:          0.1rem 0.1rem;
+  line-height:     1.6;
+  user-select:     none;
+}
+
 /* ── Redacted text ──
    Stories with the admin CMS's "redact" toggle on get every literal
    [REDACTED] wrapped in this span (see partials/story-shell.php): blurred,

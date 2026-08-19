@@ -94,6 +94,36 @@ if ($seriesSlug !== null && $translated) {
 <?php if ($translated): ?>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script>
+    marked.setOptions({ breaks: true });
+
+  // ── Inline markup the editor can insert ──────────────
+  // [[text]] renders as a fake button (see .fake-btn). Done over text nodes
+  // rather than the markdown source so a stray [[ inside a code block or a
+  // link can't rewrite someone else's markup.
+  function decorateButtons(root) {
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+    var nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(function(node) {
+      if (node.parentNode && node.parentNode.nodeName === 'CODE') return;
+      var parts = node.nodeValue.split(/(\[\[[^\]]+\]\])/g);
+      if (parts.length < 2) return;
+      var frag = document.createDocumentFragment();
+      parts.forEach(function(part) {
+        if (part === '') return;
+        var m = /^\[\[([^\]]+)\]\]$/.exec(part);
+        if (m) {
+          var b = document.createElement('span');
+          b.className = 'fake-btn';
+          b.textContent = m[1];
+          frag.appendChild(b);
+        } else {
+          frag.appendChild(document.createTextNode(part));
+        }
+      });
+      node.parentNode.replaceChild(frag, node);
+    });
+  }
 <?php if ($redact): ?>
     // "Redact" is a per-story toggle in the admin CMS: with it on, every
     // literal [REDACTED] in the markdown is swapped for a styled span (see
@@ -128,6 +158,7 @@ if ($seriesSlug !== null && $translated) {
       .then(function(text) {
         var el = document.getElementById('md-content');
         el.innerHTML = marked.parse(text);
+        decorateButtons(el);
         // Alignment convention: a paragraph starting with "R: " or "C: " is
         // right- or center-aligned; the marker itself is stripped.
         el.querySelectorAll('p').forEach(function(p) {

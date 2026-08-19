@@ -77,7 +77,9 @@ moves on disk and it drops out of any series it was in.
 > A project can still render its own page instead of `project-shell.php` —
 > `postcords-archive` is the terminal, and its `index.php` draws its story
 > list from the same registry as everything else, in the order the PROJECTS
-> tab sets. That's the pattern to copy for any future custom page: keep the
+> tab sets. It passes `project_stories(..., 'oldest')` so an unplaced new
+> postcord joins the end of the archive instead of the top; every other
+> project keeps the site-wide newest-first default. That's the pattern to copy for any future custom page: keep the
 > markup, build the data from `project_stories()`, never hardcode a list.
 > `the-post-within` was a placeholder newspaper front page and now uses the
 > standard project page; its old markup is in git history.
@@ -106,6 +108,22 @@ hand.
   previous/next-part buttons at the end of the text.
 - Untranslated parts are skipped in the Spanish reading order rather than
   dead-ending the reader, exactly like the other listings.
+
+## Writing conventions inside a story's markdown
+
+- A line starting `R: ` or `C: ` is right- or centre-aligned; the marker is
+  stripped. Toolbar buttons in the admin editor insert these.
+- `[[text]]` renders as a red fake button — it looks like a button and
+  deliberately isn't one. The editor's toolbar wraps the selection for you.
+  Inside backticks it stays literal.
+- Single newlines are real line breaks. Both renderers set marked's
+  `breaks: true`, and the editor is pinned to `singleLineBreaks: true` to
+  match — before that the editor's preview honoured them and the site didn't,
+  which just looked like a bug.
+
+Anything post-processed out of the rendered HTML (the button, `[REDACTED]`)
+walks text nodes rather than rewriting the markdown source, so a marker that
+lands inside a link, an `<em>` or a code span can't corrupt other markup.
 
 ## Redacted text
 
